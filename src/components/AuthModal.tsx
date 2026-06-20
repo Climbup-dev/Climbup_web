@@ -1,6 +1,6 @@
 "use client";
 
-import "../style/AuthModal.css";
+import "../styles/AuthModal.css";
 
 import Image from "next/image";
 import { createPortal } from "react-dom";
