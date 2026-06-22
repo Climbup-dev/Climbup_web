@@ -1,6 +1,7 @@
 "use client";
 
 import "../styles/AuthModal.css";
+import "../styles/AuthHomeTheme.css";
 
 import Image from "next/image";
 import { createPortal } from "react-dom";
@@ -20,6 +21,7 @@ import { useToast } from "@/hooks/useToast";
 interface AuthModalProps {
   open: boolean;
   onClose: () => void;
+  initialMode?: "login" | "register";
 }
 
 type AuthMode = "login" | "register" | "forgot";
@@ -184,7 +186,11 @@ function getSafeAuthError(
   return rawMessage || fallback;
 }
 
-export default function AuthModal({ open, onClose }: AuthModalProps) {
+export default function AuthModal({
+  open,
+  onClose,
+  initialMode = "login",
+}: AuthModalProps) {
   const {
     currentUser,
     loading,
@@ -202,7 +208,7 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
   const titleId = useId();
   const descriptionId = useId();
 
-  const [mode, setMode] = useState<AuthMode>("login");
+  const [mode, setMode] = useState<AuthMode>(initialMode);
   const [step, setStep] = useState<AuthStep>("form");
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -235,7 +241,7 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
   }, []);
 
   const resetForm = useCallback(() => {
-    setMode("login");
+    setMode(initialMode);
     setStep("form");
     setFullName("");
     setEmail("");
@@ -248,7 +254,7 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
     setResendCooldown(0);
     otpRequestRef.current = false;
     otpVerificationRef.current = false;
-  }, [clearMessages]);
+  }, [clearMessages, initialMode]);
 
   const showAuthError = useCallback(
     (authError: unknown, fallback: string) => {
@@ -296,7 +302,6 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
   useEffect(() => {
     if (!effectiveOpen) {
       closingRef.current = false;
-      setIsClosing(false);
       return;
     }
 
@@ -348,11 +353,15 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
   useEffect(() => {
     if (!passwordRecovery) return;
 
-    setMode("forgot");
-    setStep("new-password");
-    setPassword("");
-    setConfirmPassword("");
-    clearMessages();
+    const timer = window.setTimeout(() => {
+      setMode("forgot");
+      setStep("new-password");
+      setPassword("");
+      setConfirmPassword("");
+      clearMessages();
+    }, 0);
+
+    return () => window.clearTimeout(timer);
   }, [passwordRecovery, clearMessages]);
 
   const switchMode = (nextMode: AuthMode) => {
@@ -649,11 +658,12 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
     clearMessages();
 
     try {
-      await login();
+      const googleLogin = login();
+      startSmoothClose();
+      await googleLogin;
       if (!mountedRef.current) return;
 
       showToast("Signed in successfully", "success");
-      startSmoothClose();
     } catch (authError) {
       if (mountedRef.current) {
         showAuthError(authError, "Google sign-in could not be completed.");

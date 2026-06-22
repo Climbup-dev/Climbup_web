@@ -29,9 +29,21 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      ...["/hero-video.mp4", "/hero-poster.webp", "/logo.png"].map(
+        (source) => ({
+          source,
+          headers: [
+            {
+              key: "Cache-Control",
+              value: "public, max-age=86400, stale-while-revalidate=604800",
+            },
+          ],
+        })
+      ),
     ];
   },
   images: {
+    qualities: [75, 78],
     remotePatterns: [
       {
         protocol: "https",

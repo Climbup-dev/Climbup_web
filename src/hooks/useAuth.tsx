@@ -228,33 +228,160 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = useCallback(async () => {
     assertSupabaseConfigured();
 
-    const {
-      data: { session },
-      error: sessionError,
-    } = await supabase.auth.getSession();
+    const popupWidth = 520;
+    const popupHeight = 680;
+    const popupLeft = Math.max(
+      0,
+      window.screenX + (window.outerWidth - popupWidth) / 2
+    );
+    const popupTop = Math.max(
+      0,
+      window.screenY + (window.outerHeight - popupHeight) / 2
+    );
+    const popup = window.open(
+      "about:blank",
+      "climbup-google-auth",
+      `popup=yes,width=${popupWidth},height=${popupHeight},left=${Math.round(
+        popupLeft
+      )},top=${Math.round(popupTop)},resizable=yes,scrollbars=yes`
+    );
 
-    if (sessionError) throw sessionError;
-
-    if (session?.user) {
-      setCurrentUser(session.user);
-      await loadUserProfile(session.user);
-      return;
+    if (!popup) {
+      throw new Error(
+        "The Google sign-in popup was blocked. Allow popups and try again."
+      );
     }
 
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: getAuthRedirectUrl(window.location.origin),
-        queryParams: {
-          access_type: "online",
+    popup.document.title = "Connecting to Google...";
+
+    try {
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
+      if (sessionError) throw sessionError;
+
+      if (session?.user) {
+        popup.close();
+        setCurrentUser(session.user);
+        await loadUserProfile(session.user);
+        return;
+      }
+
+      document.cookie =
+        "climbup_oauth_popup=1; Path=/; Max-Age=300; SameSite=Lax";
+      const callbackUrl = getAuthRedirectUrl(window.location.origin);
+
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: callbackUrl,
+          skipBrowserRedirect: true,
+          queryParams: {
+            access_type: "online",
+            prompt: "select_account",
+          },
         },
-      },
-    });
+      });
 
-    if (error) throw error;
+      if (error) throw error;
+      if (!data.url) throw new Error("Google sign-in could not be started.");
 
-    if (data.url) {
-      window.location.assign(data.url);
+      await new Promise<void>((resolve, reject) => {
+        let settled = false;
+        const authChannel =
+          typeof BroadcastChannel === "undefined"
+            ? null
+            : new BroadcastChannel("climbup-auth");
+
+        const finish = (callback: () => void) => {
+          if (settled) return;
+          settled = true;
+          window.removeEventListener("message", handleMessage);
+          window.removeEventListener("storage", handleStorage);
+          authChannel?.removeEventListener("message", handleChannelMessage);
+          authChannel?.close();
+          window.clearInterval(closedCheck);
+          window.clearTimeout(timeout);
+          callback();
+        };
+
+        const handleResult = (result: {
+          type?: string;
+          status?: string;
+          message?: string;
+        }) => {
+          if (result?.type !== "climbup:oauth") return;
+
+          if (result.status === "success") {
+            finish(resolve);
+            return;
+          }
+
+          finish(() =>
+            reject(
+              new Error(result.message || "Google sign-in was not completed.")
+            )
+          );
+        };
+
+        const handleMessage = (event: MessageEvent) => {
+          if (event.origin !== window.location.origin) return;
+          if (event.source !== popup) return;
+          handleResult(event.data);
+        };
+
+        const handleChannelMessage = (event: MessageEvent) => {
+          handleResult(event.data);
+        };
+
+        const handleStorage = (event: StorageEvent) => {
+          if (event.key !== "climbup:oauth:result" || !event.newValue) return;
+
+          try {
+            handleResult(JSON.parse(event.newValue));
+          } catch {
+            // Ignore malformed cross-window messages.
+          }
+        };
+
+        const closedCheck = window.setInterval(() => {
+          if (popup.closed) {
+            finish(() => reject(new Error("Google sign-in window was closed.")));
+          }
+        }, 500);
+
+        const timeout = window.setTimeout(() => {
+          popup.close();
+          finish(() => reject(new Error("Google sign-in timed out. Please try again.")));
+        }, 120000);
+
+        window.addEventListener("message", handleMessage);
+        window.addEventListener("storage", handleStorage);
+        authChannel?.addEventListener("message", handleChannelMessage);
+        window.localStorage.removeItem("climbup:oauth:result");
+        popup.location.replace(data.url);
+      });
+
+      const {
+        data: { session: signedInSession },
+        error: signedInSessionError,
+      } = await supabase.auth.getSession();
+
+      if (signedInSessionError) throw signedInSessionError;
+      if (!signedInSession?.user) {
+        throw new Error("Google sign-in completed, but the session was not restored.");
+      }
+
+      setCurrentUser(signedInSession.user);
+      await loadUserProfile(signedInSession.user);
+    } catch (error) {
+      if (!popup.closed) popup.close();
+      throw error;
+    } finally {
+      document.cookie =
+        "climbup_oauth_popup=; Path=/; Max-Age=0; SameSite=Lax";
     }
   }, [loadUserProfile, supabase]);
 

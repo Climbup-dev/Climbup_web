@@ -1,471 +1,161 @@
 "use client";
 
-import {
-  useEffect,
-  useState,
-} from "react";
-
+import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/useToast";
-import AuthModal from "./AuthModal";
+import "@/styles/Navbar.css";
 
-export default function Navbar() {
-  const pathname = usePathname();
+interface NavbarProps {
+  onLogin: () => void;
+  onSignUp: () => void;
+}
 
-  const {
-    currentUser,
-    profileImage,
-    loading,
-    logout,
-  } = useAuth();
+function getInitials(name: string) {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("") || "U";
+}
 
+export default function Navbar({ onLogin, onSignUp }: NavbarProps) {
+  const { currentUser, profileImage, loading, logout } = useAuth();
   const { showToast } = useToast();
+  const [signingOut, setSigningOut] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [avatarError, setAvatarError] = useState(false);
+  const profileMenuRef = useRef<HTMLDivElement>(null);
 
-  const [authOpen, setAuthOpen] =
-    useState(false);
-
-  const [scrolled, setScrolled] =
-    useState(false);
-
-  const [menuOpen, setMenuOpen] =
-    useState(false);
-
-  const [
-    failedAvatarUrl,
-    setFailedAvatarUrl,
-  ] = useState<string | null>(null);
-
-  const isHome = pathname === "/";
-
-  const isLearnSphereRoute =
-    pathname === "/" ||
-    pathname === "/profile" ||
-    pathname.startsWith("/subjects") ||
-    pathname.startsWith("/papers");
-
-  const name =
+  const displayName =
     currentUser?.user_metadata?.full_name ||
     currentUser?.user_metadata?.name ||
-    currentUser?.email ||
-    "User";
+    currentUser?.email?.split("@")[0] ||
+    "Member";
 
-  const firstName =
-    name.split(" ")[0] || "User";
+  const handleLogout = async () => {
+    if (signingOut) return;
+    setSigningOut(true);
 
-  const initial =
-    firstName[0]?.toUpperCase() || "U";
-
-  const metadataAvatar =
-    typeof currentUser?.user_metadata
-      ?.avatar_url === "string"
-      ? currentUser.user_metadata.avatar_url
-      : typeof currentUser?.user_metadata
-            ?.picture === "string"
-        ? currentUser.user_metadata.picture
-        : null;
-
-  const avatarUrl =
-    profileImage || metadataAvatar;
-
-  const showAvatar = Boolean(
-    avatarUrl &&
-      failedAvatarUrl !== avatarUrl
-  );
-
-  useEffect(() => {
-    setFailedAvatarUrl(null);
-  }, [avatarUrl]);
-
-  async function handleLogout() {
     try {
-      setMenuOpen(false);
-      setAuthOpen(false);
-
       await logout();
-
-      showToast(
-        "Signed out successfully",
-        "info"
-      );
-    } catch {
-      showToast(
-        "Unable to sign out. Please try again.",
-        "error"
-      );
+      setProfileOpen(false);
+      showToast("Signed out successfully.", "success");
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Unable to sign out right now.";
+      showToast(message, "error");
+    } finally {
+      setSigningOut(false);
     }
-  }
-
-  function openAuthModal() {
-    setMenuOpen(false);
-
-    if (loading) return;
-
-    if (currentUser) {
-      showToast(
-        "You are already signed in",
-        "info"
-      );
-      return;
-    }
-
-    setAuthOpen(true);
-  }
+  };
 
   useEffect(() => {
-    if (!isLearnSphereRoute) return;
+    if (!profileOpen) return;
 
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 60);
+    const handlePointerDown = (event: PointerEvent) => {
+      if (
+        profileMenuRef.current &&
+        !profileMenuRef.current.contains(event.target as Node)
+      ) {
+        setProfileOpen(false);
+      }
     };
 
-    handleScroll();
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setProfileOpen(false);
+    };
 
-    window.addEventListener(
-      "scroll",
-      handleScroll,
-      {
-        passive: true,
-      }
-    );
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      window.removeEventListener(
-        "scroll",
-        handleScroll
-      );
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isLearnSphereRoute]);
-
-  useEffect(() => {
-    if (currentUser && authOpen) {
-      setAuthOpen(false);
-    }
-  }, [currentUser, authOpen]);
-
-  const renderUserChip = (
-    mobile = false
-  ) => (
-    <Link
-      className="ls-user-chip"
-      href="/profile"
-      onClick={
-        mobile
-          ? () => setMenuOpen(false)
-          : undefined
-      }
-    >
-      {showAvatar && avatarUrl ? (
-        <>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={avatarUrl}
-            alt=""
-            referrerPolicy="no-referrer"
-            onError={() =>
-              setFailedAvatarUrl(avatarUrl)
-            }
-          />
-
-          <span>{firstName}</span>
-        </>
-      ) : (
-        <>
-          <b>{initial}</b>
-          <span>{firstName}</span>
-        </>
-      )}
-    </Link>
-  );
-
-  if (isLearnSphereRoute) {
-    const landingLinks = [
-      [
-        "Courses",
-        isHome
-          ? "#courses"
-          : "/#courses",
-      ],
-      [
-        "Live Classes",
-        isHome
-          ? "#features"
-          : "/#features",
-      ],
-      [
-        "PYQ Bank",
-        isHome
-          ? "#popular-courses"
-          : "/#popular-courses",
-      ],
-      [
-        "Placement",
-        isHome
-          ? "#placement"
-          : "/#placement",
-      ],
-    ];
-
-    return (
-      <>
-        <nav
-          className={`ls-navbar ${
-            scrolled || menuOpen
-              ? "scrolled"
-              : ""
-          }`}
-        >
-          <div className="ls-navbar-inner">
-            <Link
-              className="ls-wordmark"
-              href="/"
-            >
-              <span />
-              ClimbUP
-            </Link>
-
-            <div className="ls-nav-links">
-              {landingLinks.map(
-                ([label, href]) => (
-                  <a
-                    key={label}
-                    href={href}
-                    onClick={() =>
-                      setMenuOpen(false)
-                    }
-                  >
-                    {label}
-                  </a>
-                )
-              )}
-            </div>
-
-            <div className="ls-nav-actions">
-              {!loading && !currentUser && (
-                <>
-                  <button
-                    type="button"
-                    className="ls-login-btn"
-                    onClick={openAuthModal}
-                  >
-                    Log In
-                  </button>
-
-                  <button
-                    type="button"
-                    className="ls-nav-start"
-                    onClick={openAuthModal}
-                  >
-                    Start Free
-                  </button>
-                </>
-              )}
-
-              {!loading && currentUser && (
-                <>
-                  {renderUserChip()}
-
-                  <button
-                    type="button"
-                    className="ls-login-btn"
-                    onClick={handleLogout}
-                  >
-                    Sign Out
-                  </button>
-                </>
-              )}
-            </div>
-
-            <button
-              type="button"
-              className={`ls-menu-btn ${
-                menuOpen ? "open" : ""
-              }`}
-              onClick={() =>
-                setMenuOpen(
-                  (current) => !current
-                )
-              }
-              aria-label="Toggle navigation"
-              aria-expanded={menuOpen}
-            >
-              <span />
-              <span />
-              <span />
-            </button>
-          </div>
-
-          <div
-            className={`ls-mobile-drawer ${
-              menuOpen ? "open" : ""
-            }`}
-          >
-            {landingLinks.map(
-              ([label, href]) => (
-                <a
-                  key={label}
-                  href={href}
-                  onClick={() =>
-                    setMenuOpen(false)
-                  }
-                >
-                  {label}
-                </a>
-              )
-            )}
-
-            {!loading && !currentUser && (
-              <>
-                <button
-                  type="button"
-                  className="ls-login-btn"
-                  onClick={openAuthModal}
-                >
-                  Log In
-                </button>
-
-                <button
-                  type="button"
-                  className="ls-nav-start"
-                  onClick={openAuthModal}
-                >
-                  Start Free
-                </button>
-              </>
-            )}
-
-            {!loading && currentUser && (
-              <>
-                {renderUserChip(true)}
-
-                <button
-                  type="button"
-                  className="ls-login-btn"
-                  onClick={handleLogout}
-                >
-                  Sign Out
-                </button>
-              </>
-            )}
-          </div>
-        </nav>
-
-        <AuthModal
-          open={authOpen}
-          onClose={() =>
-            setAuthOpen(false)
-          }
-        />
-      </>
-    );
-  }
+  }, [profileOpen]);
 
   return (
-    <>
-      <nav
-        className="navbar"
-        id="navbar"
-      >
-        <Link
-          className="navbar-logo"
-          href="/"
-        >
-          <div className="logo-icon">
-            CU
-          </div>
+    <nav className="navbar" aria-label="Main navigation">
+      <Link className="brand" href="/" aria-label="ClimbUP home">
+        <Image src="/logo.png" alt="ClimbUP logo" width={52} height={52} priority />
+        <span>ClimbUP</span>
+      </Link>
 
-          Climb<span>UP</span>
-        </Link>
+      <div className="navLinks" aria-label="Home sections">
+        <Link className="active" href="/#home">Home</Link>
+        <Link href="/#features">Features</Link>
+        <Link href="/#insights">Insights</Link>
+        <Link href="/#placements">Placements</Link>
+        <Link href="/#about">About</Link>
+      </div>
 
-        <div className="navbar-nav">
-          <Link
-            className="nav-link"
-            href="/subjects"
-          >
-            Subjects
-          </Link>
-
-          {!loading && currentUser && (
-            <Link
-              className="nav-link"
-              href="/profile"
-            >
-              Profile
-            </Link>
-          )}
-        </div>
-
-        <div
-          className="navbar-right"
-          id="navbar-right"
-        >
-          {!loading && !currentUser && (
+      <div className="navActions">
+        {loading ? (
+          <span className="authStatus" role="status">Checking session...</span>
+        ) : currentUser ? (
+          <div className="profileMenuWrap" ref={profileMenuRef}>
             <button
               type="button"
-              className="btn btn-primary btn-sm"
-              id="login-btn"
-              onClick={openAuthModal}
+              className="profileTrigger"
+              aria-haspopup="menu"
+              aria-expanded={profileOpen}
+              aria-label={`Open ${displayName}'s profile menu`}
+              onClick={() => setProfileOpen((value) => !value)}
             >
-              Sign In
-            </button>
-          )}
-
-          {!loading && currentUser && (
-            <>
-              <Link
-                className="user-avatar-btn"
-                href="/profile"
-                id="user-avatar-btn"
-              >
-                {showAvatar &&
-                avatarUrl ? (
-                  <>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={avatarUrl}
-                      alt=""
-                      referrerPolicy="no-referrer"
-                      onError={() =>
-                        setFailedAvatarUrl(
-                          avatarUrl
-                        )
-                      }
-                    />
-
-                    <span>{firstName}</span>
-                  </>
+              <span className="userAvatar" aria-hidden>
+                {profileImage && !avatarError ? (
+                  <Image
+                    src={profileImage}
+                    alt=""
+                    width={44}
+                    height={44}
+                    onError={() => setAvatarError(true)}
+                  />
                 ) : (
-                  <>
-                    <div className="avatar-placeholder">
-                      {initial}
-                    </div>
-
-                    <span>{firstName}</span>
-                  </>
+                  getInitials(displayName)
                 )}
-              </Link>
+              </span>
+              <span className="userIdentity">
+                <strong>{displayName}</strong>
+                <small>View profile</small>
+              </span>
+              <span className={`profileChevron ${profileOpen ? "open" : ""}`} aria-hidden>⌄</span>
+            </button>
 
-              <button
-                type="button"
-                className="btn btn-ghost btn-sm"
-                id="logout-btn"
-                onClick={handleLogout}
-              >
-                Sign Out
-              </button>
-            </>
-          )}
-        </div>
-      </nav>
-
-      <AuthModal
-        open={authOpen}
-        onClose={() =>
-          setAuthOpen(false)
-        }
-      />
-    </>
+            {profileOpen && (
+              <div className="profileDropdown" role="menu">
+                <div className="profileDropdownHeader">
+                  <strong>{displayName}</strong>
+                  <span>{currentUser.email}</span>
+                </div>
+                <Link role="menuitem" href="/profile" onClick={() => setProfileOpen(false)}>
+                  <span aria-hidden>◉</span>
+                  Open profile
+                </Link>
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="profileLogout"
+                  onClick={handleLogout}
+                  disabled={signingOut}
+                >
+                  <span aria-hidden>↗</span>
+                  {signingOut ? "Signing out..." : "Log out"}
+                </button>
+              </div>
+            )}
+          </div>
+        ) : (
+          <>
+            <button type="button" className="loginBtn" onClick={onLogin}>Log In</button>
+            <button type="button" className="signupBtn" onClick={onSignUp}>Sign Up</button>
+          </>
+        )}
+      </div>
+    </nav>
   );
 }
