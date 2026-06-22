@@ -1,3 +1,4 @@
+import Footer from "@/components/Footer";
 import HeroSection from "@/components/HeroSection";
 import HomeSections from "@/components/HomeSections";
 
@@ -6,6 +7,7 @@ export default function Page() {
     <main>
       <HeroSection />
       <HomeSections />
+      <Footer />
     </main>
   );
 }

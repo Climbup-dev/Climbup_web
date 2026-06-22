@@ -22,6 +22,7 @@ interface AuthModalProps {
   open: boolean;
   onClose: () => void;
   initialMode?: "login" | "register";
+  initialEmail?: string;
 }
 
 type AuthMode = "login" | "register" | "forgot";
@@ -190,6 +191,7 @@ export default function AuthModal({
   open,
   onClose,
   initialMode = "login",
+  initialEmail = "",
 }: AuthModalProps) {
   const {
     currentUser,
@@ -211,7 +213,7 @@ export default function AuthModal({
   const [mode, setMode] = useState<AuthMode>(initialMode);
   const [step, setStep] = useState<AuthStep>("form");
   const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(() => normalizeEmail(initialEmail));
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [otp, setOtp] = useState("");
@@ -244,7 +246,7 @@ export default function AuthModal({
     setMode(initialMode);
     setStep("form");
     setFullName("");
-    setEmail("");
+    setEmail(normalizeEmail(initialEmail));
     setPassword("");
     setConfirmPassword("");
     setOtp("");
@@ -254,7 +256,7 @@ export default function AuthModal({
     setResendCooldown(0);
     otpRequestRef.current = false;
     otpVerificationRef.current = false;
-  }, [clearMessages, initialMode]);
+  }, [clearMessages, initialEmail, initialMode]);
 
   const showAuthError = useCallback(
     (authError: unknown, fallback: string) => {
