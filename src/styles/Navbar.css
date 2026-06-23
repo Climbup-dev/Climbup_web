@@ -56,7 +56,7 @@
 .profileDropdownHeader { display: grid; gap: 3px; padding: 10px 11px 13px; margin-bottom: 7px; border-bottom: 1px solid rgba(158, 248, 220, 0.14); }
 .profileDropdownHeader strong, .profileDropdownHeader span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .profileDropdownHeader strong { font-size: 15px; }
-.profileDropdownHeader span { color: rgba(255, 255, 255, 0.56); font-size: 12px; }
+.profileDropdownHeader span { color: rgba(255, 255, 255, 0.72); font-size: 12px; }
 .profileDropdown a, .profileDropdown button { width: 100%; min-height: 43px; padding: 0 11px; display: flex; align-items: center; gap: 10px; color: rgba(255, 255, 255, 0.84); background: transparent; border: 0; border-radius: 10px; font: inherit; font-size: 14px; font-weight: 700; text-decoration: none; cursor: pointer; transition: color 160ms ease, background 160ms ease; }
 .profileDropdown a:hover, .profileDropdown a:focus-visible { color: #9ef8dc; background: rgba(56, 211, 153, 0.1); outline: 0; }
 .profileDropdown .profileLogout { color: #fecaca; }

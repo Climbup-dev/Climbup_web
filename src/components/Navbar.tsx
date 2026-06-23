@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import { useAuth } from "@/hooks/useAuth";
@@ -25,6 +26,7 @@ function getInitials(name: string) {
 export default function Navbar({ onLogin, onSignUp }: NavbarProps) {
   const { currentUser, profileImage, loading, logout } = useAuth();
   const { showToast } = useToast();
+  const pathname = usePathname();
   const [signingOut, setSigningOut] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [avatarError, setAvatarError] = useState(false);
@@ -86,11 +88,12 @@ export default function Navbar({ onLogin, onSignUp }: NavbarProps) {
       </Link>
 
       <div className="navLinks" aria-label="Home sections">
-        <Link className="active" href="/#home">Home</Link>
-        <Link href="/#features">Features</Link>
-        <Link href="/#insights">Insights</Link>
-        <Link href="/#placements">Placements</Link>
-        <Link href="/#about">About</Link>
+        <div className="navLinks" aria-label="Main sections">
+          <Link className={pathname === "/" ? "active" : undefined} href="/">Home</Link>
+          <Link className={pathname === "/pyqs" ? "active" : undefined} href="/pyqs">PYQs</Link>
+          <Link className={pathname === "/discoveries" ? "active" : undefined} href="/discoveries">Discoveries</Link>
+          <Link className={pathname === "/jobs" ? "active" : undefined} href="/jobs">Job Prepration</Link>
+        </div>
       </div>
 
       <div className="navActions">
