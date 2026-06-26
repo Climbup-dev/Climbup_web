@@ -191,9 +191,13 @@ function getAuthorName(
 ) {
   return (
     sanitizeText(profile?.full_name) ||
-    (currentUser?.id === authorId ? getUserMetadataName(currentUser) : "") ||
+    (currentUser && currentUser.id === authorId
+      ? getUserMetadataName(currentUser)
+      : "") ||
     getEmailName(profile?.email) ||
-    (currentUser?.id === authorId ? getEmailName(currentUser.email) : "") ||
+    (currentUser && currentUser.id === authorId
+      ? getEmailName(currentUser.email)
+      : "") ||
     "Student"
   );
 }
