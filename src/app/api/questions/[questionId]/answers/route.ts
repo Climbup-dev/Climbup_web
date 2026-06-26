@@ -269,7 +269,9 @@ function getAuthorName(
   );
 }
 
-function getUserMetadataName(user: CurrentUser) {
+function getUserMetadataName(user: CurrentUser | null) {
+  if (!user) return "";
+
   return (
     sanitizeText(user.user_metadata?.full_name) ||
     sanitizeText(user.user_metadata?.name)
