@@ -2,7 +2,6 @@
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import Footer from "@/components/Footer";
@@ -35,7 +34,6 @@ export default function AppPageShell({
   primaryAction,
   cards,
 }: AppPageShellProps) {
-  const router = useRouter();
   const { currentUser, loading, passwordRecovery } = useAuth();
   const [authOpen, setAuthOpen] = useState(false);
   const [entryMode, setEntryMode] = useState<EntryMode>("login");
@@ -50,7 +48,7 @@ export default function AppPageShell({
     setAuthOpen(false);
 
     if (!currentUser) {
-      router.push("/");
+      window.location.assign("/");
     }
   };
 
@@ -79,7 +77,7 @@ export default function AppPageShell({
               >
                 {primaryAction}
               </button>
-              <Link href="/">Back to Home</Link>
+              <Link href="/" prefetch={false}>Back to Home</Link>
             </div>
           </div>
         </section>

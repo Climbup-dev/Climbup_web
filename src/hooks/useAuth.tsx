@@ -148,7 +148,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setCurrentUser(user);
         await loadUserProfile(user);
       } catch (error) {
-        console.error("Unable to restore session:", error);
+        if (process.env.NODE_ENV !== "production") {
+          const message =
+            error instanceof Error ? error.message : "Unknown session error";
+          console.warn(`Unable to restore session: ${message}`);
+        }
 
         if (active && mountedRef.current) {
           setCurrentUser(null);
@@ -363,6 +367,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         window.localStorage.removeItem("climbup:oauth:result");
         popup.location.replace(data.url);
       });
+
+      if (!popup.closed) {
+        popup.close();
+      }
 
       const {
         data: { session: signedInSession },

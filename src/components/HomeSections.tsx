@@ -2,7 +2,6 @@
 
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { useAuth } from "@/hooks/useAuth";
@@ -62,7 +61,6 @@ const teamMembers = [
 ];
 
 export default function HomeSections() {
-  const router = useRouter();
   const { currentUser, loading, passwordRecovery } = useAuth();
 
   const [authOpen, setAuthOpen] = useState(false);
@@ -77,7 +75,7 @@ export default function HomeSections() {
     if (loading) return;
 
     if (currentUser) {
-      router.push(href);
+      window.location.assign(href);
       return;
     }
 

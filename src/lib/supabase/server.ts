@@ -3,6 +3,8 @@ import type { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 
+allowLocalSupabaseTlsInspection();
+
 export async function createClient() {
   if (!isSupabaseConfigured()) {
     throw new Error(
@@ -32,6 +34,15 @@ export async function createClient() {
       },
     }
   );
+}
+
+function allowLocalSupabaseTlsInspection() {
+  if (
+    process.env.NODE_ENV === "development" &&
+    process.env.CLIMBUP_STRICT_SUPABASE_TLS !== "true"
+  ) {
+    process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+  }
 }
 
 export function createRouteHandlerClient(

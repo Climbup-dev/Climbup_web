@@ -55,7 +55,7 @@ export default function Footer() {
 
         <section className="footerMain">
           <div className="footerBrand">
-            <Link className="footerLogo" href="/">
+            <Link className="footerLogo" href="/" prefetch={false}>
               <Image src="/logo.png" alt="ClimbUP" width={52} height={52} />
               <span>ClimbUP</span>
             </Link>
@@ -79,7 +79,11 @@ export default function Footer() {
                 <ul>
                   {group.links.map(([label, href]) => (
                     <li key={label}>
-                      <Link href={href}>{label}</Link>
+                      {href.startsWith("#") || href.includes("#") ? (
+                        <a href={href}>{label}</a>
+                      ) : (
+                        <Link href={href} prefetch={false}>{label}</Link>
+                      )}
                     </li>
                   ))}
                 </ul>

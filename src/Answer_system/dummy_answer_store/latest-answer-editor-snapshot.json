@@ -1,0 +1,168 @@
+{
+  "schema": "climbup.answer-editor.snapshot",
+  "schemaVersion": 1,
+  "savedAt": "2026-06-26T06:14:53.873Z",
+  "question": "Discuss in detail TCP -IP reference model.",
+  "visibility": "public",
+  "feedback": "like",
+  "answer": {
+    "question": "Discuss in detail TCP -IP reference model.",
+    "blocks": [
+      {
+        "id": "markdown-1",
+        "type": "markdown",
+        "title": "Introduction and Definition",
+        "order": 0,
+        "content": "The TCP-IP reference model is a conceptual framework us**## - ed to understand the architecture of the internet. ==It is a simplified model that consists of four layers: Application Layer, Transport Layer, Internet Layer, and Link Layer. T==he TCP-IP model is used to explain how data is transmitted over the internet and how different devices communicate with each other. The model is based on the concept of layering, where each layer has a specific function and communicates with the layers above and below it. The TCP-IP model is widely used in computer networking and is the basis for the internet protocol suite.**"
+      },
+      {
+        "id": "image-2",
+        "type": "image",
+        "title": "Architecture / Model Diagram",
+        "order": 1,
+        "url": "https://static.afteracademy.com/images/what-is-the-tcp-ip-model-and-how-it-works-tcp-ip-model-four-layers-54cb912bbb0e51ff.jpg",
+        "alt": "Architecture / Model Diagram",
+        "caption": "Architecture / Model Diagram",
+        "search_query": "TCP-IP reference model diagram",
+        "recommended_websites": [
+          "Wikipedia",
+          "GeeksforGeeks"
+        ]
+      },
+      {
+        "id": "table-3",
+        "type": "table",
+        "title": "Layer-wise / Type-wise Explanation",
+        "order": 2,
+        "columns": [
+          "Layer / Type",
+          "Function",
+          "Important Points",
+          "Example"
+        ],
+        "rows": [
+          [
+            "Application Layer",
+            "Provides services to end-user applications",
+            "HTTP, FTP, SMTP, DNS",
+            "Web browsing, file transfer, email"
+          ],
+          [
+            "Transport Layer",
+            "Provides reliable data transfer between devices",
+            "TCP, UDP, port numbers",
+            "Ensuring data arrives in the correct order"
+          ],
+          [
+            "Internet Layer",
+            "Routes data between networks",
+            "IP addresses, routing tables",
+            "Routing data packets between networks"
+          ],
+          [
+            "Link Layer",
+            "Provides error-free transfer of data frames between two devices on the same network",
+            "Ethernet, Wi-Fi, MAC addresses",
+            "Transferring data between devices on a LAN"
+          ],
+          [
+            "Physical Layer",
+            "Defines the physical means of transmitting data between devices",
+            "Cables, wireless transmission, network interfaces",
+            "Transmitting data over a physical medium"
+          ]
+        ]
+      },
+      {
+        "id": "steps-4",
+        "type": "steps",
+        "title": "Flow or Interaction Between Levels",
+        "order": 3,
+        "items": [
+          {
+            "id": "step-1",
+            "title": "",
+            "content": "The Application Layer receives data from the user and passes it to the Transport Layer."
+          },
+          {
+            "id": "step-2",
+            "title": "",
+            "content": "The Transport Layer breaks the data into smaller segments and assigns a sequence number to each segment."
+          },
+          {
+            "id": "step-3",
+            "title": "",
+            "content": "The Transport Layer passes the segments to the Internet Layer, which adds the source and destination IP addresses to each segment."
+          },
+          {
+            "id": "step-4",
+            "title": "",
+            "content": "The Internet Layer passes the segments to the Link Layer, which adds the source and destination MAC addresses to each segment."
+          },
+          {
+            "id": "step-5",
+            "title": "",
+            "content": "The Link Layer transmits the segments over the physical medium to the destination device."
+          },
+          {
+            "id": "step-6",
+            "title": "",
+            "content": "The destination device receives the segments and passes them to the Link Layer, which removes the MAC addresses."
+          },
+          {
+            "id": "step-7",
+            "title": "",
+            "content": "The Link Layer passes the segments to the Internet Layer, which removes the IP addresses."
+          },
+          {
+            "id": "step-8",
+            "title": "",
+            "content": "The Internet Layer passes the segments to the Transport Layer, which reassembles the original data."
+          },
+          {
+            "id": "step-9",
+            "title": "",
+            "content": "The Transport Layer passes the reassembled data to the Application Layer, which delivers it to the user."
+          }
+        ]
+      },
+      {
+        "id": "markdown-5",
+        "type": "markdown",
+        "title": "Advantages, Limitations and Applications",
+        "order": 4,
+        "content": "The TCP-IP model has several advantages, including its ability to provide a standardized framework for communication between different devices and networks. It also allows for the use of multiple protocols and services, making it a flexible and scalable model. However, the TCP-IP model also has some limitations, such as its lack of security features and its vulnerability to attacks. Despite these limitations, the TCP-IP model is widely used in many applications, including the internet, local area networks, and wide area networks. It is also used in many devices, including computers, smartphones, and routers."
+      },
+      {
+        "id": "markdown-6",
+        "type": "markdown",
+        "title": "Exam-Focused Points",
+        "order": 5,
+        "content": "Some important points to note about the TCP-IP model include its layering structure, the functions of each layer, and the protocols used in each layer. It is also important to understand how the layers interact with each other and how data is transmitted between them. Additionally, it is important to be aware of the advantages and limitations of the TCP-IP model, as well as its applications and uses. Some common mistakes to avoid include confusing the TCP-IP model with the OSI model, and not understanding the differences between the layers and their functions."
+      },
+      {
+        "id": "markdown-7",
+        "type": "markdown",
+        "title": "Conclusion",
+        "order": 6,
+        "content": "In conclusion, the TCP-IP model is a fundamental concept in computer networking that provides a standardized framework for communication between different devices and networks. It consists of four layers, each with its own specific function, and is widely used in many applications. Understanding the TCP-IP model is essential for anyone working in the field of computer networking, and it is an important topic for exams and other assessments. By understanding the layering structure, the functions of each layer, and the protocols used in each layer, individuals can gain a deeper understanding of how data is transmitted over the internet and how different devices communicate with each other."
+      }
+    ]
+  },
+  "rendererContract": {
+    "source": "src/Answer_system/Ans/AnswerRenderer.tsx",
+    "blockTypes": [
+      "markdown",
+      "image",
+      "table",
+      "steps",
+      "code",
+      "mermaid"
+    ],
+    "mermaid": {
+      "inputField": "content",
+      "renderMode": "client",
+      "renderer": "src/Answer_system/Ans/MermaidBlock.tsx"
+    }
+  }
+}

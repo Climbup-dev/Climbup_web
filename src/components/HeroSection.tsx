@@ -2,7 +2,6 @@
 
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 import Navbar from "@/components/Navbar";
@@ -164,9 +163,9 @@ export default function HeroSection() {
                 <strong aria-hidden="true">→</strong>
               </button>
 
-              <Link className="heroSecondaryLink" href="#features">
+              <a className="heroSecondaryLink" href="#features">
                 Explore Platform
-              </Link>
+              </a>
             </div>
           )}
         </div>
