@@ -49,6 +49,8 @@ interface UserProfileRow {
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
+const GOOGLE_SESSION_RESTORE_ATTEMPTS = 20;
+const GOOGLE_SESSION_RESTORE_DELAY_MS = 250;
 
 function assertSupabaseConfigured() {
   if (!isSupabaseConfigured()) {
@@ -73,6 +75,25 @@ function getMetadataImage(user: SupabaseUser | null): string | null {
   }
 
   return null;
+}
+
+function getMetadataName(user: SupabaseUser): string {
+  const fullName = user.user_metadata?.full_name;
+  const name = user.user_metadata?.name;
+
+  if (typeof fullName === "string" && fullName.trim()) {
+    return fullName.trim();
+  }
+
+  if (typeof name === "string" && name.trim()) {
+    return name.trim();
+  }
+
+  return user.email?.split("@")[0] || "ClimbUP member";
+}
+
+function wait(ms: number) {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -125,6 +146,53 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     [supabase]
   );
+
+  const syncGoogleUserProfile = useCallback(
+    async (user: SupabaseUser | null) => {
+      if (!user) return;
+
+      const provider = user.app_metadata?.provider;
+      if (provider !== "google") return;
+
+      try {
+        await supabase.from("users").upsert(
+          {
+            user_id: user.id,
+            full_name: getMetadataName(user),
+            email: user.email || "",
+            profile_image: getMetadataImage(user),
+            reputation: 0,
+          },
+          { onConflict: "user_id" }
+        );
+      } catch {
+        // Google auth must still succeed even if profile sync is unavailable.
+      }
+    },
+    [supabase]
+  );
+
+  const waitForRestoredGoogleSession = useCallback(async () => {
+    let lastError: unknown = null;
+
+    for (let attempt = 0; attempt < GOOGLE_SESSION_RESTORE_ATTEMPTS; attempt += 1) {
+      const {
+        data: { session },
+        error,
+      } = await supabase.auth.getSession();
+
+      if (error) {
+        lastError = error;
+      } else if (session?.user) {
+        return session;
+      }
+
+      await wait(GOOGLE_SESSION_RESTORE_DELAY_MS);
+    }
+
+    if (lastError) throw lastError;
+    return null;
+  }, [supabase]);
 
   const refreshProfile = useCallback(async () => {
     await loadUserProfile(currentUser);
@@ -373,15 +441,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       const {
-        data: { session: signedInSession },
-        error: signedInSessionError,
+        data: { session: immediateSession },
+        error: immediateSessionError,
       } = await supabase.auth.getSession();
 
-      if (signedInSessionError) throw signedInSessionError;
+      if (immediateSessionError) throw immediateSessionError;
+      const signedInSession =
+        immediateSession || (await waitForRestoredGoogleSession());
+
       if (!signedInSession?.user) {
         throw new Error("Google sign-in completed, but the session was not restored.");
       }
 
+      await syncGoogleUserProfile(signedInSession.user);
       setCurrentUser(signedInSession.user);
       await loadUserProfile(signedInSession.user);
     } catch (error) {
@@ -391,7 +463,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       document.cookie =
         "climbup_oauth_popup=; Path=/; Max-Age=0; SameSite=Lax";
     }
-  }, [loadUserProfile, supabase]);
+  }, [loadUserProfile, supabase, syncGoogleUserProfile, waitForRestoredGoogleSession]);
 
   const loginWithEmail = useCallback(
     async (email: string, password: string) => {

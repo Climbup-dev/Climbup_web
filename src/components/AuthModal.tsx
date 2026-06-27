@@ -661,11 +661,11 @@ export default function AuthModal({
 
     try {
       const googleLogin = login();
-      startSmoothClose();
       await googleLogin;
       if (!mountedRef.current) return;
 
       showToast("Signed in successfully", "success");
+      startSmoothClose();
     } catch (authError) {
       if (mountedRef.current) {
         showAuthError(authError, "Google sign-in could not be completed.");

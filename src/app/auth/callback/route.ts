@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import type { User } from "@supabase/supabase-js";
 
 import { createRouteHandlerClient } from "@/lib/supabase/server";
 
@@ -22,6 +23,36 @@ function popupUrl(origin: string, status: "success" | "error", message?: string)
   url.searchParams.set("status", status);
   if (message) url.searchParams.set("message", message);
   return url;
+}
+
+function getMetadataName(user: User): string {
+  const fullName = user.user_metadata?.full_name;
+  const name = user.user_metadata?.name;
+
+  if (typeof fullName === "string" && fullName.trim()) {
+    return fullName.trim();
+  }
+
+  if (typeof name === "string" && name.trim()) {
+    return name.trim();
+  }
+
+  return user.email?.split("@")[0] || "ClimbUP member";
+}
+
+function getMetadataImage(user: User): string | null {
+  const avatarUrl = user.user_metadata?.avatar_url;
+  const picture = user.user_metadata?.picture;
+
+  if (typeof avatarUrl === "string" && avatarUrl.trim()) {
+    return avatarUrl.trim();
+  }
+
+  if (typeof picture === "string" && picture.trim()) {
+    return picture.trim();
+  }
+
+  return null;
 }
 
 export async function GET(request: Request) {
@@ -59,6 +90,17 @@ export async function GET(request: Request) {
         "error",
         "Email signups must use the 6-digit OTP code, not a magic link."
       ).toString()
+    );
+  } else if (user?.app_metadata?.provider === "google") {
+    await supabase.from("users").upsert(
+      {
+        user_id: user.id,
+        full_name: getMetadataName(user),
+        email: user.email || "",
+        profile_image: getMetadataImage(user),
+        reputation: 0,
+      },
+      { onConflict: "user_id" }
     );
   }
 
