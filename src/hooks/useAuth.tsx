@@ -387,10 +387,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (result?.type !== "climbup:oauth") return;
 
           if (result.status === "success") {
+            popup.close();
             finish(resolve);
             return;
           }
 
+          popup.close();
           finish(() =>
             reject(
               new Error(result.message || "Google sign-in was not completed.")

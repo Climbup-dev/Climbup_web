@@ -27,9 +27,15 @@ export default function AuthPopupPage() {
       window.opener.postMessage(result, window.location.origin);
     }
 
-    window.close();
-    const closeRetry = window.setTimeout(() => window.close(), 150);
-    return () => window.clearTimeout(closeRetry);
+    const closeTimers = [0, 100, 300, 700, 1500].map((delay) =>
+      window.setTimeout(() => {
+        window.close();
+      }, delay)
+    );
+
+    return () => {
+      closeTimers.forEach((timer) => window.clearTimeout(timer));
+    };
   }, []);
 
   return (
