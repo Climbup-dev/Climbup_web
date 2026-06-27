@@ -23,6 +23,16 @@ type AnswerToolbarProps = {
   onToggleTheme: () => void;
 };
 
+type AnswerFeedbackActionsProps = Pick<
+  AnswerToolbarProps,
+  "feedback" | "onShare" | "onLike" | "onDislike"
+> & {
+  likesCount?: number;
+  dislikesCount?: number;
+  reactionSaving?: boolean;
+  canReact?: boolean;
+};
+
 type ToolIconKind =
   | "improve"
   | "pdf"
@@ -325,10 +335,13 @@ export function AnswerFeedbackActions({
   onShare,
   onLike,
   onDislike,
-}: Pick<
-  AnswerToolbarProps,
-  "feedback" | "onShare" | "onLike" | "onDislike"
->) {
+  likesCount = 0,
+  dislikesCount = 0,
+  reactionSaving = false,
+  canReact = true,
+}: AnswerFeedbackActionsProps) {
+  const reactionsDisabled = reactionSaving;
+
   return (
     <div className="answer-feedback-actions">
       <button
@@ -342,26 +355,34 @@ export function AnswerFeedbackActions({
       </button>
 
       <button
-        className={`toolbar-btn icon-action ${
+        className={`toolbar-btn icon-action reaction-action ${
           feedback === "like" ? "active-like" : ""
         }`}
+        aria-pressed={feedback === "like"}
+        disabled={reactionsDisabled}
         onClick={onLike}
-        aria-label="Like"
-        data-tooltip="Like"
+        aria-label={`Like answer (${likesCount} likes)`}
+        data-tooltip={canReact ? `Like (${likesCount})` : "Open a saved answer to react"}
       >
         <ToolIcon kind="like" />
+        <span className="reaction-count">{likesCount}</span>
         <ToolLabel>Like</ToolLabel>
       </button>
 
       <button
-        className={`toolbar-btn icon-action ${
+        className={`toolbar-btn icon-action reaction-action ${
           feedback === "dislike" ? "active-dislike" : ""
         }`}
+        aria-pressed={feedback === "dislike"}
+        disabled={reactionsDisabled}
         onClick={onDislike}
-        aria-label="Dislike"
-        data-tooltip="Dislike"
+        aria-label={`Dislike answer (${dislikesCount} dislikes)`}
+        data-tooltip={
+          canReact ? `Dislike (${dislikesCount})` : "Open a saved answer to react"
+        }
       >
         <ToolIcon kind="dislike" />
+        <span className="reaction-count">{dislikesCount}</span>
         <ToolLabel>Dislike</ToolLabel>
       </button>
     </div>

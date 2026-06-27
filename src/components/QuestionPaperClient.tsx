@@ -153,7 +153,7 @@ export default function QuestionPaperClient({ paperId }: { paperId: string }) {
         ) : (
           <section className="officialPaper">
             <header className="officialPaperHeader">
-              <p className="paperLabel">Official Question Paper</p>
+              <p className="paperLabel">Question Paper</p>
 
               <h1>{paper.paper_title}</h1>
 

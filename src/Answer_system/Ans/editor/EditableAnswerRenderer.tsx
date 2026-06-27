@@ -10,11 +10,21 @@ import { generateAnswerPdfDocument } from "./answerPdf";
 import BlockEditor from "./BlockEditor";
 import { createAnswerEditorSnapshot } from "./answerSnapshot";
 import { saveDummyAnswerSnapshot } from "./dummyAnswerStorage";
+import { useAuth } from "@/hooks/useAuth";
+import { createClient } from "@/lib/supabase/client";
 
 type Feedback = "like" | "dislike" | null;
 type AnswerTheme = "light" | "dark";
 type PopupKind = "answers" | "insights";
 type SaveMessageTone = "success" | "error";
+type ReactionCounts = {
+  likes: number;
+  dislikes: number;
+};
+type LikeReactionRow = {
+  user_id: string;
+  reaction_type: "like" | "dislike" | string | null;
+};
 type ImprovedAnswerCard = {
   id: string;
   source: "ai" | "student";
@@ -69,12 +79,19 @@ export default function EditableAnswerRenderer({
   answerId = "",
   onSave = undefined,
 }: EditableAnswerRendererProps) {
+  const { currentUser } = useAuth();
+  const supabase = useMemo(() => createClient(), []);
   const normalized = useMemo(() => normalizeAnswerData(data), [data]);
   const initialInsightAnswerId = answerId || "";
 
   const [isEditing, setIsEditing] = useState(false);
   const [editableBlocks, setEditableBlocks] = useState(() => normalized.blocks);
   const [feedback, setFeedback] = useState<Feedback>(null);
+  const [reactionCounts, setReactionCounts] = useState<ReactionCounts>({
+    likes: 0,
+    dislikes: 0,
+  });
+  const [reactionSaving, setReactionSaving] = useState(false);
   const [isPublic, setIsPublic] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
   const [saveMessageTone, setSaveMessageTone] =
@@ -112,6 +129,47 @@ export default function EditableAnswerRenderer({
 
     return () => window.clearTimeout(timeout);
   }, [saveMessage, saveMessageTone]);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadReactions() {
+      if (!currentAnswerId) {
+        setFeedback(null);
+        setReactionCounts({ likes: 0, dislikes: 0 });
+        return;
+      }
+
+      const { data: rows, error } = await supabase
+        .from("likes")
+        .select("user_id, reaction_type")
+        .eq("answer_id", currentAnswerId);
+
+      if (!active) return;
+
+      if (error) {
+        console.error("Unable to load reactions:", error.message);
+        return;
+      }
+
+      const reactions = (rows || []) as LikeReactionRow[];
+      const likes = reactions.filter((r) => r.reaction_type === "like").length;
+      const dislikes = reactions.filter((r) => r.reaction_type === "dislike").length;
+      const myReaction =
+        reactions.find((r) => r.user_id === currentUser?.id)?.reaction_type || null;
+
+      setReactionCounts({ likes, dislikes });
+      setFeedback(
+        myReaction === "like" || myReaction === "dislike" ? myReaction : null
+      );
+    }
+
+    loadReactions();
+
+    return () => {
+      active = false;
+    };
+  }, [currentAnswerId, currentUser?.id, supabase]);
 
   const updateBlock = (index: number, updatedBlock: any) => {
     setEditableBlocks((prev: any[]) =>
@@ -250,12 +308,72 @@ export default function EditableAnswerRenderer({
     }
   };
 
+  const saveReaction = async (reactionType: Exclude<Feedback, null>) => {
+    if (reactionSaving) return;
+
+    if (!currentUser) {
+      setSaveMessageTone("error");
+      setSaveMessage("Please login to react.");
+      return;
+    }
+
+    if (!currentAnswerId) {
+      setSaveMessageTone("error");
+      setSaveMessage("Open a saved answer before reacting.");
+      return;
+    }
+
+    const previousReaction = feedback;
+    const previousCounts = reactionCounts;
+    const nextReaction = previousReaction === reactionType ? null : reactionType;
+
+    setReactionSaving(true);
+    setFeedback(nextReaction);
+    setReactionCounts(
+      getOptimisticReactionCounts(previousCounts, previousReaction, nextReaction)
+    );
+
+    try {
+      if (nextReaction) {
+        const { error } = await supabase.from("likes").upsert(
+          {
+            answer_id: currentAnswerId,
+            user_id: currentUser.id,
+            reaction_type: nextReaction,
+          },
+          {
+            onConflict: "user_id,answer_id",
+          }
+        );
+
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("likes")
+          .delete()
+          .eq("answer_id", currentAnswerId)
+          .eq("user_id", currentUser.id);
+
+        if (error) throw error;
+      }
+    } catch (error) {
+      setFeedback(previousReaction);
+      setReactionCounts(previousCounts);
+      setSaveMessageTone("error");
+      setSaveMessage(
+        error instanceof Error ? error.message : "Unable to save reaction."
+      );
+    } finally {
+      setReactionSaving(false);
+    }
+  };
+
   const handleLike = () => {
-    setFeedback((prev) => (prev === "like" ? null : "like"));
+    saveReaction("like");
   };
 
   const handleDislike = () => {
-    setFeedback((prev) => (prev === "dislike" ? null : "dislike"));
+    saveReaction("dislike");
   };
 
   const handleMakePublic = () => {
@@ -538,6 +656,10 @@ export default function EditableAnswerRenderer({
 
         <AnswerFeedbackActions
           feedback={feedback}
+          likesCount={reactionCounts.likes}
+          dislikesCount={reactionCounts.dislikes}
+          reactionSaving={reactionSaving}
+          canReact={Boolean(currentAnswerId && currentUser)}
           onShare={handleShare}
           onLike={handleLike}
           onDislike={handleDislike}
@@ -580,6 +702,10 @@ export default function EditableAnswerRenderer({
 
         <AnswerFeedbackActions
           feedback={feedback}
+          likesCount={reactionCounts.likes}
+          dislikesCount={reactionCounts.dislikes}
+          reactionSaving={reactionSaving}
+          canReact={Boolean(currentAnswerId && currentUser)}
           onShare={handleShare}
           onLike={handleLike}
           onDislike={handleDislike}
@@ -885,6 +1011,32 @@ function normalizeAnswerData(data: any) {
       "Question unavailable",
     blocks: [],
   };
+}
+
+function getOptimisticReactionCounts(
+  counts: ReactionCounts,
+  previousReaction: Feedback,
+  nextReaction: Feedback
+): ReactionCounts {
+  const nextCounts = { ...counts };
+
+  if (previousReaction === "like") {
+    nextCounts.likes = Math.max(0, nextCounts.likes - 1);
+  }
+
+  if (previousReaction === "dislike") {
+    nextCounts.dislikes = Math.max(0, nextCounts.dislikes - 1);
+  }
+
+  if (nextReaction === "like") {
+    nextCounts.likes += 1;
+  }
+
+  if (nextReaction === "dislike") {
+    nextCounts.dislikes += 1;
+  }
+
+  return nextCounts;
 }
 
 function createEmptyBlock(type: string) {
