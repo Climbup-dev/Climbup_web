@@ -215,26 +215,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     let active = true;
 
-    const finishPopupAuth = async () => {
+    const finishPopupAuth = () => {
       const result = {
         type: "climbup:oauth",
         status: oauthError ? "error" : "success",
         message: oauthError || undefined,
+        code: code || undefined,
       };
-
-      try {
-        if (code && !oauthError) {
-          const { error } = await supabase.auth.exchangeCodeForSession(code);
-          if (error) {
-            result.status = "error";
-            result.message = error.message;
-          }
-        }
-      } catch (error) {
-        result.status = "error";
-        result.message =
-          error instanceof Error ? error.message : "Google sign-in failed.";
-      }
 
       if (!active) return;
 
@@ -249,12 +236,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       window.setTimeout(() => closePopupWindow(window), 500);
     };
 
-    void finishPopupAuth();
+    finishPopupAuth();
 
     return () => {
       active = false;
     };
-  }, [supabase]);
+  }, []);
 
   const refreshProfile = useCallback(async () => {
     await loadUserProfile(currentUser);
@@ -440,16 +427,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           callback();
         };
 
-        const handleResult = (result: {
+        const handleResult = async (result: {
           type?: string;
           status?: string;
           message?: string;
+          code?: string;
         }) => {
           if (result?.type !== "climbup:oauth") return;
 
           if (result.status === "success") {
             closePopupWindow(popup);
-            finish(resolve);
+            try {
+              if (result.code) {
+                const { error } = await supabase.auth.exchangeCodeForSession(
+                  result.code
+                );
+
+                if (error) throw error;
+              }
+
+              finish(resolve);
+            } catch (error) {
+              finish(() =>
+                reject(
+                  error instanceof Error
+                    ? error
+                    : new Error("Google sign-in could not be completed.")
+                )
+              );
+            }
             return;
           }
 
@@ -463,18 +469,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         const handleMessage = (event: MessageEvent) => {
           if (event.source !== popup) return;
-          handleResult(event.data);
+          void handleResult(event.data);
         };
 
         const handleChannelMessage = (event: MessageEvent) => {
-          handleResult(event.data);
+          void handleResult(event.data);
         };
 
         const handleStorage = (event: StorageEvent) => {
           if (event.key !== "climbup:oauth:result" || !event.newValue) return;
 
           try {
-            handleResult(JSON.parse(event.newValue));
+            void handleResult(JSON.parse(event.newValue));
           } catch {
             // Ignore malformed cross-window messages.
           }
