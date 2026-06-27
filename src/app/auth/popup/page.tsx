@@ -27,13 +27,16 @@ export default function AuthPopupPage() {
       window.opener.postMessage(result, window.location.origin);
     }
 
+    const closePopup = () => {
+      window.close();
+    };
+    const animationFrame = window.requestAnimationFrame(closePopup);
     const closeTimers = [0, 100, 300, 700, 1500].map((delay) =>
-      window.setTimeout(() => {
-        window.close();
-      }, delay)
+      window.setTimeout(closePopup, delay)
     );
 
     return () => {
+      window.cancelAnimationFrame(animationFrame);
       closeTimers.forEach((timer) => window.clearTimeout(timer));
     };
   }, []);

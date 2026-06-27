@@ -96,6 +96,14 @@ function wait(ms: number) {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
 }
 
+function closePopupWindow(popup: Window | null) {
+  try {
+    popup?.close();
+  } catch {
+    // Cross-origin policies can temporarily block access while Google owns it.
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [currentUser, setCurrentUser] = useState<SupabaseUser | null>(null);
   const [profileImage, setProfileImage] = useState<string | null>(null);
@@ -335,7 +343,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (sessionError) throw sessionError;
 
       if (session?.user) {
-        popup.close();
+        closePopupWindow(popup);
         setCurrentUser(session.user);
         await loadUserProfile(session.user);
         return;
@@ -374,7 +382,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           window.removeEventListener("storage", handleStorage);
           authChannel?.removeEventListener("message", handleChannelMessage);
           authChannel?.close();
-          window.clearInterval(closedCheck);
           window.clearTimeout(timeout);
           callback();
         };
@@ -387,12 +394,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (result?.type !== "climbup:oauth") return;
 
           if (result.status === "success") {
-            popup.close();
+            closePopupWindow(popup);
             finish(resolve);
             return;
           }
 
-          popup.close();
+          closePopupWindow(popup);
           finish(() =>
             reject(
               new Error(result.message || "Google sign-in was not completed.")
@@ -420,14 +427,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         };
 
-        const closedCheck = window.setInterval(() => {
-          if (popup.closed) {
-            finish(() => reject(new Error("Google sign-in window was closed.")));
-          }
-        }, 500);
-
         const timeout = window.setTimeout(() => {
-          popup.close();
+          closePopupWindow(popup);
           finish(() => reject(new Error("Google sign-in timed out. Please try again.")));
         }, 120000);
 
@@ -438,9 +439,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         popup.location.replace(data.url);
       });
 
-      if (!popup.closed) {
-        popup.close();
-      }
+      closePopupWindow(popup);
 
       const {
         data: { session: immediateSession },
@@ -459,7 +458,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setCurrentUser(signedInSession.user);
       await loadUserProfile(signedInSession.user);
     } catch (error) {
-      if (!popup.closed) popup.close();
+      closePopupWindow(popup);
       throw error;
     } finally {
       document.cookie =

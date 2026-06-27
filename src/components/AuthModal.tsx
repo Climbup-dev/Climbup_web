@@ -47,16 +47,22 @@ function getErrorDetails(error: unknown) {
   if (error instanceof Error) {
     const candidate = error as Error & {
       status?: number;
-      code?: string;
-      name?: string;
+      code?: unknown;
+      name?: unknown;
     };
 
     return {
       rawMessage: candidate.message.trim(),
       message: candidate.message.trim().toLowerCase(),
       status: candidate.status,
-      code: candidate.code?.toLowerCase() ?? "",
-      name: candidate.name?.toLowerCase() ?? "",
+      code:
+        typeof candidate.code === "string"
+          ? candidate.code.toLowerCase()
+          : "",
+      name:
+        typeof candidate.name === "string"
+          ? candidate.name.toLowerCase()
+          : "",
     };
   }
 
@@ -661,11 +667,11 @@ export default function AuthModal({
 
     try {
       const googleLogin = login();
+      startSmoothClose();
       await googleLogin;
       if (!mountedRef.current) return;
 
       showToast("Signed in successfully", "success");
-      startSmoothClose();
     } catch (authError) {
       if (mountedRef.current) {
         showAuthError(authError, "Google sign-in could not be completed.");
