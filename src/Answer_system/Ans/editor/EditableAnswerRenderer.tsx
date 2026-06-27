@@ -6,7 +6,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import AnswerRenderer from "../AnswerRenderer";
 import AnswerToolbar, { AnswerFeedbackActions } from "./AnswerToolbar";
 import AddBlockMenu from "./AddBlockMenu";
-import { generateAnswerPdfDocument } from "./answerPdf";
 import BlockEditor from "./BlockEditor";
 import { createAnswerEditorSnapshot } from "./answerSnapshot";
 import { saveDummyAnswerSnapshot } from "./dummyAnswerStorage";
@@ -94,6 +93,7 @@ export default function EditableAnswerRenderer({
     dislikes: 0,
   });
   const [reactionSaving, setReactionSaving] = useState(false);
+  const [pdfGenerating, setPdfGenerating] = useState(false);
   const [isPublic, setIsPublic] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
   const [saveMessageTone, setSaveMessageTone] =
@@ -389,11 +389,42 @@ export default function EditableAnswerRenderer({
     setIsPublic((prev) => !prev);
   };
 
-  const handleGeneratePdf = () => {
-    generateAnswerPdfDocument({
+  const handleGeneratePdf = async () => {
+    if (pdfGenerating) return;
+
+    setPdfGenerating(true);
+    setSaveMessage("");
+
+    const snapshot = createAnswerEditorSnapshot({
       question: normalized.question,
       blocks: editableBlocks,
+      isPublic,
+      feedback,
     });
+    const printWindow = window.open("about:blank", "climbup-answer-pdf");
+
+    if (printWindow) {
+      printWindow.document.write(
+        "<!doctype html><title>Preparing PDF</title><body style=\"font-family:system-ui;padding:24px\">Preparing your PDF...</body>"
+      );
+      printWindow.document.close();
+    }
+
+    try {
+      const { generateAnswerPdfDocument } = await import("./answerPdf");
+
+      await generateAnswerPdfDocument(snapshot, { targetWindow: printWindow });
+
+      setSaveMessageTone("success");
+      setSaveMessage("PDF is ready. Use your browser print dialog to save it.");
+    } catch (error) {
+      printWindow?.close();
+      console.error("Unable to generate PDF:", error);
+      setSaveMessageTone("error");
+      setSaveMessage("Unable to generate PDF. Please try again.");
+    } finally {
+      setPdfGenerating(false);
+    }
   };
 
   const handleImprovedAnswer = async () => {
@@ -638,6 +669,7 @@ export default function EditableAnswerRenderer({
       onDislike={handleDislike}
       onMakePublic={handleMakePublic}
       onGeneratePdf={handleGeneratePdf}
+      pdfGenerating={pdfGenerating}
       onImprovedAnswer={handleImprovedAnswer}
       onInsights={handleInsights}
       onClimbupAi={handleClimbupAi}

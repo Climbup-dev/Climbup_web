@@ -2,9 +2,10 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-type NormalizedAnswer = {
-  question: string;
-  blocks: any[];
+import type { AnswerEditorSnapshot } from "./answerSnapshot";
+
+type PdfGenerationOptions = {
+  targetWindow?: Window | null;
 };
 
 const accentColors = [
@@ -16,46 +17,79 @@ const accentColors = [
   "#0891b2",
 ];
 
-export function generateAnswerPdfDocument(answer: NormalizedAnswer) {
+export async function generateAnswerPdfDocument(
+  snapshot: AnswerEditorSnapshot,
+  options: PdfGenerationOptions = {}
+) {
   if (typeof window === "undefined") return;
 
-  const frame = document.createElement("iframe");
-  frame.setAttribute("aria-hidden", "true");
-  frame.style.position = "fixed";
-  frame.style.right = "0";
-  frame.style.bottom = "0";
-  frame.style.width = "0";
-  frame.style.height = "0";
-  frame.style.border = "0";
+  const printWindow =
+    options.targetWindow || window.open("about:blank", "climbup-answer-pdf");
 
-  document.body.appendChild(frame);
-
-  const printWindow = frame.contentWindow;
-  const printDocument = frame.contentDocument;
-
-  if (!printWindow || !printDocument) {
-    frame.remove();
-    return;
+  if (!printWindow) {
+    throw new Error("The PDF window was blocked. Allow popups and try again.");
   }
 
-  printDocument.open();
-  printDocument.write(buildPdfHtml(answer, `${window.location.origin}/logo.png`));
-  printDocument.close();
+  const html = buildPdfHtml(snapshot, `${window.location.origin}/logo.png`);
 
-  const cleanup = () => {
-    window.setTimeout(() => frame.remove(), 500);
-  };
-
-  frame.onload = () => {
-    printWindow.focus();
-    printWindow.print();
-    cleanup();
-  };
+  writePrintDocument(printWindow, html);
+  await waitForPrintAssets(printWindow.document);
+  focusAndPrint(printWindow);
 }
 
-function buildPdfHtml(answer: NormalizedAnswer, logoUrl: string) {
-  const safeQuestion = escapeHtml(answer.question || "Question unavailable");
-  const blocks = Array.isArray(answer.blocks) ? answer.blocks : [];
+function writePrintDocument(printWindow: Window, html: string) {
+  const printDocument = printWindow.document;
+
+  printDocument.open();
+  printDocument.write(html);
+  printDocument.close();
+}
+
+function focusAndPrint(printWindow: Window) {
+  window.setTimeout(() => {
+    printWindow.focus();
+    printWindow.print();
+  }, 120);
+}
+
+async function waitForPrintAssets(printDocument: Document) {
+  if (printDocument.readyState !== "complete") {
+    await new Promise<void>((resolve) => {
+      printDocument.defaultView?.addEventListener("load", () => resolve(), {
+        once: true,
+      });
+      window.setTimeout(resolve, 900);
+    });
+  }
+
+  const images = Array.from(printDocument.images);
+
+  await Promise.all(
+    images.map((image) => {
+      if (image.complete) return Promise.resolve();
+
+      return new Promise<void>((resolve) => {
+        image.addEventListener("load", () => resolve(), { once: true });
+        image.addEventListener("error", () => resolve(), { once: true });
+        window.setTimeout(resolve, 1200);
+      });
+    })
+  );
+}
+
+function buildPdfHtml(snapshot: AnswerEditorSnapshot, logoUrl: string) {
+  const safeQuestion = escapeHtml(
+    snapshot.answer?.question || snapshot.question || "Question unavailable"
+  );
+  const blocks = Array.isArray(snapshot.answer?.blocks)
+    ? snapshot.answer.blocks
+    : [];
+  const savedAt = snapshot.savedAt
+    ? new Intl.DateTimeFormat("en-IN", {
+        dateStyle: "medium",
+        timeStyle: "short",
+      }).format(new Date(snapshot.savedAt))
+    : "";
   const content =
     blocks.length > 0
       ? blocks.map((block, index) => renderStudySection(block, index)).join("")
@@ -70,13 +104,22 @@ function buildPdfHtml(answer: NormalizedAnswer, logoUrl: string) {
   </head>
   <body>
     <main class="pdf-page">
+      <div class="pdf-watermark" aria-hidden="true">
+        <img src="${escapeAttribute(logoUrl)}" alt="" />
+        <span>ClimbUP</span>
+      </div>
       <header class="pdf-hero">
         <div class="brand-row">
-          <span class="brand-text">ClimbUp Answer</span>
+          <span class="brand-text">ClimbUP Answer Sheet</span>
           <img class="brand-logo" src="${escapeAttribute(logoUrl)}" alt="ClimbUp" />
         </div>
-        <p class="eyebrow">Structured Answer PDF</p>
+        <p class="eyebrow">Structured engineering answer</p>
         <h1>${safeQuestion}</h1>
+        <div class="pdf-meta">
+          <span>Source: Answer JSON</span>
+          ${savedAt ? `<span>Generated: ${escapeHtml(savedAt)}</span>` : ""}
+          <span>Blocks: ${blocks.length}</span>
+        </div>
       </header>
       ${content}
     </main>
@@ -92,8 +135,11 @@ function renderStudySection(block: any, index: number) {
   const body = renderBlockBody(block);
 
   return `<section class="study-section" style="--section-accent:${color}">
-    ${title}
-    ${body}
+    <div class="section-top">
+      <span class="section-index">${String(index + 1).padStart(2, "0")}</span>
+      ${title}
+    </div>
+    <div class="section-body">${body}</div>
   </section>`;
 }
 
@@ -343,7 +389,7 @@ function pdfStyles() {
   return `
     @page {
       size: A4;
-      margin: 10mm;
+      margin: 11mm 10mm 12mm;
     }
 
     * {
@@ -356,22 +402,77 @@ function pdfStyles() {
       background: #ffffff;
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
         "Segoe UI", Arial, Helvetica, sans-serif;
-      font-size: 12px;
-      line-height: 1.55;
+      font-size: 12.2px;
+      line-height: 1.62;
       -webkit-font-smoothing: antialiased;
       text-rendering: optimizeLegibility;
     }
 
     .pdf-page {
       width: 100%;
+      position: relative;
+      isolation: isolate;
+    }
+
+    .pdf-watermark {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      z-index: -1;
+      display: grid;
+      place-items: center;
+      gap: 10px;
+      width: 260px;
+      height: 260px;
+      pointer-events: none;
+      opacity: 0.055;
+      transform: translate(-50%, -50%) rotate(-22deg);
+      print-color-adjust: exact;
+      -webkit-print-color-adjust: exact;
+    }
+
+    .pdf-watermark img {
+      width: 116px;
+      height: 116px;
+      object-fit: contain;
+      border: 0;
+      border-radius: 0;
+      filter: grayscale(1);
+    }
+
+    .pdf-watermark span {
+      color: #021526;
+      font-size: 40px;
+      font-weight: 950;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
     }
 
     .pdf-hero {
-      padding: 14px 18px;
+      position: relative;
+      overflow: hidden;
+      padding: 18px 20px 20px;
       color: #ffffff;
-      background: linear-gradient(135deg, #062923 0%, #0f766e 48%, #2563eb 100%);
-      border-radius: 12px;
+      background:
+        radial-gradient(circle at 86% 18%, rgba(158, 248, 220, 0.24), transparent 26%),
+        linear-gradient(135deg, #031b2b 0%, #07564e 50%, #1d4ed8 100%);
+      border: 1px solid rgba(158, 248, 220, 0.42);
+      border-radius: 15px;
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.16);
       page-break-inside: avoid;
+      print-color-adjust: exact;
+      -webkit-print-color-adjust: exact;
+    }
+
+    .pdf-hero::after {
+      content: "";
+      position: absolute;
+      right: -44px;
+      bottom: -74px;
+      width: 180px;
+      height: 180px;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.16), transparent 68%);
+      border-radius: 999px;
     }
 
     .brand-row {
@@ -379,7 +480,7 @@ function pdfStyles() {
       align-items: center;
       justify-content: space-between;
       gap: 14px;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
       font-weight: 800;
     }
 
@@ -387,6 +488,20 @@ function pdfStyles() {
     .eyebrow {
       letter-spacing: 0.08em;
       text-transform: uppercase;
+    }
+
+    .brand-text {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 5px 10px;
+      color: #dffdf5;
+      background: rgba(2, 21, 38, 0.28);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 999px;
+      font-size: 9px;
+      print-color-adjust: exact;
+      -webkit-print-color-adjust: exact;
     }
 
     .brand-logo {
@@ -397,11 +512,12 @@ function pdfStyles() {
       margin: 0;
       background: rgba(255, 255, 255, 0.94);
       border: 1px solid rgba(255, 255, 255, 0.55);
-      border-radius: 10px;
+      border-radius: 11px;
+      box-shadow: 0 8px 18px rgba(2, 21, 38, 0.18);
     }
 
     .eyebrow {
-      margin: 0 0 5px;
+      margin: 0 0 7px;
       color: #cffafe;
       font-size: 9px;
       font-weight: 800;
@@ -410,27 +526,88 @@ function pdfStyles() {
     h1 {
       max-width: 96%;
       margin: 0;
-      font-size: 20px;
-      line-height: 1.18;
+      font-size: 21px;
+      line-height: 1.22;
+      letter-spacing: 0;
+    }
+
+    .pdf-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-top: 12px;
+    }
+
+    .pdf-meta span {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      padding: 4px 9px;
+      color: #e8fff8;
+      background: rgba(2, 21, 38, 0.28);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 999px;
+      font-size: 9px;
+      font-weight: 800;
+      print-color-adjust: exact;
+      -webkit-print-color-adjust: exact;
     }
 
     .study-section {
-      margin: 10px 0 0;
-      padding: 0 0 1px 10px;
-      border-left: 3px solid var(--section-accent, #0f766e);
+      margin: 11px 0 0;
+      padding: 11px 12px 12px;
+      background:
+        linear-gradient(90deg, rgba(15, 118, 110, 0.07), transparent 34%),
+        #ffffff;
+      border: 1px solid #e2e8f0;
+      border-left: 4px solid var(--section-accent, #0f766e);
+      border-radius: 12px;
+      box-shadow: 0 7px 20px rgba(15, 23, 42, 0.06);
+      break-inside: auto;
+      print-color-adjust: exact;
+      -webkit-print-color-adjust: exact;
+    }
+
+    .section-top {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      margin-bottom: 7px;
+      page-break-after: avoid;
+    }
+
+    .section-index {
+      display: inline-grid;
+      place-items: center;
+      flex: 0 0 25px;
+      width: 25px;
+      height: 25px;
+      color: #ffffff;
+      background: var(--section-accent, #0f766e);
+      border-radius: 8px;
+      font-size: 9px;
+      font-weight: 950;
+      print-color-adjust: exact;
+      -webkit-print-color-adjust: exact;
+    }
+
+    .section-body {
+      min-width: 0;
     }
 
     h2 {
-      margin: 0 0 6px;
+      margin: 1px 0 0;
       color: var(--section-accent, #0f766e);
-      font-size: 15px;
-      line-height: 1.28;
+      font-size: 14.6px;
+      line-height: 1.32;
+      letter-spacing: 0;
     }
 
     h3 {
-      margin: 8px 0 4px;
+      margin: 9px 0 4px;
       color: #111827;
       font-size: 12px;
+      page-break-after: avoid;
     }
 
     h4 {
@@ -440,7 +617,7 @@ function pdfStyles() {
     }
 
     p {
-      margin: 0 0 5px;
+      margin: 0 0 6px;
       font-family: inherit;
     }
 
@@ -451,7 +628,7 @@ function pdfStyles() {
     }
 
     li {
-      margin-bottom: 2px;
+      margin-bottom: 3px;
       font-family: inherit;
     }
 
@@ -484,22 +661,25 @@ function pdfStyles() {
     }
 
     pre {
-      margin: 5px 0;
-      padding: 8px;
+      margin: 6px 0;
+      padding: 10px;
       overflow-wrap: anywhere;
       white-space: pre-wrap;
       color: #e5f3ff;
-      background: #0f172a;
-      border-radius: 8px;
+      background: linear-gradient(135deg, #0f172a, #111827);
+      border: 1px solid #1f3b57;
+      border-radius: 10px;
       font-family: Consolas, Monaco, monospace;
       font-size: 9px;
-      line-height: 1.35;
+      line-height: 1.42;
+      print-color-adjust: exact;
+      -webkit-print-color-adjust: exact;
     }
 
     .code-meta {
       display: inline-flex;
       margin: 0 0 4px;
-      padding: 3px 7px;
+      padding: 3px 8px;
       color: #075985;
       background: #e0f2fe;
       border-radius: 999px;
@@ -512,12 +692,13 @@ function pdfStyles() {
       width: 100%;
       border-collapse: collapse;
       overflow: hidden;
-      border-radius: 12px;
+      border: 1px solid #dbe3ef;
+      border-radius: 10px;
     }
 
     th,
     td {
-      padding: 5px 7px;
+      padding: 6px 8px;
       border: 1px solid #dbe3ef;
       text-align: left;
       vertical-align: top;
@@ -528,6 +709,8 @@ function pdfStyles() {
       color: #063a35;
       background: #ccfbf1;
       font-weight: 900;
+      print-color-adjust: exact;
+      -webkit-print-color-adjust: exact;
     }
 
     tr:nth-child(even) td {
@@ -536,25 +719,25 @@ function pdfStyles() {
 
     .pdf-steps {
       display: grid;
-      gap: 6px;
+      gap: 7px;
     }
 
     .pdf-step {
       display: grid;
-      grid-template-columns: 26px 1fr;
-      gap: 7px;
-      padding: 7px;
-      background: #f8fafc;
+      grid-template-columns: 28px 1fr;
+      gap: 8px;
+      padding: 8px;
+      background: linear-gradient(180deg, #ffffff, #f8fafc);
       border: 1px solid #e2e8f0;
-      border-radius: 8px;
+      border-radius: 10px;
       break-inside: auto;
     }
 
     .step-number {
       display: grid;
       place-items: center;
-      width: 22px;
-      height: 22px;
+      width: 24px;
+      height: 24px;
       color: #ffffff;
       background: var(--section-accent, #0f766e);
       border-radius: 999px;
@@ -569,11 +752,12 @@ function pdfStyles() {
     img {
       display: block;
       max-width: 100%;
-      max-height: 240px;
+      max-height: 250px;
       margin: 0 auto;
       object-fit: contain;
-      border: 1px solid #e2e8f0;
-      border-radius: 8px;
+      border: 1px solid #dbe3ef;
+      border-radius: 10px;
+      box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
     }
 
     figcaption,
@@ -584,10 +768,12 @@ function pdfStyles() {
     }
 
     .diagram-box {
-      padding: 7px;
+      padding: 9px;
       background: #f8fafc;
       border: 1px dashed #94a3b8;
-      border-radius: 8px;
+      border-radius: 10px;
+      print-color-adjust: exact;
+      -webkit-print-color-adjust: exact;
     }
   `;
 }

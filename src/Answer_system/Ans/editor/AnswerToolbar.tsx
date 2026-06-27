@@ -13,6 +13,7 @@ type AnswerToolbarProps = {
   onDislike: () => void;
   onMakePublic: () => void;
   onGeneratePdf: () => void;
+  pdfGenerating?: boolean;
   addBlockMenu?: ReactNode;
   onImprovedAnswer: () => void;
   onInsights: () => void;
@@ -194,6 +195,7 @@ export default function AnswerToolbar({
   onCancel,
   onMakePublic,
   onGeneratePdf,
+  pdfGenerating = false,
   addBlockMenu = null,
   onImprovedAnswer,
   onInsights,
@@ -219,11 +221,13 @@ export default function AnswerToolbar({
           <button
             className="toolbar-btn pdf-action"
             onClick={onGeneratePdf}
+            disabled={pdfGenerating}
             aria-label="Generate PDF"
-            data-tooltip="Generate PDF"
+            aria-busy={pdfGenerating}
+            data-tooltip={pdfGenerating ? "Preparing PDF" : "Generate PDF"}
           >
             <ToolIcon kind="pdf" />
-            <ToolLabel>Generate PDF</ToolLabel>
+            <ToolLabel>{pdfGenerating ? "Preparing" : "Generate PDF"}</ToolLabel>
           </button>
 
           <button
