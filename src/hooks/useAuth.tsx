@@ -202,6 +202,60 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return null;
   }, [supabase]);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!window.opener) return;
+
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("code");
+    const oauthError =
+      params.get("error_description") || params.get("error");
+
+    if (!code && !oauthError) return;
+
+    let active = true;
+
+    const finishPopupAuth = async () => {
+      const result = {
+        type: "climbup:oauth",
+        status: oauthError ? "error" : "success",
+        message: oauthError || undefined,
+      };
+
+      try {
+        if (code && !oauthError) {
+          const { error } = await supabase.auth.exchangeCodeForSession(code);
+          if (error) {
+            result.status = "error";
+            result.message = error.message;
+          }
+        }
+      } catch (error) {
+        result.status = "error";
+        result.message =
+          error instanceof Error ? error.message : "Google sign-in failed.";
+      }
+
+      if (!active) return;
+
+      try {
+        window.opener.postMessage(result, "*");
+      } catch {
+        // The popup can still close itself even if the opener is unavailable.
+      }
+
+      window.setTimeout(() => closePopupWindow(window), 0);
+      window.setTimeout(() => closePopupWindow(window), 150);
+      window.setTimeout(() => closePopupWindow(window), 500);
+    };
+
+    void finishPopupAuth();
+
+    return () => {
+      active = false;
+    };
+  }, [supabase]);
+
   const refreshProfile = useCallback(async () => {
     await loadUserProfile(currentUser);
   }, [currentUser, loadUserProfile]);
@@ -408,7 +462,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         };
 
         const handleMessage = (event: MessageEvent) => {
-          if (event.origin !== window.location.origin) return;
           if (event.source !== popup) return;
           handleResult(event.data);
         };
