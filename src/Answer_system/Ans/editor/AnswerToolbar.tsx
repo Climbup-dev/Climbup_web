@@ -340,7 +340,7 @@ export function AnswerFeedbackActions({
   reactionSaving = false,
   canReact = true,
 }: AnswerFeedbackActionsProps) {
-  const reactionsDisabled = reactionSaving;
+  const reactionsDisabled = reactionSaving || !canReact;
 
   return (
     <div className="answer-feedback-actions">

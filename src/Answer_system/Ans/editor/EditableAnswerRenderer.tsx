@@ -77,12 +77,14 @@ export default function EditableAnswerRenderer({
   data,
   questionId = "",
   answerId = "",
+  answerSource = undefined,
   onSave = undefined,
 }: EditableAnswerRendererProps) {
   const { currentUser } = useAuth();
   const supabase = useMemo(() => createClient(), []);
   const normalized = useMemo(() => normalizeAnswerData(data), [data]);
   const initialInsightAnswerId = answerId || "";
+  const initialReactionSource = answerSource || undefined;
 
   const [isEditing, setIsEditing] = useState(false);
   const [editableBlocks, setEditableBlocks] = useState(() => normalized.blocks);
@@ -97,6 +99,9 @@ export default function EditableAnswerRenderer({
   const [saveMessageTone, setSaveMessageTone] =
     useState<SaveMessageTone>("success");
   const [currentAnswerId, setCurrentAnswerId] = useState(initialInsightAnswerId);
+  const [currentAnswerSource, setCurrentAnswerSource] = useState(
+    initialReactionSource
+  );
   const [answerCards, setAnswerCards] = useState<ImprovedAnswerCard[]>([]);
   const [showImprovedPopup, setShowImprovedPopup] = useState(false);
   const [closingPopup, setClosingPopup] = useState<PopupKind | null>(null);
@@ -134,7 +139,7 @@ export default function EditableAnswerRenderer({
     let active = true;
 
     async function loadReactions() {
-      if (!currentAnswerId) {
+      if (!canSaveReaction(currentAnswerId, currentAnswerSource)) {
         setFeedback(null);
         setReactionCounts({ likes: 0, dislikes: 0 });
         return;
@@ -169,7 +174,7 @@ export default function EditableAnswerRenderer({
     return () => {
       active = false;
     };
-  }, [currentAnswerId, currentUser?.id, supabase]);
+  }, [currentAnswerId, currentAnswerSource, currentUser?.id, supabase]);
 
   const updateBlock = (index: number, updatedBlock: any) => {
     setEditableBlocks((prev: any[]) =>
@@ -264,6 +269,7 @@ export default function EditableAnswerRenderer({
 
         if (result.answer?.answer_id) {
           setCurrentAnswerId(result.answer.answer_id);
+          setCurrentAnswerSource("student_draft");
         }
       } catch (error) {
         setSaveMessageTone("error");
@@ -317,9 +323,13 @@ export default function EditableAnswerRenderer({
       return;
     }
 
-    if (!currentAnswerId) {
+    if (!canSaveReaction(currentAnswerId, currentAnswerSource)) {
       setSaveMessageTone("error");
-      setSaveMessage("Open a saved answer before reacting.");
+      setSaveMessage(
+        currentAnswerSource === "ai_answer"
+          ? "Reactions are available on saved student answers. Save this answer first."
+          : "Open a saved answer before reacting."
+      );
       return;
     }
 
@@ -357,12 +367,11 @@ export default function EditableAnswerRenderer({
         if (error) throw error;
       }
     } catch (error) {
+      console.error("Unable to save reaction:", error);
       setFeedback(previousReaction);
       setReactionCounts(previousCounts);
       setSaveMessageTone("error");
-      setSaveMessage(
-        error instanceof Error ? error.message : "Unable to save reaction."
-      );
+      setSaveMessage("Unable to save reaction. Please try again.");
     } finally {
       setReactionSaving(false);
     }
@@ -659,7 +668,7 @@ export default function EditableAnswerRenderer({
           likesCount={reactionCounts.likes}
           dislikesCount={reactionCounts.dislikes}
           reactionSaving={reactionSaving}
-          canReact={Boolean(currentAnswerId && currentUser)}
+          canReact={canSaveReaction(currentAnswerId, currentAnswerSource)}
           onShare={handleShare}
           onLike={handleLike}
           onDislike={handleDislike}
@@ -705,7 +714,7 @@ export default function EditableAnswerRenderer({
           likesCount={reactionCounts.likes}
           dislikesCount={reactionCounts.dislikes}
           reactionSaving={reactionSaving}
-          canReact={Boolean(currentAnswerId && currentUser)}
+          canReact={canSaveReaction(currentAnswerId, currentAnswerSource)}
           onShare={handleShare}
           onLike={handleLike}
           onDislike={handleDislike}
@@ -1037,6 +1046,13 @@ function getOptimisticReactionCounts(
   }
 
   return nextCounts;
+}
+
+function canSaveReaction(
+  answerId: string,
+  answerSource: EditableAnswerRendererProps["answerSource"] | undefined
+) {
+  return Boolean(answerId && answerSource === "student_draft");
 }
 
 function createEmptyBlock(type: string) {
