@@ -1,10 +1,10 @@
 {
   "schema": "climbup.answer-editor.snapshot",
   "schemaVersion": 1,
-  "savedAt": "2026-06-26T06:14:53.873Z",
+  "savedAt": "2026-06-27T02:38:24.397Z",
   "question": "Discuss in detail TCP -IP reference model.",
-  "visibility": "public",
-  "feedback": "like",
+  "visibility": "private",
+  "feedback": null,
   "answer": {
     "question": "Discuss in detail TCP -IP reference model.",
     "blocks": [
@@ -82,7 +82,7 @@
           {
             "id": "step-1",
             "title": "",
-            "content": "The Application Layer receives data from the user and passes it to the Transport Layer."
+            "content": "The Application Layer receives data from the user and passes it to the Tra==**nsport Layer.**=="
           },
           {
             "id": "step-2",

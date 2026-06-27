@@ -12,8 +12,8 @@
 }
 
 .pyqHero {
-  margin-bottom: 22px;
-  padding-bottom: 22px;
+  margin-bottom: 18px;
+  padding-bottom: 18px;
   border-bottom: 1px solid rgba(158, 248, 220, 0.12);
 }
 
@@ -29,9 +29,10 @@
 .pyqHero h1 {
   margin: 8px 0 10px;
   color: #fff;
-  font-size: clamp(32px, 5vw, 52px);
+  font-size: clamp(34px, 4vw, 48px);
   line-height: 1;
-  font-weight: 900;
+  font-weight: 850;
+  letter-spacing: 0;
 }
 
 .pyqHero p,
@@ -45,8 +46,8 @@
 
 .pyqLayout {
   display: grid;
-  grid-template-columns: 340px minmax(0, 1fr);
-  gap: 18px;
+  grid-template-columns: 360px minmax(0, 1fr);
+  gap: 20px;
   align-items: start;
 }
 
@@ -67,6 +68,13 @@
 .pyqSubjectsPanel {
   position: sticky;
   top: 18px;
+  display: grid;
+  gap: 16px;
+}
+
+.pyqPapersPanel {
+  min-height: 344px;
+  overflow: hidden;
 }
 
 .pyqPanelHeading {
@@ -76,9 +84,74 @@
 .pyqPanelHeading h2 {
   margin: 7px 0 6px;
   color: #fff;
-  font-size: clamp(22px, 2.4vw, 30px);
-  line-height: 1.15;
+  font-size: clamp(21px, 2vw, 28px);
+  line-height: 1.2;
+  font-weight: 780;
+  letter-spacing: 0;
+}
+
+.pyqProfileCard {
+  display: grid;
+  gap: 6px;
+  padding: 16px;
+  background:
+    linear-gradient(135deg, rgba(56, 211, 153, 0.12), rgba(96, 165, 250, 0.055)),
+    rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(140, 240, 208, 0.16);
+  border-left: 5px solid #38d399;
+  border-radius: 12px;
+  animation: pyqPanelIn 220ms ease-out both;
+}
+
+.pyqProfileCard span,
+.pyqSubjectHeader span {
+  color: #8cf0d0;
+  font-size: 11px;
   font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.pyqProfileCard strong {
+  color: #ffffff;
+  font-size: 26px;
+  line-height: 1.18;
+  font-weight: 780;
+}
+
+.pyqProfileCard p,
+.pyqProfileCard small {
+  margin: 0;
+  color: rgba(238, 252, 248, 0.72);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.pyqSubjectHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.pyqSubjectHeader h2 {
+  margin: 4px 0 0;
+  color: #ffffff;
+  font-size: 20px;
+  line-height: 1.25;
+  font-weight: 760;
+}
+
+.pyqSubjectHeader > strong {
+  min-width: 38px;
+  height: 38px;
+  display: inline-grid;
+  place-items: center;
+  color: #041721;
+  background: #8cf0d0;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 900;
 }
 
 .pyqSubjectList {
@@ -87,14 +160,16 @@
 }
 
 .pyqSubjectGroup {
-  display: contents;
+  display: grid;
+  gap: 8px;
 }
 
 .pyqSubjectList button {
   width: 100%;
-  padding: 15px;
+  min-height: 76px;
+  padding: 14px;
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: auto minmax(0, 1fr);
   gap: 8px 12px;
   align-items: center;
   color: #fff;
@@ -103,13 +178,18 @@
   border-radius: 12px;
   text-align: left;
   cursor: pointer;
-  transition: background 160ms ease, border-color 160ms ease, transform 160ms ease;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
 }
 
 .pyqSubjectList button:hover,
 .pyqSubjectList button.active {
   background: rgba(56, 211, 153, 0.1);
   border-color: rgba(140, 240, 208, 0.34);
+  box-shadow: 0 12px 24px rgba(2, 21, 38, 0.16);
   transform: translateY(-1px);
 }
 
@@ -141,6 +221,28 @@
   font-weight: 750;
 }
 
+.pyqPaperHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.pyqPaperHeader .pyqPanelHeading {
+  margin-bottom: 0;
+}
+
+.pyqPaperHeader > strong {
+  flex: 0 0 auto;
+  padding: 8px 11px;
+  color: #041721;
+  background: #8cf0d0;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
 .pyqPaperGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(220px, 1fr));
@@ -158,6 +260,7 @@
   border: 1px solid rgba(140, 240, 208, 0.12);
   border-radius: 12px;
   text-decoration: none;
+  animation: pyqPanelIn 220ms ease-out both;
   transition: background 160ms ease, border-color 160ms ease, transform 160ms ease;
 }
 
@@ -204,6 +307,90 @@
 
 .pyqInlinePapers {
   display: none;
+}
+
+.pyqStartPanel {
+  min-height: 260px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 13px;
+  padding: 30px;
+  text-align: center;
+  background:
+    radial-gradient(circle at top, rgba(56, 211, 153, 0.1), transparent 42%),
+    rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(140, 240, 208, 0.14);
+  border-radius: 14px;
+  animation: pyqPanelIn 240ms ease-out both;
+}
+
+.pyqStartMark {
+  width: 58px;
+  height: 58px;
+  display: inline-grid;
+  place-items: center;
+  color: #041721;
+  background: linear-gradient(135deg, #8cf0d0, #38d399);
+  border-radius: 18px;
+  box-shadow: 0 16px 32px rgba(56, 211, 153, 0.2);
+  font-size: 13px;
+  font-weight: 950;
+}
+
+.pyqStartPanel h2 {
+  margin: 0;
+  color: #ffffff;
+  font-size: clamp(24px, 3vw, 36px);
+  line-height: 1.16;
+  font-weight: 780;
+  letter-spacing: 0;
+}
+
+.pyqStartPanel p {
+  max-width: 520px;
+  margin: 0;
+  color: rgba(238, 252, 248, 0.72);
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.pyqStartPanel a {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
+  color: #041721;
+  background: #8cf0d0;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 850;
+  text-decoration: none;
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.pyqStartPanel a:hover {
+  opacity: 0.92;
+  transform: translateY(-1px);
+}
+
+.pyqFlow {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.pyqFlow span {
+  padding: 7px 10px;
+  color: rgba(238, 252, 248, 0.76);
+  background: rgba(0, 0, 0, 0.16);
+  border: 1px solid rgba(140, 240, 208, 0.12);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
 }
 
 .pyqState {
@@ -253,6 +440,8 @@
 
 .pyqSubjectList button:focus-visible,
 .pyqPaperCard:focus-visible,
+.pyqStartPanel a:focus-visible,
+.pyqEmptyMini a:focus-visible,
 .pyqState button:focus-visible,
 .pyqState a:focus-visible {
   outline: 3px solid rgba(140, 240, 208, 0.72);
@@ -260,10 +449,13 @@
 }
 
 .pyqEmptyMini {
-  padding: 18px;
+  display: grid;
+  gap: 8px;
+  padding: 16px;
   background: rgba(255, 255, 255, 0.025);
   border: 1px dashed rgba(140, 240, 208, 0.2);
   border-radius: 12px;
+  animation: pyqPanelIn 220ms ease-out both;
 }
 
 .pyqEmptyMini strong {
@@ -273,6 +465,26 @@
 .pyqEmptyMini p,
 .pyqMessage {
   color: rgba(238, 252, 248, 0.66);
+}
+
+.pyqEmptyMini p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.pyqEmptyMini a {
+  width: fit-content;
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 13px;
+  color: #041721;
+  background: #8cf0d0;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 850;
+  text-decoration: none;
 }
 
 .pyqMessage {
@@ -298,6 +510,18 @@
 @keyframes pyqSpin {
   to {
     transform: rotate(360deg);
+  }
+}
+
+@keyframes pyqPanelIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
@@ -358,6 +582,18 @@
     margin-bottom: 14px;
   }
 
+  .pyqProfileCard {
+    padding: 15px;
+  }
+
+  .pyqProfileCard strong {
+    font-size: 22px;
+  }
+
+  .pyqSubjectHeader h2 {
+    font-size: 18px;
+  }
+
   .pyqPanelHeading h2 {
     margin: 6px 0 5px;
     font-size: 22px;
@@ -401,6 +637,11 @@
 
   .pyqPapersPanel {
     display: none;
+  }
+
+  .pyqStartPanel {
+    min-height: 230px;
+    padding: 24px 18px;
   }
 
   .pyqInlinePapers {
@@ -523,7 +764,7 @@
   .pyqSubjectList button {
     width: 100%;
     min-width: 0;
-    min-height: 108px;
+    min-height: 84px;
   }
 
   .pyqPaperCard div {
@@ -563,9 +804,13 @@
 @media (prefers-reduced-motion: reduce) {
   .pyqSubjectList button,
   .pyqPaperCard,
+  .pyqProfileCard,
+  .pyqStartPanel,
+  .pyqEmptyMini,
   .pyqState button,
   .pyqState a {
     transition: none;
+    animation: none;
   }
 
   .pyqSubjectList button:hover,

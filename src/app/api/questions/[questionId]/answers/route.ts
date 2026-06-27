@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import type { User } from "@supabase/supabase-js";
 
 import { createRouteHandlerClient } from "@/lib/supabase/server";
 
@@ -7,12 +6,12 @@ type PageProps = {
   params: Promise<{ questionId: string }>;
 };
 
+type AnswerBadge = "DRAFT" | "PUBLISHED" | "AI";
+
 type AnswerCard = {
   id: string;
   source: "ai" | "student";
-  label: string;
-  status: string;
-  meta: string;
+  badge: AnswerBadge;
   preview: string;
   href: string;
   authorName: string;
@@ -27,26 +26,34 @@ type AiAnswerRow = {
   created_at?: string | null;
 };
 
-type StudentAnswerRow = {
-  answer_id: string;
-  answer_content?: string | null;
-  status?: string | null;
-  updated_at?: string | null;
-  published_at?: string | null;
-  user_id?: string | null;
-};
-
-type UserProfileRow = {
-  user_id: string;
+type UserDisplayFields = {
   full_name?: string | null;
-  email?: string | null;
   profile_image?: string | null;
 };
 
-type CurrentUser = {
-  id: string;
-  email?: string | null;
-  user_metadata?: Record<string, unknown> | null;
+type PrivateAnswerRow = {
+  answer_id: string;
+  answer_content?: unknown;
+  status?: string | null;
+  created_at?: string | null;
+  users?: UserDisplayFields | UserDisplayFields[] | null;
+};
+
+type PublicAnswerRow = {
+  answer_id: string;
+  answer_content?: unknown;
+  verification_score?: number | null;
+  likes_count?: number | null;
+  views_count?: number | null;
+  published_at?: string | null;
+  full_name?: string | null;
+  profile_image?: string | null;
+  reputation?: number | null;
+};
+
+type CurrentUserDisplay = {
+  fullName: string;
+  profileImage: string;
 };
 
 export async function GET(request: Request, { params }: PageProps) {
@@ -65,44 +72,59 @@ export async function GET(request: Request, { params }: PageProps) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  let privateAnswer: PrivateAnswerRow | null = null;
+  const currentUserDisplay = user ? getCurrentUserDisplay(user) : null;
+
   if (user) {
-    await syncUserProfile(supabase, user);
+    const { data, error } = await supabase
+      .from("student_answers")
+      .select(`
+        answer_id,
+        answer_content,
+        status,
+        created_at,
+        users:user_id (
+          full_name,
+          profile_image
+        )
+      `)
+      .eq("question_id", questionId)
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (error) {
+      return NextResponse.json(
+        { ok: false, error: error.message },
+        { status: 500 }
+      );
+    }
+
+    privateAnswer = data as PrivateAnswerRow | null;
   }
 
-  const studentVisibility = user
-    ? `status.eq.published,user_id.eq.${user.id}`
-    : "status.eq.published";
-
-  const { data: studentAnswers, error: studentError } = await supabase
-    .from("student_answers")
+  const { data: publicAnswers, error: publicError } = await supabase
+    .from("public_answers")
     .select(`
       answer_id,
       answer_content,
-      status,
-      updated_at,
+      verification_score,
+      likes_count,
+      views_count,
       published_at,
-      user_id
+      full_name,
+      profile_image,
+      reputation
     `)
-    .eq("question_id", questionId)
-    .or(studentVisibility)
-    .order("updated_at", { ascending: false });
+    .eq("question_id", questionId);
 
-  if (studentError) {
+  if (publicError) {
     return NextResponse.json(
-      { ok: false, error: studentError.message },
+      { ok: false, error: publicError.message },
       { status: 500 }
     );
   }
 
-  const studentRows = (studentAnswers || []) as StudentAnswerRow[];
-  const profileMap = await getProfileMap(
-    supabase,
-    studentRows
-      .map((answer) => answer.user_id)
-      .filter((id): id is string => Boolean(id))
-  );
-
-  const { data: aiAnswers, error: aiError } = await supabase
+  const { data: aiAnswer, error: aiError } = await supabase
     .from("ai_answers")
     .select(`
       ai_answer_id,
@@ -111,7 +133,9 @@ export async function GET(request: Request, { params }: PageProps) {
       created_at
     `)
     .eq("question_id", questionId)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
 
   if (aiError) {
     return NextResponse.json(
@@ -120,91 +144,20 @@ export async function GET(request: Request, { params }: PageProps) {
     );
   }
 
-  const studentCards = studentRows.map((answer) => {
-    const isOwn = user?.id && answer.user_id === user.id;
-    const status = answer.status || "draft";
-    const profile = answer.user_id ? profileMap.get(answer.user_id) : null;
-    const authorName = getAuthorName(profile, user, answer.user_id);
-    const authorImage = sanitizeText(profile?.profile_image);
+  const privateCards = privateAnswer
+    ? [toPrivateAnswerCard(privateAnswer, questionId, currentUserDisplay)]
+    : [];
+  const privateAnswerId = privateAnswer?.answer_id || "";
+  const publicCards = ((publicAnswers || []) as PublicAnswerRow[])
+    .filter((answer) => answer.answer_id && answer.answer_id !== privateAnswerId)
+    .map((answer) => toPublicAnswerCard(answer, questionId));
+  const aiCards = aiAnswer
+    ? [toAiAnswerCard(aiAnswer as AiAnswerRow, questionId)]
+    : [];
 
-    return {
-      id: answer.answer_id,
-      source: "student" as const,
-      label: isOwn && status === "draft" ? "Private draft" : "Public answer",
-      status,
-      meta: `${authorName} - ${formatDate(
-        answer.updated_at || answer.published_at
-      )}`,
-      preview: getAnswerPreview(answer.answer_content),
-      href: buildAnswerHref(questionId, answer.answer_id, "student"),
-      authorName,
-      authorImage,
-      authorInitials: getInitials(authorName),
-    };
-  });
-
-  const aiCards = ((aiAnswers || []) as AiAnswerRow[]).map((answer, index) => ({
-    id: answer.ai_answer_id,
-    source: "ai" as const,
-    label: answer.ai_model || `AI answer ${index + 1}`,
-    status: "ai",
-    meta: formatDate(answer.created_at),
-    preview: getAnswerPreview(answer.answer),
-    href: buildAnswerHref(questionId, answer.ai_answer_id, "ai"),
-    authorName: "ClimbUP AI",
-    authorImage: "",
-    authorInitials: "AI",
-  }));
-
-  const cards: AnswerCard[] = [...studentCards, ...aiCards];
+  const cards: AnswerCard[] = [...privateCards, ...publicCards, ...aiCards];
 
   return NextResponse.json({ ok: true, answers: cards });
-}
-
-async function getProfileMap(
-  supabase: ReturnType<typeof createRouteHandlerClient>,
-  userIds: string[]
-) {
-  const uniqueIds = Array.from(new Set(userIds));
-  const map = new Map<string, UserProfileRow>();
-
-  if (!uniqueIds.length) return map;
-
-  const { data } = await supabase
-    .from("users")
-    .select("user_id,full_name,email,profile_image")
-    .in("user_id", uniqueIds);
-
-  ((data || []) as UserProfileRow[]).forEach((profile) => {
-    map.set(profile.user_id, profile);
-  });
-
-  return map;
-}
-
-async function syncUserProfile(
-  supabase: ReturnType<typeof createRouteHandlerClient>,
-  user: User
-) {
-  const fullName =
-    sanitizeText(user.user_metadata?.full_name) ||
-    sanitizeText(user.user_metadata?.name) ||
-    getEmailName(user.email);
-
-  const profileImage =
-    sanitizeText(user.user_metadata?.avatar_url) ||
-    sanitizeText(user.user_metadata?.picture) ||
-    null;
-
-  await supabase.from("users").upsert(
-    {
-      user_id: user.id,
-      full_name: fullName,
-      email: user.email || "",
-      profile_image: profileImage,
-    },
-    { onConflict: "user_id" }
-  );
 }
 
 function buildAnswerHref(
@@ -220,22 +173,89 @@ function buildAnswerHref(
   return `/question/${questionId}?${params.toString()}`;
 }
 
-function formatDate(value?: string | null) {
-  if (!value) return "No date";
+function toPrivateAnswerCard(
+  answer: PrivateAnswerRow,
+  questionId: string,
+  currentUserDisplay: CurrentUserDisplay | null
+): AnswerCard {
+  const profile = getRelatedUser(answer.users);
+  const authorName = getDisplayName(
+    profile?.full_name || currentUserDisplay?.fullName
+  );
+  const authorImage = getAuthorImage(
+    profile?.profile_image,
+    currentUserDisplay?.profileImage
+  );
 
-  const date = new Date(value);
+  return {
+    id: answer.answer_id,
+    source: "student",
+    badge: normalizeStudentBadge(answer.status),
+    preview: getAnswerPreview(answer.answer_content),
+    href: buildAnswerHref(questionId, answer.answer_id, "student"),
+    authorName,
+    authorImage,
+    authorInitials: getInitials(authorName),
+  };
+}
 
-  if (Number.isNaN(date.getTime())) {
-    return "No date";
+function toPublicAnswerCard(
+  answer: PublicAnswerRow,
+  questionId: string
+): AnswerCard {
+  const authorName = getDisplayName(answer.full_name);
+  const authorImage = getAuthorImage(answer.profile_image);
+
+  return {
+    id: answer.answer_id,
+    source: "student",
+    badge: "PUBLISHED",
+    preview: getAnswerPreview(answer.answer_content),
+    href: buildAnswerHref(questionId, answer.answer_id, "student"),
+    authorName,
+    authorImage,
+    authorInitials: getInitials(authorName),
+  };
+}
+
+function toAiAnswerCard(answer: AiAnswerRow, questionId: string): AnswerCard {
+  return {
+    id: answer.ai_answer_id,
+    source: "ai",
+    badge: "AI",
+    preview: getAnswerPreview(answer.answer),
+    href: buildAnswerHref(questionId, answer.ai_answer_id, "ai"),
+    authorName: "ClimbUP AI",
+    authorImage: "/images/climbup-ai.png",
+    authorInitials: "AI",
+  };
+}
+
+function getRelatedUser(value: PrivateAnswerRow["users"]) {
+  if (Array.isArray(value)) {
+    return value[0] || null;
   }
 
-  return date.toLocaleString("en-IN", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  return value || null;
+}
+
+function getCurrentUserDisplay(user: {
+  user_metadata?: Record<string, unknown> | null;
+}) {
+  return {
+    fullName:
+      sanitizeText(user.user_metadata?.full_name) ||
+      sanitizeText(user.user_metadata?.name),
+    profileImage:
+      sanitizeText(user.user_metadata?.avatar_url) ||
+      sanitizeText(user.user_metadata?.picture),
+  };
+}
+
+function normalizeStudentBadge(status?: string | null): AnswerBadge {
+  return sanitizeText(status).toLowerCase() === "published"
+    ? "PUBLISHED"
+    : "DRAFT";
 }
 
 function getAnswerPreview(value: unknown) {
@@ -251,36 +271,40 @@ function sanitizeText(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
 }
 
-function getAuthorName(
-  profile: UserProfileRow | undefined | null,
-  currentUser: CurrentUser | null,
-  authorId?: string | null
-) {
-  return (
-    sanitizeText(profile?.full_name) ||
-    (currentUser && currentUser.id === authorId
-      ? getUserMetadataName(currentUser)
-      : "") ||
-    getEmailName(profile?.email) ||
-    (currentUser && currentUser.id === authorId
-      ? getEmailName(currentUser.email)
-      : "") ||
-    "Student"
-  );
+function getAuthorImage(value: unknown, fallback?: string | null) {
+  return normalizeImageUrl(sanitizeText(value) || sanitizeText(fallback));
 }
 
-function getUserMetadataName(user: CurrentUser | null) {
-  if (!user) return "";
+function normalizeImageUrl(value: string) {
+  const clean = value.trim();
 
-  return (
-    sanitizeText(user.user_metadata?.full_name) ||
-    sanitizeText(user.user_metadata?.name)
+  if (!clean) return "";
+  if (/^(https?:|data:image\/|blob:)/i.test(clean)) return clean;
+  if (clean.startsWith("//")) return `https:${clean}`;
+  if (clean.startsWith("/")) return clean;
+
+  const supabaseUrl = sanitizeText(process.env.NEXT_PUBLIC_SUPABASE_URL).replace(
+    /\/$/,
+    ""
   );
+
+  if (!supabaseUrl) return clean;
+
+  const storagePath = clean.replace(/^\/+/, "").replace(/^public\//, "");
+
+  if (storagePath.includes("storage/v1/object/")) {
+    return `${supabaseUrl}/${storagePath}`;
+  }
+
+  if (storagePath.includes("/")) {
+    return `${supabaseUrl}/storage/v1/object/public/${storagePath}`;
+  }
+
+  return clean;
 }
 
-function getEmailName(email?: string | null) {
-  const cleanEmail = sanitizeText(email);
-  return cleanEmail ? cleanEmail.split("@")[0] : "";
+function getDisplayName(value: unknown) {
+  return sanitizeText(value) || "Student";
 }
 
 function getInitials(name: string) {

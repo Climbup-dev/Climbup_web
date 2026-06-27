@@ -27,9 +27,6 @@ type QuestionPaper = {
 type PaperQuestion = {
   question_id: string;
   question_number: string;
-  module: string | null;
-  marks: number;
-  difficulty: string | null;
   question_text: string;
 };
 
@@ -90,9 +87,6 @@ export default function QuestionPaperClient({ paperId }: { paperId: string }) {
               .select(`
                 question_id,
                 question_number,
-                module,
-                marks,
-                difficulty,
                 question_text
               `)
               .eq("paper_id", paperId)
@@ -178,15 +172,9 @@ export default function QuestionPaperClient({ paperId }: { paperId: string }) {
               </div>
             </header>
 
-            <div className="paperSectionTitle">
-              <h2>Questions</h2>
-              <span>{questions.length} questions</span>
-            </div>
-
             {questions.length === 0 ? (
               <div className="questionPaperState compact">
-                <h2>No questions added</h2>
-                <p>Add questions in Supabase for this paper.</p>
+                <h2>No questions available.</h2>
               </div>
             ) : (
               <div className="paperQuestionList">
@@ -203,17 +191,7 @@ export default function QuestionPaperClient({ paperId }: { paperId: string }) {
 
                     <div className="questionContent">
                       <p>{question.question_text}</p>
-
-                      <div className="questionMetaLine">
-                        {question.module && <span>{question.module}</span>}
-                        <span>{question.marks} marks</span>
-                        {question.difficulty && <span>{question.difficulty}</span>}
-                      </div>
                     </div>
-
-                    <span className="answerLink">
-                      View Answer
-                    </span>
                   </Link>
                 ))}
               </div>

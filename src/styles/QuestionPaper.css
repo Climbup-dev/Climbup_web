@@ -44,10 +44,10 @@
 .officialPaperHeader h1 {
   margin: 0;
   color: #ffffff;
-  font-size: clamp(24px, 3vw, 36px);
+  font-size: 32px;
   line-height: 1.18;
-  font-weight: 850;
-  letter-spacing: -0.04em;
+  font-weight: 760;
+  letter-spacing: 0;
 }
 
 .paperSubject {
@@ -81,47 +81,27 @@
   font-weight: 800;
 }
 
-.paperSectionTitle {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 24px 32px 12px;
-}
-
-.paperSectionTitle h2 {
-  margin: 0;
-  color: #ffffff;
-  font-size: 24px;
-  line-height: 1.2;
-  font-weight: 850;
-  letter-spacing: -0.03em;
-}
-
-.paperSectionTitle span {
-  color: rgba(238, 253, 248, 0.58);
-  font-size: 13px;
-  font-weight: 650;
-}
-
 .paperQuestionList {
   display: grid;
-  gap: 14px;
-  padding: 0 32px 32px;
+  gap: 15px;
+  padding: 24px 32px 32px;
 }
 
 .paperQuestionRow {
   position: relative;
   display: grid;
-  grid-template-columns: 78px 1fr auto;
+  grid-template-columns: 82px minmax(0, 1fr);
   gap: 18px;
   align-items: center;
-  padding: 22px 24px;
-  border: 1px solid rgba(158, 248, 220, 0.13);
+  min-height: 92px;
+  padding: 20px 26px;
+  border: 1px solid rgba(158, 248, 220, 0.18);
   border-radius: 18px;
   background:
-    linear-gradient(90deg, rgba(56, 211, 153, 0.075), transparent 34%),
-    rgba(255, 255, 255, 0.045);
+    linear-gradient(90deg, rgba(56, 211, 153, 0.1), transparent 32%),
+    rgba(255, 255, 255, 0.05);
   text-decoration: none;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.12);
   transition:
     border-color 180ms ease,
     transform 180ms ease,
@@ -132,8 +112,8 @@
 .paperQuestionRow:focus-visible {
   border-color: rgba(158, 248, 220, 0.38);
   background:
-    linear-gradient(90deg, rgba(56, 211, 153, 0.12), transparent 38%),
-    rgba(255, 255, 255, 0.07);
+    linear-gradient(90deg, rgba(56, 211, 153, 0.16), transparent 38%),
+    rgba(255, 255, 255, 0.075);
   outline: none;
   transform: translateY(-2px);
 }
@@ -153,62 +133,27 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 58px;
-  height: 40px;
+  width: 64px;
+  min-height: 42px;
+  padding: 0 10px;
   border-radius: 999px;
-  background: #9ef8dc;
+  background: linear-gradient(135deg, #9ef8dc, #6ee7c5);
   color: #021526;
-  font-size: 15px;
+  font-size: 14px;
   line-height: 1;
-  font-weight: 850;
-  letter-spacing: -0.01em;
+  font-weight: 800;
+  letter-spacing: 0;
+  box-shadow: 0 10px 22px rgba(56, 211, 153, 0.18);
 }
 
 .questionContent p {
-  margin: 0 0 11px;
-  color: #f7fffc;
-  font-size: clamp(18px, 1.45vw, 20px);
-  line-height: 1.62;
-  font-weight: 650;
-  letter-spacing: -0.012em;
-  max-width: 920px;
-}
-
-.questionMetaLine {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.questionMetaLine span {
-  padding: 5px 10px;
-  border: 1px solid rgba(158, 248, 220, 0.12);
-  border-radius: 999px;
-  background: rgba(2, 21, 38, 0.42);
-  color: rgba(238, 253, 248, 0.66);
-  font-size: 12px;
-  line-height: 1.25;
-  font-weight: 700;
-  letter-spacing: 0.01em;
-}
-
-.answerLink {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 40px;
-  padding: 0 17px;
-  border-radius: 999px;
-  background: linear-gradient(135deg, #9ef8dc, #38d399);
-  color: #021526;
-  font-size: 13px;
-  font-weight: 850;
-  text-decoration: none;
-  white-space: nowrap;
-}
-
-.answerLink:hover {
-  transform: translateY(-1px);
+  margin: 0;
+  color: rgba(247, 255, 252, 0.94);
+  font-size: 20px;
+  line-height: 1.58;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-shadow: none;
 }
 
 .questionPaperState {
@@ -255,14 +200,18 @@
   }
 
   .officialPaperHeader,
-  .paperQuestionList,
-  .paperSectionTitle {
+  .paperQuestionList {
     padding-left: 16px;
     padding-right: 16px;
   }
 
   .paperInfoGrid {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .officialPaperHeader h1 {
+    font-size: 24px;
+    line-height: 1.24;
   }
 
   .paperQuestionRow {
@@ -277,11 +226,7 @@
   }
 
   .questionContent p {
-    font-size: 18px;
-    line-height: 1.58;
-  }
-
-  .answerLink {
-    width: fit-content;
+    font-size: 17px;
+    line-height: 1.55;
   }
 }

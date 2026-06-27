@@ -326,7 +326,8 @@
 }
 
 .questionDetailPage .answer-toolbar {
-  width: 146px;
+  width: max-content;
+  max-width: calc(100vw - 32px);
 }
 
 .questionDetailPage .answer-feedback-actions {
@@ -375,7 +376,8 @@
   }
 
   .questionDetailPage .answer-toolbar {
-    width: auto;
+    width: max-content;
+    max-width: calc(100vw - 16px);
   }
 }
 

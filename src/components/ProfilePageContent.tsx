@@ -52,6 +52,12 @@ type PublishedAnswer = {
   } | null;
 };
 
+type PublishedAnswerDisplay = {
+  question: string;
+  preview: string;
+  blockLabels: string[];
+};
+
 const AuthModal = dynamic(() => import("@/components/AuthModal"), {
   ssr: false,
   loading: () => null,
@@ -75,6 +81,144 @@ function getInitials(name: string) {
       .map((part) => part[0]?.toUpperCase())
       .join("") || "U"
   );
+}
+
+function getPublishedAnswerDisplay(answer: PublishedAnswer): PublishedAnswerDisplay {
+  const parsed = parseAnswerSnapshot(answer.answer_content);
+
+  return {
+    question:
+      cleanText(answer.questions?.question_text) ||
+      parsed.question ||
+      "Question not available",
+    preview: parsed.preview || getPlainAnswerPreview(answer.answer_content),
+    blockLabels: parsed.blockLabels,
+  };
+}
+
+function parseAnswerSnapshot(content: string): PublishedAnswerDisplay {
+  const parsed = parseJson(content);
+  const root = asRecord(parsed);
+  const answer = asRecord(root?.answer);
+  const blocks = asArray(answer?.blocks) || asArray(root?.blocks) || [];
+  const blockLabels = getBlockLabels(blocks);
+  const preview = blocks
+    .map((block) => getBlockPreview(block))
+    .filter(Boolean)
+    .join(" ");
+
+  return {
+    question:
+      cleanText(root?.question) ||
+      cleanText(answer?.question) ||
+      "",
+    preview: trimPreview(preview),
+    blockLabels,
+  };
+}
+
+function parseJson(content: string): unknown {
+  try {
+    return JSON.parse(content);
+  } catch {
+    return null;
+  }
+}
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
+}
+
+function asArray(value: unknown): unknown[] | null {
+  return Array.isArray(value) ? value : null;
+}
+
+function getBlockPreview(block: unknown) {
+  const record = asRecord(block);
+  if (!record) return "";
+
+  const type = cleanText(record.type);
+
+  if (type === "steps") {
+    return (asArray(record.items) || asArray(record.steps) || [])
+      .map((item) => {
+        const step = asRecord(item);
+        return step
+          ? `${cleanText(step.title)} ${cleanText(step.content) || cleanText(step.text)}`
+          : cleanText(item);
+      })
+      .join(" ");
+  }
+
+  if (type === "table") {
+    const columns = (asArray(record.columns) || []).map(cleanText).join(" ");
+    const rows = (asArray(record.rows) || [])
+      .flatMap((row) => (Array.isArray(row) ? row : []))
+      .map(cleanText)
+      .join(" ");
+    return `${cleanText(record.title)} ${columns} ${rows}`;
+  }
+
+  if (type === "image") {
+    return (
+      cleanText(record.caption) ||
+      cleanText(record.alt) ||
+      cleanText(record.title) ||
+      cleanText(record.search_query)
+    );
+  }
+
+  return (
+    cleanText(record.content) ||
+    cleanText(record.text) ||
+    cleanText(record.description) ||
+    cleanText(record.title)
+  );
+}
+
+function getBlockLabels(blocks: unknown[]) {
+  const labels = blocks
+    .map((block) => {
+      const type = cleanText(asRecord(block)?.type);
+      const labelsByType: Record<string, string> = {
+        markdown: "Text",
+        image: "Image",
+        table: "Table",
+        steps: "Steps",
+        code: "Code",
+        mermaid: "Diagram",
+      };
+
+      return labelsByType[type] || "";
+    })
+    .filter(Boolean);
+
+  return Array.from(new Set(labels)).slice(0, 4);
+}
+
+function getPlainAnswerPreview(content: string) {
+  const parsed = parseJson(content);
+  if (parsed && typeof parsed === "object") return "Answer preview not available.";
+  return trimPreview(content);
+}
+
+function cleanText(value: unknown) {
+  if (typeof value !== "string" && typeof value !== "number") return "";
+
+  return String(value)
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    .replace(/https?:\/\/\S+|www\.\S+/gi, "")
+    .replace(/[#*_`~=|>{}[\]()]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function trimPreview(value: string) {
+  const clean = cleanText(value);
+  if (!clean) return "Answer preview not available.";
+  return clean.length > 170 ? `${clean.slice(0, 170)}...` : clean;
 }
 
 function CustomSelect({
@@ -316,8 +460,28 @@ export default function ProfilePageContent() {
       }
 
       const answers = (data || []) as PublishedAnswer[];
+      const displayAnswers = answers.map((answer) => {
+        const display = getPublishedAnswerDisplay(answer);
+        const question = answer.questions
+          ? {
+              ...answer.questions,
+              question_text:
+                cleanText(answer.questions.question_text) || display.question,
+            }
+          : {
+              question_text: display.question,
+              marks: 0,
+              difficulty: "Published",
+            };
 
-      setPublishedAnswers(answers);
+        return {
+          ...answer,
+          answer_content: display.preview,
+          questions: question,
+        };
+      });
+
+      setPublishedAnswers(displayAnswers);
       setStats({
         publishedAnswers: answers.length,
         totalLikes: answers.reduce((sum, a) => sum + Number(a.likes_count || 0), 0),

@@ -1,8 +1,8 @@
 "use client";
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any, @next/next/no-img-element */
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import AnswerRenderer from "../AnswerRenderer";
 import AnswerToolbar, { AnswerFeedbackActions } from "./AnswerToolbar";
 import AddBlockMenu from "./AddBlockMenu";
@@ -13,12 +13,12 @@ import { saveDummyAnswerSnapshot } from "./dummyAnswerStorage";
 
 type Feedback = "like" | "dislike" | null;
 type AnswerTheme = "light" | "dark";
+type PopupKind = "answers" | "insights";
+type SaveMessageTone = "success" | "error";
 type ImprovedAnswerCard = {
   id: string;
   source: "ai" | "student";
-  label: string;
-  status: string;
-  meta: string;
+  badge: "DRAFT" | "PUBLISHED" | "AI";
   preview: string;
   href: string;
   authorName: string;
@@ -44,26 +44,45 @@ type EditableAnswerRendererProps = {
   onSave?: (data: any) => void;
 };
 
+const INSIGHT_PROMPTS = [
+  {
+    label: "Skill gained",
+    text: "I learned this particular skill: ",
+  },
+  {
+    label: "Mistake avoided",
+    text: "One mistake this answer helped me avoid is ",
+  },
+  {
+    label: "Exam pattern",
+    text: "The pattern I noticed from this answer is ",
+  },
+  {
+    label: "Concept clarity",
+    text: "This made the concept clear because ",
+  },
+];
+
 export default function EditableAnswerRenderer({
   data,
   questionId = "",
   answerId = "",
-  answerSource = undefined,
   onSave = undefined,
 }: EditableAnswerRendererProps) {
   const normalized = useMemo(() => normalizeAnswerData(data), [data]);
-  const initialInsightAnswerId =
-    answerSource === "student_draft" ? answerId : "";
+  const initialInsightAnswerId = answerId || "";
 
   const [isEditing, setIsEditing] = useState(false);
-  const [showAddMenu, setShowAddMenu] = useState(false);
   const [editableBlocks, setEditableBlocks] = useState(() => normalized.blocks);
   const [feedback, setFeedback] = useState<Feedback>(null);
   const [isPublic, setIsPublic] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
+  const [saveMessageTone, setSaveMessageTone] =
+    useState<SaveMessageTone>("success");
   const [currentAnswerId, setCurrentAnswerId] = useState(initialInsightAnswerId);
   const [answerCards, setAnswerCards] = useState<ImprovedAnswerCard[]>([]);
   const [showImprovedPopup, setShowImprovedPopup] = useState(false);
+  const [closingPopup, setClosingPopup] = useState<PopupKind | null>(null);
   const [isLoadingImproved, setIsLoadingImproved] = useState(false);
   const [improvedError, setImprovedError] = useState("");
   const [showInsightsPopup, setShowInsightsPopup] = useState(false);
@@ -71,8 +90,10 @@ export default function EditableAnswerRenderer({
   const [isLoadingInsights, setIsLoadingInsights] = useState(false);
   const [isSavingInsight, setIsSavingInsight] = useState(false);
   const [insightsError, setInsightsError] = useState("");
+  const [insightsNotice, setInsightsNotice] = useState("");
   const [editingInsightId, setEditingInsightId] = useState("");
   const [insightText, setInsightText] = useState("");
+  const pendingAddedBlockId = useRef("");
   const [theme, setTheme] = useState<AnswerTheme>(() => {
     if (typeof window === "undefined") return "dark";
 
@@ -80,6 +101,17 @@ export default function EditableAnswerRenderer({
       ? "light"
       : "dark";
   });
+
+  useEffect(() => {
+    if (!saveMessage) return;
+
+    const timeout = window.setTimeout(
+      () => setSaveMessage(""),
+      saveMessageTone === "error" ? 5200 : 3400
+    );
+
+    return () => window.clearTimeout(timeout);
+  }, [saveMessage, saveMessageTone]);
 
   const updateBlock = (index: number, updatedBlock: any) => {
     setEditableBlocks((prev: any[]) =>
@@ -94,18 +126,30 @@ export default function EditableAnswerRenderer({
   };
 
   const addBlock = (type: string) => {
-    setEditableBlocks((prev: any[]) => [...prev, createEmptyBlock(type)]);
-    setShowAddMenu(false);
+    const nextBlock = createEmptyBlock(type);
+    pendingAddedBlockId.current = nextBlock.id;
+    setEditableBlocks((prev: any[]) => [...prev, nextBlock]);
+
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        const block = document.querySelector<HTMLElement>(
+          `[data-editor-block-id="${pendingAddedBlockId.current}"]`
+        );
+
+        block?.scrollIntoView({ behavior: "smooth", block: "center" });
+        pendingAddedBlockId.current = "";
+      });
+    });
   };
 
   const startEditing = () => {
     setEditableBlocks(normalized.blocks);
     setIsEditing(true);
-    setShowAddMenu(false);
   };
 
   const saveChanges = async () => {
     setSaveMessage("");
+    setSaveMessageTone("success");
 
     const snapshot = createAnswerEditorSnapshot({
       question: normalized.question,
@@ -155,6 +199,7 @@ export default function EditableAnswerRenderer({
           throw new Error(result.error || "Unable to save answer.");
         }
 
+        setSaveMessageTone("success");
         setSaveMessage(
           isPublic ? "Answer published successfully." : "Private draft saved."
         );
@@ -163,6 +208,7 @@ export default function EditableAnswerRenderer({
           setCurrentAnswerId(result.answer.answer_id);
         }
       } catch (error) {
+        setSaveMessageTone("error");
         setSaveMessage(
           error instanceof Error ? error.message : "Unable to save answer."
         );
@@ -176,13 +222,11 @@ export default function EditableAnswerRenderer({
     }
 
     setIsEditing(false);
-    setShowAddMenu(false);
   };
 
   const cancelEdit = () => {
     setEditableBlocks(normalized.blocks);
     setIsEditing(false);
-    setShowAddMenu(false);
   };
 
   const handleShare = async () => {
@@ -227,6 +271,7 @@ export default function EditableAnswerRenderer({
 
   const handleImprovedAnswer = async () => {
     setFeedback((prev) => prev || "like");
+    setClosingPopup(null);
     setShowImprovedPopup(true);
     setImprovedError("");
 
@@ -265,11 +310,12 @@ export default function EditableAnswerRenderer({
 
   const loadInsights = async () => {
     setInsightsError("");
+    setInsightsNotice("");
 
     if (!currentAnswerId) {
       setInsights([]);
       setInsightsError(
-        "Insights can be added after this is saved as a student answer."
+        "Open a saved answer before viewing insights."
       );
       return;
     }
@@ -302,33 +348,50 @@ export default function EditableAnswerRenderer({
   };
 
   const handleInsights = async () => {
+    setClosingPopup(null);
     setShowInsightsPopup(true);
     await loadInsights();
+  };
+
+  const closePopup = (popup: PopupKind) => {
+    setClosingPopup(popup);
+    window.setTimeout(() => {
+      if (popup === "answers") {
+        setShowImprovedPopup(false);
+      } else {
+        setShowInsightsPopup(false);
+      }
+
+      setClosingPopup((current) => (current === popup ? null : current));
+    }, 180);
   };
 
   const resetInsightForm = () => {
     setEditingInsightId("");
     setInsightText("");
+    setInsightsError("");
   };
 
   const submitInsight = async () => {
     setInsightsError("");
+    setInsightsNotice("");
 
     if (!currentAnswerId) {
       setInsightsError(
-        "Insights can be added after this is saved as a student answer."
+        "Open a saved answer before publishing an insight."
       );
       return;
     }
 
     if (!insightText.trim()) {
-      setInsightsError("Insight is required.");
+      setInsightsError("Write one skill, pattern, or thought before publishing.");
       return;
     }
 
     setIsSavingInsight(true);
 
     try {
+      const wasEditingInsight = Boolean(editingInsightId);
       const endpoint = editingInsightId
         ? `/api/insights/${editingInsightId}`
         : `/api/answers/${currentAnswerId}/insights`;
@@ -353,6 +416,11 @@ export default function EditableAnswerRenderer({
 
       resetInsightForm();
       await loadInsights();
+      setInsightsNotice(
+        wasEditingInsight
+          ? "Reflection updated. Your learning trail stays sharp."
+          : "Published. Your thought can help another student learn with confidence."
+      );
     } catch (error) {
       setInsightsError(
         error instanceof Error ? error.message : "Unable to save insight."
@@ -365,6 +433,8 @@ export default function EditableAnswerRenderer({
   const editInsight = (insight: AnswerInsight) => {
     setEditingInsightId(insight.insightId);
     setInsightText(insight.insight);
+    setInsightsError("");
+    setInsightsNotice("");
   };
 
   const deleteInsight = async (insightId: string) => {
@@ -388,6 +458,7 @@ export default function EditableAnswerRenderer({
       }
 
       await loadInsights();
+      setInsightsNotice("Reflection removed.");
     } catch (error) {
       setInsightsError(
         error instanceof Error ? error.message : "Unable to delete insight."
@@ -435,7 +506,6 @@ export default function EditableAnswerRenderer({
       onEdit={startEditing}
       onSave={saveChanges}
       onCancel={cancelEdit}
-      onAddBlock={() => setShowAddMenu((prev) => !prev)}
       onShare={handleShare}
       onLike={handleLike}
       onDislike={handleDislike}
@@ -448,7 +518,19 @@ export default function EditableAnswerRenderer({
       isPublic={isPublic}
       theme={theme}
       onToggleTheme={toggleTheme}
+      addBlockMenu={isEditing ? <AddBlockMenu onAdd={addBlock} /> : null}
     />
+
+    {saveMessage && (
+      <div
+        aria-live={saveMessageTone === "error" ? "assertive" : "polite"}
+        className={`answer-save-message ${saveMessageTone}`}
+        role={saveMessageTone === "error" ? "alert" : "status"}
+      >
+        <span className="answer-save-message-icon" aria-hidden="true" />
+        <span>{saveMessage}</span>
+      </div>
+    )}
 
     {!isEditing ? (
       <>
@@ -461,11 +543,6 @@ export default function EditableAnswerRenderer({
           onDislike={handleDislike}
         />
 
-        {saveMessage && (
-          <div className="answer-save-message" role="status">
-            {saveMessage}
-          </div>
-        )}
       </>
     ) : (
       <>
@@ -480,23 +557,26 @@ export default function EditableAnswerRenderer({
               No blocks available. Click Add Block to create one.
             </div>
           ) : (
-            editableBlocks.map((block: any, index: number) => (
-              <BlockEditor
-                key={block.id || `${block.type}-${index}`}
-                block={block}
-                index={index}
-                onChange={updateBlock}
-                onDelete={deleteBlock}
-              />
-            ))
+            editableBlocks.map((block: any, index: number) => {
+              const blockId = block.id || `${block.type}-${index}`;
+
+              return (
+                <div
+                  className="editor-block-scroll-target"
+                  data-editor-block-id={blockId}
+                  key={blockId}
+                >
+                  <BlockEditor
+                    block={block}
+                    index={index}
+                    onChange={updateBlock}
+                    onDelete={deleteBlock}
+                  />
+                </div>
+              );
+            })
           )}
         </div>
-
-        {showAddMenu && (
-          <div className="bottom-add-block-wrapper">
-            <AddBlockMenu onAdd={addBlock} />
-          </div>
-        )}
 
         <AnswerFeedbackActions
           feedback={feedback}
@@ -505,21 +585,18 @@ export default function EditableAnswerRenderer({
           onDislike={handleDislike}
         />
 
-        {saveMessage && (
-          <div className="answer-save-message" role="status">
-            {saveMessage}
-          </div>
-        )}
       </>
     )}
 
     {showImprovedPopup && (
       <div
-        className="improved-answer-overlay"
+        className={`improved-answer-overlay ${
+          closingPopup === "answers" ? "is-closing" : ""
+        }`}
         role="presentation"
         onMouseDown={(event) => {
           if (event.target === event.currentTarget) {
-            setShowImprovedPopup(false);
+            closePopup("answers");
           }
         }}
       >
@@ -538,7 +615,7 @@ export default function EditableAnswerRenderer({
             <button
               type="button"
               className="improved-answer-close"
-              onClick={() => setShowImprovedPopup(false)}
+              onClick={() => closePopup("answers")}
             >
               Close
             </button>
@@ -556,34 +633,32 @@ export default function EditableAnswerRenderer({
             <div className="improved-answer-grid">
               {answerCards.map((answer) => (
                 <a
-                  className="improved-answer-card"
+                  aria-label={`Open ${answer.badge.toLowerCase()} answer by ${answer.authorName}`}
+                  className={`improved-answer-card ${
+                    answer.source === "ai" ? "is-ai-answer" : ""
+                  }`}
                   href={answer.href}
                   key={`${answer.source}-${answer.id}`}
                 >
-                  <div className="improved-answer-card-top">
-                    <span>{answer.label}</span>
-                    <strong>{answer.status}</strong>
-                  </div>
-                  <div className="improved-answer-author">
-                    {answer.authorImage ? (
-                      <span
-                        className="improved-answer-avatar has-image"
-                        style={{
-                          backgroundImage: `url(${answer.authorImage})`,
-                        }}
-                        aria-hidden="true"
+                  <div className="improved-answer-card-head">
+                    <div className="improved-answer-author">
+                      <AnswerAvatar
+                        image={answer.authorImage}
+                        initials={answer.authorInitials}
                       />
-                    ) : (
-                      <span className="improved-answer-avatar" aria-hidden>
-                        {answer.authorInitials}
-                      </span>
-                    )}
-                  <div>
-                      <b>{answer.authorName}</b>
-                      <small>{answer.meta}</small>
+                      <div>
+                        <b>{answer.authorName}</b>
+                      </div>
                     </div>
+
+                    <strong className={`improved-answer-badge ${answer.badge.toLowerCase()}`}>
+                      {answer.badge}
+                    </strong>
                   </div>
+
                   <p>{answer.preview}</p>
+
+                  <span className="improved-answer-open">Open</span>
                 </a>
               ))}
             </div>
@@ -594,11 +669,13 @@ export default function EditableAnswerRenderer({
 
     {showInsightsPopup && (
       <div
-        className="improved-answer-overlay"
+        className={`improved-answer-overlay ${
+          closingPopup === "insights" ? "is-closing" : ""
+        }`}
         role="presentation"
         onMouseDown={(event) => {
           if (event.target === event.currentTarget) {
-            setShowInsightsPopup(false);
+            closePopup("insights");
           }
         }}
       >
@@ -611,13 +688,13 @@ export default function EditableAnswerRenderer({
           <div className="improved-answer-head">
             <div>
               <p>Answer insights</p>
-              <h2>Notes from students</h2>
+              <h2>Skills students are building</h2>
             </div>
 
             <button
               type="button"
               className="improved-answer-close"
-              onClick={() => setShowInsightsPopup(false)}
+              onClick={() => closePopup("insights")}
             >
               Close
             </button>
@@ -625,13 +702,38 @@ export default function EditableAnswerRenderer({
 
           <div className="insights-layout">
             <div className="insight-form">
-              <label>
-                <span>Insight</span>
+              <div className="insight-composer-top">
+                <span className="insight-composer-mark" aria-hidden>
+                  IN
+                </span>
+                <div>
+                  <h3>Publish a learning reflection</h3>
+                </div>
+              </div>
+
+              <div className="insight-focus-row" aria-label="Reflection starters">
+                {INSIGHT_PROMPTS.map((prompt) => (
+                  <button
+                    key={prompt.label}
+                    type="button"
+                    onClick={() =>
+                      setInsightText((current) =>
+                        current.trim() ? current : prompt.text
+                      )
+                    }
+                  >
+                    {prompt.label}
+                  </button>
+                ))}
+              </div>
+
+              <label className="insight-textarea-field">
+                <span>Your thought</span>
                 <textarea
                   value={insightText}
                   onChange={(event) => setInsightText(event.target.value)}
-                  placeholder="Write your insight..."
-                  rows={5}
+                  placeholder="Example : While studying Statistics, I learned how to analyze data instead of making assumptions. I now compare my test scores and study patterns to identify what actually improves my performance."
+                  rows={7}
                 />
               </label>
 
@@ -642,7 +744,7 @@ export default function EditableAnswerRenderer({
                   disabled={isSavingInsight}
                   onClick={submitInsight}
                 >
-                  {editingInsightId ? "Update insight" : "Publish"}
+                  {editingInsightId ? "Update reflection" : "Publish reflection"}
                 </button>
 
                 {editingInsightId && (
@@ -656,37 +758,40 @@ export default function EditableAnswerRenderer({
                 )}
               </div>
 
+              {insightsNotice && (
+                <div className="insight-inline-state success">
+                  {insightsNotice}
+                </div>
+              )}
+
               {insightsError && (
-                <div className="improved-answer-state error">
+                <div className="insight-inline-state error">
                   {insightsError}
                 </div>
               )}
             </div>
 
             <div className="insights-list">
+              <div className="insights-list-head">
+                <span>{insights.length} reflections</span>
+                <strong>Student learning trail</strong>
+              </div>
+
               {isLoadingInsights ? (
                 <div className="improved-answer-state">Loading insights...</div>
               ) : insights.length === 0 ? (
                 <div className="improved-answer-state">
-                  No insights are available for this answer yet.
+                  No reflections yet. Be the first to share what this answer sharpened.
                 </div>
               ) : (
                 insights.map((insight) => (
                   <article className="insight-card" key={insight.insightId}>
+                    <span className="insight-card-kind">Skill reflection</span>
                     <div className="improved-answer-author">
-                      {insight.authorImage ? (
-                        <span
-                          className="improved-answer-avatar has-image"
-                          style={{
-                            backgroundImage: `url(${insight.authorImage})`,
-                          }}
-                          aria-hidden="true"
-                        />
-                      ) : (
-                        <span className="improved-answer-avatar" aria-hidden>
-                          {insight.authorInitials}
-                        </span>
-                      )}
+                      <AnswerAvatar
+                        image={insight.authorImage}
+                        initials={insight.authorInitials}
+                      />
                       <div>
                         <b>{insight.authorName}</b>
                         <small>{formatInsightDate(insight.updatedAt)}</small>
@@ -722,6 +827,36 @@ export default function EditableAnswerRenderer({
     )}
   </div>
 );
+}
+
+function AnswerAvatar({
+  image,
+  initials,
+}: {
+  image: string;
+  initials: string;
+}) {
+  const [failedImage, setFailedImage] = useState("");
+  const showImage = Boolean(image && failedImage !== image);
+
+  return (
+    <span
+      className={`improved-answer-avatar ${showImage ? "has-image" : ""}`}
+      aria-hidden="true"
+    >
+      {showImage ? (
+        <img
+          src={image}
+          alt=""
+          loading="lazy"
+          referrerPolicy="no-referrer"
+          onError={() => setFailedImage(image)}
+        />
+      ) : (
+        initials
+      )}
+    </span>
+  );
 }
 
 function normalizeAnswerData(data: any) {

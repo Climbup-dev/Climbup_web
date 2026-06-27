@@ -63,6 +63,13 @@ export default function PyqsPreparationClient() {
 
   const isProfileIncomplete =
     !profile?.university_id || !profile?.branch_id || !profile?.semester;
+  const universityName = profile?.universities?.university_name || "University";
+  const branchName = profile?.branches?.branch_name || "Branch";
+  const branchCode = profile?.branches?.branch_code;
+  const branchLabel = branchCode ? `${branchName} (${branchCode})` : branchName;
+  const semesterLabel = profile?.semester
+    ? `Semester ${profile.semester}`
+    : "Semester -";
 
   useEffect(() => {
     async function loadUserSubjects() {
@@ -162,12 +169,9 @@ export default function PyqsPreparationClient() {
 
       <section className="pyqShell">
         <div className="pyqHero">
-          <span>Previous year questions</span>
+          <span>Practice papers</span>
           <h1>PYQs</h1>
-          <p>
-            Your subjects and papers are shown according to your selected
-            university, branch and semester.
-          </p>
+          <p>Semester-wise question papers.</p>
         </div>
 
         {loading || pageLoading ? (
@@ -188,82 +192,93 @@ export default function PyqsPreparationClient() {
           <div className="pyqState">
             <h2>Complete academic profile</h2>
             <p>{message}</p>
-            <Link href="/profile" prefetch={false}>Go to profile</Link>
+            <Link href="/profile" prefetch={false}>
+              Go to profile
+            </Link>
           </div>
         ) : (
           <div className="pyqLayout">
             <aside className="pyqSubjectsPanel">
-              <div className="pyqPanelHeading">
-                <span>Your academic profile</span>
-                <h2>Semester {profile?.semester || "-"} Subjects</h2>
-                <p>
-                  {profile?.universities?.university_name || "University"} •{" "}
-                  {profile?.branches?.branch_name || "Branch"}
-                  {profile?.branches?.branch_code
-                    ? ` (${profile.branches.branch_code})`
-                    : ""}
-                </p>
+              <div className="pyqProfileCard">
+                <span>Profile</span>
+                <strong>{semesterLabel}</strong>
+                <p>{branchLabel}</p>
+                <small>{universityName}</small>
+              </div>
+
+              <div className="pyqSubjectHeader">
+                <div>
+                  <h2>Subjects</h2>
+                </div>
+                <strong>{subjects.length}</strong>
               </div>
 
               {subjects.length === 0 ? (
                 <div className="pyqEmptyMini">
-                  <strong>No subjects found</strong>
-                  <p>
-                    Add subjects in Supabase for this university, branch and
-                    semester.
-                  </p>
+                  <strong>No subjects yet</strong>
                 </div>
               ) : (
                 <div className="pyqSubjectList">
                   {subjects.map((subject) => (
                     <div className="pyqSubjectGroup" key={subject.subject_id}>
-                    <button
-                      type="button"
-                      className={
-                        selectedSubject?.subject_id === subject.subject_id
-                          ? "active"
-                          : ""
-                      }
-                      onClick={() => loadPapers(subject)}
-                    >
-                      <span>{subject.subject_code}</span>
-                      <strong>{subject.subject_name}</strong>
-                      <em>View papers →</em>
-                    </button>
+                      <button
+                        type="button"
+                        className={
+                          selectedSubject?.subject_id === subject.subject_id
+                            ? "active"
+                            : ""
+                        }
+                        aria-current={
+                          selectedSubject?.subject_id === subject.subject_id
+                            ? "true"
+                            : undefined
+                        }
+                        onClick={() => loadPapers(subject)}
+                      >
+                        <span>{subject.subject_code || "SUB"}</span>
+                        <strong>{subject.subject_name}</strong>
+                        <em>
+                          {selectedSubject?.subject_id === subject.subject_id
+                            ? "Selected"
+                            : "View papers"}
+                        </em>
+                      </button>
 
-                    {selectedSubject?.subject_id === subject.subject_id && (
-                      <div className="pyqInlinePapers">
-                        {papersLoading ? (
-                          <div className="pyqInlineState">
-                            <span className="pyqLoader" />
-                            <p>Loading papers...</p>
-                          </div>
-                        ) : papers.length === 0 ? (
-                          <div className="pyqInlineState">
-                            <strong>No papers available</strong>
-                            <p>This subject does not have uploaded PYQs yet.</p>
-                          </div>
-                        ) : (
-                          <div className="pyqInlinePaperList">
-                            {papers.map((paper) => (
-                              <Link
-                                href={`/pyqs/${paper.paper_id}`}
-                                key={paper.paper_id}
-                                className="pyqInlinePaperCard"
-                                prefetch={false}
-                              >
-                                <span>{paper.exam_type}</span>
-                                <strong>{paper.paper_title}</strong>
-                                <em>
-                                  {paper.year} | {paper.total_marks} marks |{" "}
-                                  {paper.duration} min
-                                </em>
-                              </Link>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    )}
+                      {selectedSubject?.subject_id === subject.subject_id && (
+                        <div className="pyqInlinePapers">
+                          {papersLoading ? (
+                            <div className="pyqInlineState">
+                              <span className="pyqLoader" />
+                              <p>Loading papers...</p>
+                            </div>
+                          ) : papers.length === 0 ? (
+                            <div className="pyqInlineState">
+                              <strong>No papers available</strong>
+                              <p>
+                                This subject does not have uploaded PYQs yet.
+                              </p>
+                            </div>
+                          ) : (
+                            <div className="pyqInlinePaperList">
+                              {papers.map((paper) => (
+                                <Link
+                                  href={`/pyqs/${paper.paper_id}`}
+                                  key={paper.paper_id}
+                                  className="pyqInlinePaperCard"
+                                  prefetch={false}
+                                >
+                                  <span>{paper.exam_type}</span>
+                                  <strong>{paper.paper_title}</strong>
+                                  <em>
+                                    {paper.year} | {paper.total_marks} marks |{" "}
+                                    {paper.duration} min
+                                  </em>
+                                </Link>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -271,20 +286,32 @@ export default function PyqsPreparationClient() {
             </aside>
 
             <section className="pyqPapersPanel">
-              {!selectedSubject ? (
-                <div className="pyqState compact">
-                  <h2>Select a subject</h2>
-                  <p>
-                    Click any subject from the left side to view available PYQ
-                    papers.
-                  </p>
+              {subjects.length === 0 ? (
+                <div className="pyqStartPanel">
+                  <span className="pyqStartMark">PYQ</span>
+                  <h2>No subjects yet</h2>
+                  <Link href="/profile" prefetch={false}>
+                    Review profile
+                  </Link>
+                </div>
+              ) : !selectedSubject ? (
+                <div className="pyqStartPanel">
+                  <span className="pyqStartMark">PYQ</span>
+                  <h2>Select subject</h2>
                 </div>
               ) : (
                 <>
-                  <div className="pyqPanelHeading">
-                    <span>Available question papers</span>
-                    <h2>{selectedSubject.subject_name}</h2>
-                    <p>{selectedSubject.subject_code}</p>
+                  <div className="pyqPaperHeader">
+                    <div className="pyqPanelHeading">
+                      <span>Papers</span>
+                      <h2>{selectedSubject.subject_name}</h2>
+                      <p>{selectedSubject.subject_code}</p>
+                    </div>
+                    <strong>
+                      {papersLoading
+                        ? "Loading"
+                        : `${papers.length} paper${papers.length === 1 ? "" : "s"}`}
+                    </strong>
                   </div>
 
                   {papersLoading ? (
@@ -339,5 +366,3 @@ export default function PyqsPreparationClient() {
     </main>
   );
 }
-
-

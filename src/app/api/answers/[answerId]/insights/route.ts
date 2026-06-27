@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import type { User } from "@supabase/supabase-js";
 
 import { createRouteHandlerClient } from "@/lib/supabase/server";
 
@@ -13,18 +14,16 @@ type InsightRow = {
   title?: string | null;
   insight?: string | null;
   created_at?: string | null;
+  users?: UserDisplayFields | UserDisplayFields[] | null;
 };
 
-type UserProfileRow = {
-  user_id: string;
+type UserDisplayFields = {
   full_name?: string | null;
-  email?: string | null;
   profile_image?: string | null;
 };
 
 type CurrentUser = {
   id: string;
-  email?: string | null;
   user_metadata?: Record<string, unknown> | null;
 };
 
@@ -44,9 +43,24 @@ export async function GET(request: Request, { params }: PageProps) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  if (user) {
+    await syncUserProfile(supabase, user);
+  }
+
   const { data, error } = await supabase
     .from("insights")
-    .select("insight_id,user_id,answer_id,title,insight,created_at")
+    .select(`
+      insight_id,
+      user_id,
+      answer_id,
+      title,
+      insight,
+      created_at,
+      users:user_id (
+        full_name,
+        profile_image
+      )
+    `)
     .eq("answer_id", answerId)
     .order("created_at", { ascending: false });
 
@@ -58,16 +72,17 @@ export async function GET(request: Request, { params }: PageProps) {
   }
 
   const rows = (data || []) as InsightRow[];
-  const profileMap = await getProfileMap(
-    supabase,
-    rows.map((row) => row.user_id).filter(Boolean)
-  );
 
   return NextResponse.json({
     ok: true,
     insights: rows.map((row) => {
-      const profile = profileMap.get(row.user_id);
+      const profile = getRelatedUser(row.users);
       const authorName = getAuthorName(profile, user, row.user_id);
+      const authorImage =
+        normalizeImageUrl(sanitizeText(profile?.profile_image)) ||
+        (user?.id === row.user_id
+          ? normalizeImageUrl(getUserMetadataImage(user))
+          : "");
 
       return {
         insightId: row.insight_id,
@@ -76,7 +91,7 @@ export async function GET(request: Request, { params }: PageProps) {
         updatedAt: row.created_at || "",
         canEdit: Boolean(user?.id && user.id === row.user_id),
         authorName,
-        authorImage: sanitizeText(profile?.profile_image),
+        authorImage,
         authorInitials: getInitials(authorName),
       };
     }),
@@ -100,6 +115,8 @@ export async function POST(request: Request, { params }: PageProps) {
     );
   }
 
+  await syncUserProfile(supabase, user);
+
   const body = (await request.json().catch(() => null)) as {
     title?: string;
     insight?: string;
@@ -114,25 +131,25 @@ export async function POST(request: Request, { params }: PageProps) {
     );
   }
 
-  const { data: answer, error: answerError } = await supabase
-    .from("student_answers")
-    .select("answer_id")
-    .eq("answer_id", answerId)
-    .maybeSingle();
+  const answerLookup = await getInsightAnswerTarget(
+    supabase,
+    answerId,
+    user.id
+  );
 
-  if (answerError) {
+  if (answerLookup.error) {
     return NextResponse.json(
-      { ok: false, error: answerError.message },
+      { ok: false, error: answerLookup.error },
       { status: 500 }
     );
   }
 
-  if (!answer) {
+  if (!answerLookup.exists) {
     return NextResponse.json(
       {
         ok: false,
         error:
-          "Insights can only be added to saved student answers. Save this answer first, then publish an insight.",
+          "Insights can only be added to an available answer. Open a saved answer first.",
       },
       { status: 400 }
     );
@@ -159,25 +176,76 @@ export async function POST(request: Request, { params }: PageProps) {
   return NextResponse.json({ ok: true, insight: data });
 }
 
-async function getProfileMap(
+async function syncUserProfile(
   supabase: ReturnType<typeof createRouteHandlerClient>,
-  userIds: string[]
+  user: User
 ) {
-  const uniqueIds = Array.from(new Set(userIds));
-  const map = new Map<string, UserProfileRow>();
+  const fullName =
+    sanitizeText(user.user_metadata?.full_name) ||
+    sanitizeText(user.user_metadata?.name) ||
+    getEmailName(user.email);
 
-  if (!uniqueIds.length) return map;
+  const profileImage =
+    sanitizeText(user.user_metadata?.avatar_url) ||
+    sanitizeText(user.user_metadata?.picture) ||
+    null;
 
-  const { data } = await supabase
-    .from("users")
-    .select("user_id,full_name,email,profile_image")
-    .in("user_id", uniqueIds);
+  await supabase.from("users").upsert(
+    {
+      user_id: user.id,
+      full_name: fullName,
+      email: user.email || "",
+      profile_image: profileImage,
+    },
+    { onConflict: "user_id" }
+  );
+}
 
-  ((data || []) as UserProfileRow[]).forEach((profile) => {
-    map.set(profile.user_id, profile);
-  });
+async function getInsightAnswerTarget(
+  supabase: ReturnType<typeof createRouteHandlerClient>,
+  answerId: string,
+  userId: string
+): Promise<{ exists: boolean; error: string | null }> {
+  const { data: studentAnswer, error: studentError } = await supabase
+    .from("student_answers")
+    .select("answer_id")
+    .eq("answer_id", answerId)
+    .or(`status.eq.published,user_id.eq.${userId}`)
+    .maybeSingle();
 
-  return map;
+  if (studentError) {
+    return { exists: false, error: studentError.message };
+  }
+
+  if (studentAnswer) {
+    return { exists: true, error: null };
+  }
+
+  const { data: publicAnswer, error: publicError } = await supabase
+    .from("public_answers")
+    .select("answer_id")
+    .eq("answer_id", answerId)
+    .maybeSingle();
+
+  if (publicError) {
+    return { exists: false, error: publicError.message };
+  }
+
+  if (publicAnswer) {
+    return { exists: true, error: null };
+  }
+
+  const { data: aiAnswer, error: aiError } = await supabase
+    .from("ai_answers")
+    .select("ai_answer_id")
+    .eq("ai_answer_id", answerId)
+    .maybeSingle();
+
+  if (aiError) {
+    return { exists: false, error: aiError.message };
+  }
+
+  return { exists: Boolean(aiAnswer), error: null };
 }
 
 function sanitizeText(value: unknown) {
@@ -185,7 +253,7 @@ function sanitizeText(value: unknown) {
 }
 
 function getAuthorName(
-  profile: UserProfileRow | undefined,
+  profile: UserDisplayFields | undefined | null,
   currentUser: CurrentUser | null,
   authorId: string
 ) {
@@ -194,12 +262,16 @@ function getAuthorName(
     (currentUser && currentUser.id === authorId
       ? getUserMetadataName(currentUser)
       : "") ||
-    getEmailName(profile?.email) ||
-    (currentUser && currentUser.id === authorId
-      ? getEmailName(currentUser.email)
-      : "") ||
     "Student"
   );
+}
+
+function getRelatedUser(value: InsightRow["users"]) {
+  if (Array.isArray(value)) {
+    return value[0] || null;
+  }
+
+  return value || null;
 }
 
 function getUserMetadataName(user: CurrentUser | null) {
@@ -211,9 +283,46 @@ function getUserMetadataName(user: CurrentUser | null) {
   );
 }
 
+function getUserMetadataImage(user: CurrentUser | null) {
+  if (!user) return "";
+
+  return (
+    sanitizeText(user.user_metadata?.avatar_url) ||
+    sanitizeText(user.user_metadata?.picture)
+  );
+}
+
 function getEmailName(email?: string | null) {
   const cleanEmail = sanitizeText(email);
   return cleanEmail ? cleanEmail.split("@")[0] : "";
+}
+
+function normalizeImageUrl(value: string) {
+  const clean = value.trim();
+
+  if (!clean) return "";
+  if (/^(https?:|data:image\/|blob:)/i.test(clean)) return clean;
+  if (clean.startsWith("//")) return `https:${clean}`;
+  if (clean.startsWith("/")) return clean;
+
+  const supabaseUrl = sanitizeText(process.env.NEXT_PUBLIC_SUPABASE_URL).replace(
+    /\/$/,
+    ""
+  );
+
+  if (!supabaseUrl) return clean;
+
+  const storagePath = clean.replace(/^\/+/, "").replace(/^public\//, "");
+
+  if (storagePath.includes("storage/v1/object/")) {
+    return `${supabaseUrl}/${storagePath}`;
+  }
+
+  if (storagePath.includes("/")) {
+    return `${supabaseUrl}/storage/v1/object/public/${storagePath}`;
+  }
+
+  return clean;
 }
 
 function getInitials(name: string) {
