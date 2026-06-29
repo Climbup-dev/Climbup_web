@@ -75,10 +75,22 @@ function renderBlock(block: any, index: number) {
 }
 
 function normalizeAnswerData(data: any) {
-  // Expected:
-  // data.answer.question
-  // data.answer.answer[]
+  // New backend format: data.answer.blocks[]
+  if (
+    data?.answer &&
+    typeof data.answer === "object" &&
+    Array.isArray(data.answer.blocks)
+  ) {
+    return {
+      question:
+        data.answer.question ||
+        data.question ||
+        "Question unavailable",
+      blocks: data.answer.blocks,
+    };
+  }
 
+  // Standard format: data.answer.answer[]
   if (
     data?.answer &&
     typeof data.answer === "object" &&
@@ -93,13 +105,19 @@ function normalizeAnswerData(data: any) {
     };
   }
 
-  // Direct:
-  // data.question
-  // data.answer[]
+  // Direct array at root: data.question + data.answer[]
   if (data?.question && Array.isArray(data?.answer)) {
     return {
       question: data.question,
       blocks: data.answer,
+    };
+  }
+
+  // Direct blocks at root: data.question + data.blocks[]
+  if (data?.question && Array.isArray(data?.blocks)) {
+    return {
+      question: data.question,
+      blocks: data.blocks,
     };
   }
 

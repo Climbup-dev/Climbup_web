@@ -314,6 +314,7 @@ function normalizeAnswerContent(content: unknown, question: string): unknown[] {
     ];
   }
 
+  // Direct array of blocks
   if (Array.isArray(content)) {
     return content;
   }
@@ -321,24 +322,32 @@ function normalizeAnswerContent(content: unknown, question: string): unknown[] {
   if (typeof content === "object") {
     const record = content as Record<string, unknown>;
 
+    // New backend format: { question: "...", blocks: [...] }
+    if (Array.isArray(record.blocks)) {
+      return record.blocks;
+    }
+
+    // Format: { answer: [...] }
     if (Array.isArray(record.answer)) {
       return record.answer;
     }
 
-    if (
-      record.answer &&
-      typeof record.answer === "object" &&
-      Array.isArray((record.answer as Record<string, unknown>).answer)
-    ) {
-      return (record.answer as Record<string, unknown>).answer as unknown[];
-    }
-
+    // Snapshot format: { answer: { question: "...", blocks: [...] } }
     if (
       record.answer &&
       typeof record.answer === "object" &&
       Array.isArray((record.answer as Record<string, unknown>).blocks)
     ) {
       return (record.answer as Record<string, unknown>).blocks as unknown[];
+    }
+
+    // Format: { answer: { answer: [...] } }
+    if (
+      record.answer &&
+      typeof record.answer === "object" &&
+      Array.isArray((record.answer as Record<string, unknown>).answer)
+    ) {
+      return (record.answer as Record<string, unknown>).answer as unknown[];
     }
   }
 
@@ -352,16 +361,13 @@ function normalizeAnswerContent(content: unknown, question: string): unknown[] {
     if (parsed && typeof parsed === "object") {
       const record = parsed as Record<string, unknown>;
 
-      if (Array.isArray(record.answer)) {
-        return record.answer;
+      // New backend format parsed from string: { question: "...", blocks: [...] }
+      if (Array.isArray(record.blocks)) {
+        return record.blocks;
       }
 
-      if (
-        record.answer &&
-        typeof record.answer === "object" &&
-        Array.isArray((record.answer as Record<string, unknown>).answer)
-      ) {
-        return (record.answer as Record<string, unknown>).answer as unknown[];
+      if (Array.isArray(record.answer)) {
+        return record.answer;
       }
 
       if (
@@ -370,6 +376,14 @@ function normalizeAnswerContent(content: unknown, question: string): unknown[] {
         Array.isArray((record.answer as Record<string, unknown>).blocks)
       ) {
         return (record.answer as Record<string, unknown>).blocks as unknown[];
+      }
+
+      if (
+        record.answer &&
+        typeof record.answer === "object" &&
+        Array.isArray((record.answer as Record<string, unknown>).answer)
+      ) {
+        return (record.answer as Record<string, unknown>).answer as unknown[];
       }
     }
 
