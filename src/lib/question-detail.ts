@@ -18,6 +18,7 @@ type QuestionRecord = {
   module?: string | null;
   marks?: number | null;
   difficulty?: string | null;
+  image_urls?: string[] | null;
   question_papers?: QuestionPaperRecord;
 };
 
@@ -48,6 +49,7 @@ export type QuestionDetail = {
   subject: string;
   subjectCode: string;
   paperTitle: string;
+  imageUrls: string[];
   meta: {
     questionNumber: string;
     module: string;
@@ -90,6 +92,7 @@ export async function getQuestionDetail(
         module,
         marks,
         difficulty,
+        image_urls,
         question_papers:paper_id (
           paper_title,
           subjects:subject_id (
@@ -269,6 +272,7 @@ function toQuestionDetail(
     subject: subject?.subject_name || "Subject",
     subjectCode: subject?.subject_code || "",
     paperTitle: question.question_papers?.paper_title || "Question paper",
+    imageUrls: question.image_urls || [],
     meta: {
       questionNumber: question.question_number || "",
       module: question.module || "",

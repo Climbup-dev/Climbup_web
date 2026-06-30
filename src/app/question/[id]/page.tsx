@@ -55,6 +55,28 @@ export default async function QuestionDetailPage({
             <>
               <header className="questionDetailHeader">
                 <h1>{question.title}</h1>
+                {question.imageUrls && question.imageUrls.length > 0 && (
+                  <div className="questionImages" style={{ display: "flex", gap: "16px", flexWrap: "wrap", marginTop: "24px" }}>
+                    {question.imageUrls.map((url, i) => (
+                      <img
+                        key={i}
+                        src={url}
+                        alt="Question Figure"
+                        style={{ 
+                          maxWidth: "100%", 
+                          maxHeight: "320px", 
+                          objectFit: "contain",
+                          borderRadius: "12px", 
+                          border: "1.5px solid rgba(158, 248, 220, 0.28)",
+                          backgroundColor: "rgba(255, 255, 255, 0.96)",
+                          padding: "8px",
+                          position: "relative",
+                          zIndex: 2
+                        }}
+                      />
+                    ))}
+                  </div>
+                )}
               </header>
 
               <EditableAnswerRenderer

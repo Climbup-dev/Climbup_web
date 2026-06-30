@@ -82,17 +82,17 @@ export default function Navbar({ onLogin, onSignUp }: NavbarProps) {
 
   return (
     <nav className="navbar" aria-label="Main navigation">
-      <Link className="brand" href="/" prefetch={false} aria-label="ClimbUP home">
+      <Link className="brand" href="/" aria-label="ClimbUP home">
         <Image src="/logo.png" alt="ClimbUP logo" width={52} height={52} priority />
         <span>ClimbUP</span>
       </Link>
 
       <div className="navLinks" aria-label="Home sections">
         <div className="navLinks" aria-label="Main sections">
-          <Link className={pathname === "/" ? "active" : undefined} href="/" prefetch={false}>Home</Link>
-          <Link className={pathname === "/pyqs" ? "active" : undefined} href="/pyqs" prefetch={false}>PYQs</Link>
-          <Link className={pathname === "/discoveries" ? "active" : undefined} href="/discoveries" prefetch={false}>Discoveries</Link>
-          <Link className={pathname === "/jobs" ? "active" : undefined} href="/jobs" prefetch={false}>Job Prepration</Link>
+          <Link className={pathname === "/" ? "active" : undefined} href="/">Home</Link>
+          <Link className={pathname === "/pyqs" ? "active" : undefined} href="/pyqs">PYQs</Link>
+          <Link className={pathname === "/discoveries" ? "active" : undefined} href="/discoveries">Discoveries</Link>
+          <Link className={pathname === "/jobs" ? "active" : undefined} href="/jobs">Job Prepration</Link>
         </div>
       </div>
 
@@ -135,7 +135,7 @@ export default function Navbar({ onLogin, onSignUp }: NavbarProps) {
                   <strong>{displayName}</strong>
                   <span>{currentUser.email}</span>
                 </div>
-                <Link role="menuitem" href="/profile" prefetch={false} onClick={() => setProfileOpen(false)}>
+                <Link role="menuitem" href="/profile" onClick={() => setProfileOpen(false)}>
                   <span aria-hidden>◉</span>
                   Open profile
                 </Link>

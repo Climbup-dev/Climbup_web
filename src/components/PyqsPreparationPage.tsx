@@ -2,11 +2,13 @@
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 import Navbar from "@/components/Navbar";
 import { useAuth } from "@/hooks/useAuth";
 import { createClient } from "@/lib/supabase/client";
+import { getCache, setCache } from "@/lib/cache";
 import "@/styles/PyqsPreparation.css";
 
 type EntryMode = "login" | "register";
@@ -33,6 +35,7 @@ type QuestionPaper = {
   exam_type: string;
   duration: number;
   total_marks: number;
+  paper_url?: string | null;
 };
 
 const AuthModal = dynamic(() => import("@/components/AuthModal"), {
@@ -41,6 +44,7 @@ const AuthModal = dynamic(() => import("@/components/AuthModal"), {
 });
 
 export default function PyqsPreparationClient() {
+  const router = useRouter();
   const { currentUser, loading, passwordRecovery } = useAuth();
   const supabase = useMemo(() => createClient(), []);
 
@@ -74,6 +78,16 @@ export default function PyqsPreparationClient() {
   useEffect(() => {
     async function loadUserSubjects() {
       if (!currentUser || !supabase) return;
+
+      const cacheKey = `pyqs_profile_${currentUser.id}`;
+      const cached = getCache<{ profile: UserAcademicProfile; subjects: Subject[] }>(cacheKey);
+      
+      if (cached) {
+        setProfile(cached.profile);
+        setSubjects(cached.subjects);
+        setPageLoading(false);
+        return;
+      }
 
       setPageLoading(true);
       setMessage("");
@@ -129,6 +143,9 @@ export default function PyqsPreparationClient() {
         setMessage(subjectsError.message);
       } else {
         setSubjects(subjectsData || []);
+        if (userProfile && !subjectsError) {
+          setCache(cacheKey, { profile: userProfile, subjects: subjectsData || [] });
+        }
       }
 
       setPageLoading(false);
@@ -141,13 +158,21 @@ export default function PyqsPreparationClient() {
     if (!supabase) return;
 
     setSelectedSubject(subject);
+    
+    const cacheKey = `pyqs_papers_${subject.subject_id}`;
+    const cached = getCache<QuestionPaper[]>(cacheKey);
+    if (cached) {
+      setPapers(cached);
+      return;
+    }
+
     setPapers([]);
     setPapersLoading(true);
     setMessage("");
 
     const { data, error } = await supabase
       .from("question_papers")
-      .select("paper_id, paper_title, year, exam_type, duration, total_marks")
+      .select("paper_id, paper_title, year, exam_type, duration, total_marks, paper_url")
       .eq("subject_id", subject.subject_id)
       .order("year", { ascending: false });
 
@@ -155,6 +180,7 @@ export default function PyqsPreparationClient() {
       setMessage(error.message);
     } else {
       setPapers(data || []);
+      if (data) setCache(cacheKey, data);
     }
 
     setPapersLoading(false);
@@ -261,19 +287,32 @@ export default function PyqsPreparationClient() {
                           ) : (
                             <div className="pyqInlinePaperList">
                               {papers.map((paper) => (
-                                <Link
-                                  href={`/pyqs/${paper.paper_id}`}
+                                <div
                                   key={paper.paper_id}
                                   className="pyqInlinePaperCard"
-                                  prefetch={false}
+                                  onClick={() => router.push(`/pyqs/${paper.paper_id}`)}
+                                  style={{ cursor: "pointer" }}
                                 >
-                                  <span>{paper.exam_type}</span>
-                                  <strong>{paper.paper_title}</strong>
-                                  <em>
-                                    {paper.year} | {paper.total_marks} marks |{" "}
-                                    {paper.duration} min
-                                  </em>
-                                </Link>
+                                  <div style={{ display: "flex", flexDirection: "column", gap: "8px", flex: 1 }}>
+                                    <span>{paper.exam_type}</span>
+                                    <strong>{paper.paper_title}</strong>
+                                    <em>
+                                      {paper.year} | {paper.total_marks} marks |{" "}
+                                      {paper.duration} min
+                                    </em>
+                                  </div>
+                                  {paper.paper_url && (
+                                    <a
+                                      href={paper.paper_url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="pyqViewPdfBtn"
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      View Paper
+                                    </a>
+                                  )}
+                                </div>
                               ))}
                             </div>
                           )}
@@ -327,20 +366,33 @@ export default function PyqsPreparationClient() {
                   ) : (
                     <div className="pyqPaperGrid">
                       {papers.map((paper) => (
-                        <Link
-                          href={`/pyqs/${paper.paper_id}`}
+                        <div
                           key={paper.paper_id}
                           className="pyqPaperCard"
-                          prefetch={false}
+                          onClick={() => router.push(`/pyqs/${paper.paper_id}`)}
+                          style={{ cursor: "pointer" }}
                         >
                           <span>{paper.exam_type}</span>
                           <h3>{paper.paper_title}</h3>
-                          <div>
-                            <strong>{paper.year}</strong>
-                            <em>{paper.total_marks} marks</em>
-                            <em>{paper.duration} min</em>
+                          <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "flex-end", gap: "12px" }}>
+                            <div>
+                              <strong>{paper.year}</strong>
+                              <em>{paper.total_marks} marks</em>
+                              <em>{paper.duration} min</em>
+                            </div>
+                            {paper.paper_url && (
+                              <a
+                                href={paper.paper_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="pyqViewPdfBtn"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                View Paper
+                              </a>
+                            )}
                           </div>
-                        </Link>
+                        </div>
                       ))}
                     </div>
                   )}

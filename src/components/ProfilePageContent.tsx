@@ -1,13 +1,14 @@
 "use client";
+"use client";
 
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import Navbar from "@/components/Navbar";
 import { useAuth } from "@/hooks/useAuth";
 import { createClient } from "@/lib/supabase/client";
+import { getCache, setCache, clearCache } from "@/lib/cache";
 import "@/styles/Profile.css";
 
 type EntryMode = "login" | "register";
@@ -368,6 +369,14 @@ export default function ProfilePageContent() {
     async function loadInitialData() {
       if (!currentUser || !supabase) return;
 
+      const cacheKey = `profile_initial_${currentUser.id}`;
+      const cached = getCache<{ universities: University[]; profile: UserProfile }>(cacheKey);
+      if (cached) {
+        setUniversities(cached.universities);
+        setProfile(cached.profile);
+        return;
+      }
+
       setProfileLoading(true);
       setProfileMessage("");
 
@@ -393,11 +402,19 @@ export default function ProfilePageContent() {
       if (profileResult.error) {
         setProfileMessage(profileResult.error.message);
       } else if (profileResult.data) {
-        setProfile({
+        const newProfile = {
           university_id: profileResult.data.university_id,
           branch_id: profileResult.data.branch_id,
           semester: profileResult.data.semester,
-        });
+        };
+        setProfile(newProfile);
+
+        if (!universitiesResult.error) {
+          setCache(cacheKey, {
+            universities: universitiesResult.data || [],
+            profile: newProfile,
+          });
+        }
       }
 
       setProfileLoading(false);
@@ -413,6 +430,13 @@ export default function ProfilePageContent() {
         return;
       }
 
+      const cacheKey = `profile_branches_${profile.university_id}`;
+      const cached = getCache<Branch[]>(cacheKey);
+      if (cached) {
+        setBranches(cached);
+        return;
+      }
+
       const { data, error } = await supabase
         .from("branches")
         .select("branch_id, university_id, branch_name, branch_code")
@@ -425,6 +449,7 @@ export default function ProfilePageContent() {
       }
 
       setBranches(data || []);
+      if (data) setCache(cacheKey, data);
     }
 
     loadBranches();
@@ -433,6 +458,14 @@ export default function ProfilePageContent() {
   useEffect(() => {
     async function loadProfileActivity() {
       if (!currentUser || !supabase) return;
+
+      const cacheKey = `profile_activity_${currentUser.id}`;
+      const cached = getCache<{ answers: any; stats: ProfileStats }>(cacheKey);
+      if (cached) {
+        setPublishedAnswers(cached.answers);
+        setStats(cached.stats);
+        return;
+      }
 
       const { data, error } = await supabase
         .from("student_answers")
@@ -481,13 +514,15 @@ export default function ProfilePageContent() {
         };
       });
 
-      setPublishedAnswers(displayAnswers);
-      setStats({
+      setPublishedAnswers(displayAnswers as any);
+      const newStats = {
         publishedAnswers: answers.length,
         totalLikes: answers.reduce((sum, a) => sum + Number(a.likes_count || 0), 0),
         totalViews: answers.reduce((sum, a) => sum + Number(a.views_count || 0), 0),
         totalComments: 0,
-      });
+      };
+      setStats(newStats);
+      setCache(cacheKey, { answers: displayAnswers, stats: newStats });
     }
 
     loadProfileActivity();
@@ -516,6 +551,11 @@ export default function ProfilePageContent() {
       },
       { onConflict: "user_id" }
     );
+
+    if (!error) {
+      clearCache(`profile_initial_${currentUser.id}`);
+      clearCache(`pyqs_profile_${currentUser.id}`);
+    }
 
     setProfileMessage(error ? error.message : "Profile updated successfully.");
     setProfileSaving(false);

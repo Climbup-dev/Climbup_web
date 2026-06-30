@@ -41,6 +41,18 @@ function allowLocalSupabaseTlsInspection() {
     process.env.NODE_ENV === "development" &&
     process.env.CLIMBUP_STRICT_SUPABASE_TLS !== "true"
   ) {
+    // Intercept the process warning to prevent Next.js from throwing an error overlay
+    const originalEmitWarning = process.emitWarning;
+    process.emitWarning = (warning, ...args) => {
+      if (
+        typeof warning === "string" &&
+        warning.includes("NODE_TLS_REJECT_UNAUTHORIZED")
+      ) {
+        return;
+      }
+      return originalEmitWarning(warning, ...args);
+    };
+
     process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
   }
 }
