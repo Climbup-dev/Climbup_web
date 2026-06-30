@@ -50,6 +50,7 @@ function allowLocalSupabaseTlsInspection() {
       ) {
         return;
       }
+      // @ts-expect-error Next.js overrides emitWarning which confuses TS overloads
       return originalEmitWarning(warning, ...args);
     };
 
