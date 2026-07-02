@@ -74,6 +74,7 @@ export default function AppPageShell({
                   openAuth("register");
                 }}
                 disabled={loading}
+                suppressHydrationWarning
               >
                 {primaryAction}
               </button>
