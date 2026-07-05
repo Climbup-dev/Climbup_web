@@ -667,6 +667,13 @@ export default function EditableAnswerRenderer({
       }
 
       const generateResult = await generateResponse.json();
+
+      if (generateResult.answer?.is_error) {
+          alert("AI Limit Reached. Please try again later.");
+          setIsGenerating(false);
+          return;
+      }
+
       const generatedMarkdown = generateResult?.answer?.answer || generateResult?.answer;
 
       if (!generatedMarkdown) {
