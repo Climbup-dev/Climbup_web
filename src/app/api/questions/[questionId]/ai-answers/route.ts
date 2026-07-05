@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/server';
 
 export async function POST(
   request: Request,
@@ -13,7 +13,7 @@ export async function POST(
       return NextResponse.json({ error: 'Answer content is required' }, { status: 400 });
     }
 
-    const supabase = await createClient();
+    const supabase = createAdminClient();
 
     // Store as standard blocks array format
     const answerBlocks = [

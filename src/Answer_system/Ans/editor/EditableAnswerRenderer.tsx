@@ -653,13 +653,12 @@ export default function EditableAnswerRenderer({
     setGenerationError("");
 
     try {
-      // 1. Generate answer using Python API
-      const generateResponse = await fetch("http://localhost:8000/api/generate-only", {
+      // 1. Generate answer using secure Next.js proxy API
+      const generateResponse = await fetch(`/api/questions/${questionId}/generate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
-          question: normalized.question,
-          question_id: questionId
+          question: normalized.question
         }),
       });
 

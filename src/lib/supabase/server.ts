@@ -36,6 +36,24 @@ export async function createClient() {
   );
 }
 
+export function createAdminClient() {
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error("Supabase is not configured. Add NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.");
+  }
+
+  // Uses the service role key to bypass RLS for server-side trusted operations
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY,
+    {
+      cookies: {
+        getAll: () => [],
+        setAll: () => {},
+      }
+    }
+  );
+}
+
 function allowLocalSupabaseTlsInspection() {
   if (
     process.env.NODE_ENV === "development" &&
