@@ -87,7 +87,7 @@ export default function RichTextEditor({ value, onChange, placeholder, className
     ],
     content: value,
     onUpdate: ({ editor }) => {
-      onChange(editor.storage.markdown.getMarkdown());
+      onChange((editor.storage as any).markdown.getMarkdown());
     },
     editorProps: {
       attributes: {
