@@ -205,7 +205,14 @@ function sanitizeFlowchartLine(line: string) {
     return line;
   }
 
+  // Fix malformed LLM syntax like `-->|Text|>` to standard `-->|Text|`
+  cleaned = cleaned.replace(/([=.-]+>)\|([^|]+)\|>/g, "$1|$2|");
+
   cleaned = normalizeLabeledArrow(cleaned);
+  
+  // Remove space after `|label| ` which causes Mermaid parse errors (got 'SPACE')
+  cleaned = cleaned.replace(/-->\|([^|]+)\|\s+/g, "-->|$1|");
+
   cleaned = quoteNodeLabels(cleaned);
 
   return `${indent}${cleaned}`;
@@ -214,7 +221,7 @@ function sanitizeFlowchartLine(line: string) {
 function normalizeLabeledArrow(line: string) {
   return line.replace(
     /^(.+?)\s+--\s+(.+?)\s+-->\s+(.+)$/,
-    (_match: string, from: string, label: string, to: string) => `${from.trim()} -->|${escapeEdgeLabel(label)}| ${to.trim()}`
+    (_match: string, from: string, label: string, to: string) => `${from.trim()} -->|${escapeEdgeLabel(label)}|${to.trim()}`
   );
 }
 

@@ -19,7 +19,12 @@ export function createClient(): BrowserClient {
   }
 
   if (!browserClient) {
-    browserClient = createBrowserClient(supabaseUrl, supabaseAnonKey);
+    const isPopup = typeof window !== "undefined" && !!window.opener;
+    browserClient = createBrowserClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        detectSessionInUrl: !isPopup,
+      },
+    });
   }
 
   return browserClient;

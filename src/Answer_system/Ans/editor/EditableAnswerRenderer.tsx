@@ -11,6 +11,7 @@ import { createAnswerEditorSnapshot } from "./answerSnapshot";
 import { saveDummyAnswerSnapshot } from "./dummyAnswerStorage";
 import { useAuth } from "@/hooks/useAuth";
 import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
 
 type Feedback = "like" | "dislike" | null;
 type AnswerTheme = "light" | "dark";
@@ -116,6 +117,10 @@ export default function EditableAnswerRenderer({
   const [editingInsightId, setEditingInsightId] = useState("");
   const [insightText, setInsightText] = useState("");
   const pendingAddedBlockId = useRef("");
+  const router = useRouter();
+  
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generationError, setGenerationError] = useState("");
   const [theme, setTheme] = useState<AnswerTheme>(() => {
     if (typeof window === "undefined") return "dark";
 
@@ -210,14 +215,15 @@ export default function EditableAnswerRenderer({
     setIsEditing(true);
   };
 
-  const saveChanges = async () => {
+  const saveChanges = async (publish: boolean) => {
+    setIsPublic(publish);
     setSaveMessage("");
     setSaveMessageTone("success");
 
     const snapshot = createAnswerEditorSnapshot({
       question: normalized.question,
       blocks: editableBlocks,
-      isPublic,
+      isPublic: publish,
       feedback,
     });
 
@@ -229,7 +235,7 @@ export default function EditableAnswerRenderer({
         answer: snapshot.answer.blocks,
       },
       editorSnapshot: snapshot,
-      isPublic,
+      isPublic: publish,
       feedback,
       updatedAt: Date.now(),
     };
@@ -246,7 +252,7 @@ export default function EditableAnswerRenderer({
           body: JSON.stringify({
             questionId,
             answerJson: snapshot,
-            publish: isPublic,
+            publish,
           }),
         });
 
@@ -264,7 +270,7 @@ export default function EditableAnswerRenderer({
 
         setSaveMessageTone("success");
         setSaveMessage(
-          isPublic ? "Answer published successfully." : "Private draft saved."
+          publish ? "Answer published successfully." : "Private draft saved."
         );
 
         if (result.answer?.answer_id) {
@@ -383,10 +389,6 @@ export default function EditableAnswerRenderer({
 
   const handleDislike = () => {
     saveReaction("dislike");
-  };
-
-  const handleMakePublic = () => {
-    setIsPublic((prev) => !prev);
   };
 
   const handleGeneratePdf = async () => {
@@ -646,6 +648,72 @@ export default function EditableAnswerRenderer({
     });
   };
 
+  const handleGenerateWithAi = async () => {
+    setIsGenerating(true);
+    setGenerationError("");
+
+    try {
+      // 1. Generate answer using Python API
+      const generateResponse = await fetch("http://localhost:8000/api/generate-only", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          question: normalized.question,
+          question_id: questionId
+        }),
+      });
+
+      if (!generateResponse.ok) {
+        throw new Error("Failed to generate answer from AI server.");
+      }
+
+      const generateResult = await generateResponse.json();
+      const generatedMarkdown = generateResult?.answer?.answer || generateResult?.answer;
+
+      if (!generatedMarkdown) {
+        throw new Error("Invalid response received from AI server.");
+      }
+
+      // 2. Save generated answer directly to the AI table using Next.js API
+      if (questionId) {
+        const saveResponse = await fetch(`/api/questions/${questionId}/ai-answers`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ answer: generatedMarkdown }),
+        });
+
+        const saveResult = await saveResponse.json();
+
+        if (saveResult.ai_answer_id) {
+          // Fetch the answer directly and effectively from the Supabase database
+          const { data: dbData, error: dbError } = await supabase
+            .from('ai_answers')
+            .select('answer')
+            .eq('ai_answer_id', saveResult.ai_answer_id)
+            .single();
+
+          if (dbError) throw dbError;
+
+          if (dbData && dbData.answer) {
+            setEditableBlocks(dbData.answer);
+            setCurrentAnswerId(saveResult.ai_answer_id);
+            setCurrentAnswerSource('ai_answer');
+          }
+        }
+        
+        // Also refresh Next.js cache in the background
+        router.refresh();
+      } else {
+        throw new Error("Cannot save AI answer because question ID is missing.");
+      }
+      
+    } catch (error) {
+      console.error("AI Generation error:", error);
+      setGenerationError(error instanceof Error ? error.message : "An unexpected error occurred.");
+      setIsGenerating(false);
+    }
+  };
+
   const rendererData = {
     ...data,
     answer: {
@@ -667,14 +735,12 @@ export default function EditableAnswerRenderer({
       onShare={handleShare}
       onLike={handleLike}
       onDislike={handleDislike}
-      onMakePublic={handleMakePublic}
       onGeneratePdf={handleGeneratePdf}
       pdfGenerating={pdfGenerating}
       onImprovedAnswer={handleImprovedAnswer}
       onInsights={handleInsights}
       onClimbupAi={handleClimbupAi}
       feedback={feedback}
-      isPublic={isPublic}
       theme={theme}
       onToggleTheme={toggleTheme}
       addBlockMenu={isEditing ? <AddBlockMenu onAdd={addBlock} /> : null}
@@ -693,7 +759,34 @@ export default function EditableAnswerRenderer({
 
     {!isEditing ? (
       <>
-        <AnswerRenderer data={rendererData} />
+        {editableBlocks.length === 0 ? (
+          <div className="ai-fallback-container">
+            <div className="ai-fallback-content">
+              <h3>No Answer Available</h3>
+              <p>No answer is available yet. Generate one instantly using AI.</p>
+              
+              {generationError && (
+                <div className="ai-fallback-error">{generationError}</div>
+              )}
+
+              {isGenerating ? (
+                <div className="ai-generating-state">
+                  <div className="ai-spinner"></div>
+                  <span>Generating answer...</span>
+                </div>
+              ) : (
+                <button 
+                  className="toolbar-btn primary large-action ai-generate-btn"
+                  onClick={handleGenerateWithAi}
+                >
+                  ✨ Generate with AI
+                </button>
+              )}
+            </div>
+          </div>
+        ) : (
+          <AnswerRenderer data={rendererData} />
+        )}
 
         <AnswerFeedbackActions
           feedback={feedback}

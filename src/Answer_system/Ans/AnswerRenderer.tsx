@@ -24,16 +24,7 @@ export default function AnswerRenderer({ data }: { data: any }) {
       </div>
 
       <div className="answer-content">
-        {blocks.length === 0 ? (
-          <div className="block empty-answer">
-            <h2>Answer blocks not found</h2>
-            <p>
-              Data was loaded, but no valid answer blocks were found.
-            </p>
-          </div>
-        ) : (
-          blocks.map((block: any, index: number) => renderBlock(block, index))
-        )}
+        {blocks.map((block: any, index: number) => renderBlock(block, index))}
       </div>
     </div>
   );

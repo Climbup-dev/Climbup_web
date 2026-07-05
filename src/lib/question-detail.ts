@@ -307,15 +307,7 @@ function toQuestionDetail(
 
 function normalizeAnswerContent(content: unknown, question: string): unknown[] {
   if (!content) {
-    return [
-      {
-        id: "empty-answer",
-        type: "markdown",
-        title: "Answer",
-        content:
-          "No AI answer is available for this question yet. Please generate or add an answer first.",
-      },
-    ];
+    return [];
   }
 
   // Direct array of blocks
@@ -401,14 +393,7 @@ function normalizeAnswerContent(content: unknown, question: string): unknown[] {
     ];
   }
 
-  return [
-    {
-      id: "fallback-answer",
-      type: "markdown",
-      title: "Answer",
-      content: `A saved AI answer exists for: ${question}`,
-    },
-  ];
+  return [];
 }
 
 function parseAnswerString(value: string): unknown | null {

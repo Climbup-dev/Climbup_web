@@ -3,6 +3,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { useRef, useState } from "react";
+import RichTextEditor from "./RichTextEditor";
 
 type BlockEditorProps = {
   block: any;
@@ -20,6 +21,61 @@ export default function BlockEditor({
   onDelete,
 }: BlockEditorProps) {
   const type = block?.type || "markdown";
+  const [isUploading, setIsUploading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const deleteImageFromCloudinary = async (url: string) => {
+    if (!url.includes('cloudinary.com')) return; // Only delete Cloudinary images
+    
+    setIsDeleting(true);
+    try {
+      await fetch('/api/upload', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url }),
+      });
+    } catch (error) {
+      console.error('Failed to delete old image:', error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) throw new Error('Upload failed');
+
+      const data = await response.json();
+      
+      // If there was an old image, delete it from Cloudinary to save space
+      if (block.url) {
+        deleteImageFromCloudinary(block.url);
+      }
+      
+      updateField("url", data.url);
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      alert('Failed to upload image. Please try again.');
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
 
   const updateField = (field: string, value: any) => {
     onChange(index, {
@@ -33,8 +89,17 @@ export default function BlockEditor({
       <div className="editor-card-top">
         <span className="block-type-pill">{type.toUpperCase()}</span>
 
-        <button className="delete-block-btn" onClick={() => onDelete(index)}>
-          Delete
+        <button 
+          className="delete-block-btn" 
+          disabled={isDeleting}
+          onClick={() => {
+            if (type === "image" && block.url) {
+              deleteImageFromCloudinary(block.url);
+            }
+            onDelete(index);
+          }}
+        >
+          {isDeleting ? "Deleting..." : "Delete"}
         </button>
       </div>
 
@@ -46,29 +111,88 @@ export default function BlockEditor({
       />
 
       {type === "markdown" && (
-        <InlineFormatTextarea
+        <RichTextEditor
           className="inline-content-textarea"
           value={block.content || ""}
           onChange={(value) => updateField("content", value)}
           placeholder="Write content..."
-          rows={8}
         />
       )}
 
       {type === "image" && (
         <>
-          <input
-            className="inline-input"
-            value={block.url || ""}
-            onChange={(e) => updateField("url", e.target.value)}
-            placeholder="Image URL"
-          />
+          {block.url ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <img 
+                src={block.url} 
+                alt="Uploaded block" 
+                style={{ width: '100%', borderRadius: '8px', border: '1px solid rgba(158, 248, 220, 0.2)', objectFit: 'contain', maxHeight: '400px', backgroundColor: 'rgba(2, 21, 38, 0.4)' }} 
+              />
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button
+                  type="button"
+                  className="toolbar-btn primary"
+                  style={{ flex: 1, padding: '8px', borderRadius: '8px', fontSize: '13px' }}
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploading}
+                >
+                  {isUploading ? "Uploading..." : "Replace Image"}
+                </button>
+                <button
+                  type="button"
+                  className="toolbar-btn danger"
+                  style={{ flex: 1, padding: '8px', borderRadius: '8px', fontSize: '13px' }}
+                  disabled={isDeleting}
+                  onClick={() => {
+                    if (block.url) deleteImageFromCloudinary(block.url);
+                    updateField("url", "");
+                  }}
+                >
+                  {isDeleting ? "Removing..." : "Remove Image"}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+                <button
+                  type="button"
+                  className="toolbar-btn primary"
+                  style={{ width: '100%', padding: '10px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '14px' }}
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploading}
+                >
+                  {isUploading ? "Uploading..." : (
+                    <>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                      Upload Image (Camera/Gallery)
+                    </>
+                  )}
+                </button>
+              </div>
+              <div style={{ textAlign: 'center', margin: '4px 0 8px', fontSize: '12px', color: '#94a3b8', fontWeight: 600 }}>OR</div>
+              <input
+                className="inline-input"
+                value={block.url || ""}
+                onChange={(e) => updateField("url", e.target.value)}
+                placeholder="Image URL"
+              />
+            </>
+          )}
 
           <input
             className="inline-input"
+            style={{ marginTop: '8px' }}
             value={block.search_query || ""}
             onChange={(e) => updateField("search_query", e.target.value)}
-            placeholder="Search query"
+            placeholder="Search query (Optional)"
+          />
+          <input
+            type="file"
+            accept="image/*"
+            ref={fileInputRef}
+            style={{ display: 'none' }}
+            onChange={handleImageUpload}
           />
         </>
       )}
@@ -115,179 +239,7 @@ export default function BlockEditor({
   );
 }
 
-function InlineFormatTextarea({
-  value,
-  onChange,
-  className,
-  placeholder,
-  rows,
-}: {
-  value: string;
-  onChange: (value: string) => void;
-  className: string;
-  placeholder?: string;
-  rows?: number;
-}) {
-  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-  const lastPointerRef = useRef<{ x: number; y: number } | null>(null);
-  const [toolbar, setToolbar] = useState<{
-    visible: boolean;
-    x: number;
-    y: number;
-  }>({ visible: false, x: 0, y: 0 });
 
-  const syncToolbar = () => {
-    const textarea = textareaRef.current;
-    if (!textarea || textarea.selectionStart === textarea.selectionEnd) {
-      setToolbar((prev) => ({ ...prev, visible: false }));
-      return;
-    }
-
-    const rect = textarea.getBoundingClientRect();
-    const pointer = lastPointerRef.current;
-
-    setToolbar({
-      visible: true,
-      x: Math.min(
-        window.innerWidth - 220,
-        Math.max(12, pointer?.x ?? rect.left + rect.width / 2)
-      ),
-      y: Math.max(12, (pointer?.y ?? rect.top) - 48),
-    });
-  };
-
-  const applyFormat = (format: "bold" | "highlight" | "code" | "h2" | "bullet") => {
-    const textarea = textareaRef.current;
-    if (!textarea) return;
-
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const selected = value.slice(start, end);
-    if (!selected) return;
-
-    const formatted = formatSelection(selected, format);
-    const nextValue = `${value.slice(0, start)}${formatted}${value.slice(end)}`;
-    onChange(nextValue);
-
-    requestAnimationFrame(() => {
-      textarea.focus();
-      textarea.setSelectionRange(start, start + formatted.length);
-      syncToolbar();
-    });
-  };
-
-  return (
-    <div className="inline-format-textarea-wrap">
-      <textarea
-        ref={textareaRef}
-        className={className}
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        onMouseDown={(event) => {
-          lastPointerRef.current = { x: event.clientX, y: event.clientY };
-        }}
-        onMouseUp={(event) => {
-          lastPointerRef.current = { x: event.clientX, y: event.clientY };
-          syncToolbar();
-        }}
-        onKeyUp={syncToolbar}
-        onSelect={syncToolbar}
-        onBlur={() => {
-          window.setTimeout(() => {
-            if (document.activeElement?.closest(".selection-format-toolbar")) {
-              return;
-            }
-
-            setToolbar((prev) => ({ ...prev, visible: false }));
-          }, 120);
-        }}
-        placeholder={placeholder}
-        rows={rows}
-      />
-
-      {toolbar.visible && (
-        <div
-          className="selection-format-toolbar"
-          style={{ left: toolbar.x, top: toolbar.y }}
-          role="toolbar"
-          aria-label="Text formatting"
-        >
-          <button
-            type="button"
-            title="Bold"
-            onMouseDown={(event) => event.preventDefault()}
-            onClick={() => applyFormat("bold")}
-          >
-            B
-          </button>
-          <button
-            type="button"
-            className="format-highlight-btn"
-            title="Highlight"
-            onMouseDown={(event) => event.preventDefault()}
-            onClick={() => applyFormat("highlight")}
-          >
-            HL
-          </button>
-          <button
-            type="button"
-            title="Inline code"
-            onMouseDown={(event) => event.preventDefault()}
-            onClick={() => applyFormat("code")}
-          >
-            Code
-          </button>
-          <button
-            type="button"
-            title="Heading"
-            onMouseDown={(event) => event.preventDefault()}
-            onClick={() => applyFormat("h2")}
-          >
-            H2
-          </button>
-          <button
-            type="button"
-            title="Bullet"
-            onMouseDown={(event) => event.preventDefault()}
-            onClick={() => applyFormat("bullet")}
-          >
-            List
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function formatSelection(
-  selectedText: string,
-  format: "bold" | "highlight" | "code" | "h2" | "bullet"
-) {
-  const text = selectedText.trim();
-  const leading = selectedText.match(/^\s*/)?.[0] || "";
-  const trailing = selectedText.match(/\s*$/)?.[0] || "";
-
-  switch (format) {
-    case "bold":
-      return `${leading}**${text}**${trailing}`;
-    case "highlight":
-      return `${leading}==${text}==${trailing}`;
-    case "code":
-      return `${leading}\`${text.replace(/`/g, "'")}\`${trailing}`;
-    case "h2":
-      return selectedText
-        .split(/\r?\n/)
-        .map((line) => (line.trim() ? `## ${line.replace(/^#+\s*/, "")}` : line))
-        .join("\n");
-    case "bullet":
-      return selectedText
-        .split(/\r?\n/)
-        .map((line) => (line.trim() ? `- ${line.replace(/^[-*]\s+/, "")}` : line))
-        .join("\n");
-    default:
-      return selectedText;
-  }
-}
 
 function TableEditor({ block, index, onChange }: NestedEditorProps) {
   const columns = Array.isArray(block.columns) ? block.columns : [];
@@ -356,7 +308,7 @@ function TableEditor({ block, index, onChange }: NestedEditorProps) {
               <tr key={rowIndex}>
                 {columns.map((_: string, colIndex: number) => (
                   <td key={colIndex}>
-                    <InlineFormatTextarea
+                    <RichTextEditor
                       className="table-cell-textarea"
                       value={row[colIndex] || ""}
                       onChange={(value) => updateCell(rowIndex, colIndex, value)}
@@ -413,7 +365,7 @@ function StepsEditor({ block, index, onChange }: NestedEditorProps) {
         <div className="step-edit-row" key={stepIndex}>
           <div className="step-edit-number">{stepIndex + 1}</div>
 
-          <InlineFormatTextarea
+          <RichTextEditor
             className="inline-content-textarea"
             value={
               typeof item === "string"
@@ -421,7 +373,6 @@ function StepsEditor({ block, index, onChange }: NestedEditorProps) {
                 : item.content || item.text || item.description || ""
             }
             onChange={(value) => updateStep(stepIndex, value)}
-            rows={3}
           />
         </div>
       ))}

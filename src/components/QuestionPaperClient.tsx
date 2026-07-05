@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, Fragment } from "react";
 
 import Navbar from "@/components/Navbar";
 import { useAuth } from "@/hooks/useAuth";
@@ -30,6 +30,7 @@ type PaperQuestion = {
   question_text: string;
   image_urls?: string[] | null;
   marks?: number | null;
+  has_or_before?: boolean | null;
 };
 
 const AuthModal = dynamic(() => import("@/components/AuthModal"), {
@@ -91,7 +92,8 @@ export default function QuestionPaperClient({ paperId }: { paperId: string }) {
                 question_number,
                 question_text,
                 image_urls,
-                marks
+                marks,
+                has_or_before
               `)
               .eq("paper_id", paperId)
               .order("question_number", { ascending: true }),
@@ -105,7 +107,16 @@ export default function QuestionPaperClient({ paperId }: { paperId: string }) {
           setMessage(questionsError.message);
         } else {
           setPaper(paperData as QuestionPaper | null);
-          setQuestions((questionsData || []) as PaperQuestion[]);
+          const rawQuestions = (questionsData || []) as PaperQuestion[];
+          
+          // Natural sort so "10" comes after "2" instead of before "1"
+          const sortedQuestions = rawQuestions.sort((a, b) => {
+            const numA = a.question_number || "";
+            const numB = b.question_number || "";
+            return numA.localeCompare(numB, undefined, { numeric: true, sensitivity: "base" });
+          });
+          
+          setQuestions(sortedQuestions);
         }
       } catch (error) {
         if (!active) return;
@@ -182,13 +193,63 @@ export default function QuestionPaperClient({ paperId }: { paperId: string }) {
               </div>
             ) : (
               <div className="paperQuestionList">
-                {questions.map((question, index) => (
-                  <Link
-                    className="paperQuestionRow"
-                    href={`/question/${question.question_id}`}
-                    key={question.question_id}
-                    prefetch={false}
-                  >
+                {questions.map((question, index) => {
+                  const getBaseNumber = (qNum: string) => {
+                    const match = qNum.match(/^\d+/);
+                    return match ? parseInt(match[0], 10) : null;
+                  };
+
+                  const currentBase = getBaseNumber(question.question_number || "");
+                  const prevBase = index > 0 ? getBaseNumber(questions[index - 1].question_number || "") : null;
+                  const isNewSection = prevBase !== null && currentBase !== null && prevBase % 2 === 0 && currentBase % 2 === 1 && currentBase > prevBase;
+
+                  return (
+                  <Fragment key={question.question_id}>
+                    {isNewSection && (
+                      <div style={{
+                        display: "flex",
+                        alignItems: "center",
+                        margin: "56px 0 40px",
+                        gap: "20px"
+                      }}>
+                        <div style={{ flex: 1, height: "1.5px", background: "linear-gradient(to right, transparent, rgba(251, 191, 36, 0.45))" }}></div>
+                        <div style={{
+                          width: "8px", height: "8px", transform: "rotate(45deg)", background: "#fbbf24", boxShadow: "0 0 10px rgba(251,191,36,0.5)"
+                        }}></div>
+                        <div style={{
+                          width: "8px", height: "8px", transform: "rotate(45deg)", background: "#fbbf24", boxShadow: "0 0 10px rgba(251,191,36,0.5)"
+                        }}></div>
+                        <div style={{
+                          width: "8px", height: "8px", transform: "rotate(45deg)", background: "#fbbf24", boxShadow: "0 0 10px rgba(251,191,36,0.5)"
+                        }}></div>
+                        <div style={{ flex: 1, height: "1.5px", background: "linear-gradient(to left, transparent, rgba(251, 191, 36, 0.45))" }}></div>
+                      </div>
+                    )}
+                    
+                    {question.has_or_before && (
+                      <div style={{ display: "flex", alignItems: "center", margin: "32px 0 24px" }}>
+                        <div style={{ flex: 1, height: "1.5px", background: "linear-gradient(to right, transparent, rgba(56, 189, 248, 0.35))" }}></div>
+                        <span style={{ 
+                          padding: "6px 20px", 
+                          fontWeight: 850, 
+                          color: "#38bdf8", 
+                          fontSize: "14px", 
+                          letterSpacing: "2px",
+                          background: "rgba(56, 189, 248, 0.12)",
+                          borderRadius: "20px",
+                          border: "1px solid rgba(56, 189, 248, 0.3)",
+                          boxShadow: "0 0 15px rgba(56, 189, 248, 0.15)"
+                        }}>
+                          OR
+                        </span>
+                        <div style={{ flex: 1, height: "1.5px", background: "linear-gradient(to left, transparent, rgba(56, 189, 248, 0.35))" }}></div>
+                      </div>
+                    )}
+                    <Link
+                      className="paperQuestionRow"
+                      href={`/question/${question.question_id}`}
+                      prefetch={false}
+                    >
                     <div className="questionNumber">
                       {question.question_number || `Q${index + 1}`}
                     </div>
@@ -239,7 +300,9 @@ export default function QuestionPaperClient({ paperId }: { paperId: string }) {
                       )}
                     </div>
                   </Link>
-                ))}
+                  </Fragment>
+                  );
+                })}
               </div>
             )}
           </section>

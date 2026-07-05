@@ -6,12 +6,11 @@ import type { ReactNode } from "react";
 type AnswerToolbarProps = {
   isEditing: boolean;
   onEdit: () => void;
-  onSave: () => void;
+  onSave: (isPublic: boolean) => void;
   onCancel: () => void;
   onShare: () => void;
   onLike: () => void;
   onDislike: () => void;
-  onMakePublic: () => void;
   onGeneratePdf: () => void;
   pdfGenerating?: boolean;
   addBlockMenu?: ReactNode;
@@ -19,7 +18,6 @@ type AnswerToolbarProps = {
   onInsights: () => void;
   onClimbupAi: () => void;
   feedback: "like" | "dislike" | null;
-  isPublic: boolean;
   theme: "light" | "dark";
   onToggleTheme: () => void;
 };
@@ -193,14 +191,12 @@ export default function AnswerToolbar({
   onEdit,
   onSave,
   onCancel,
-  onMakePublic,
   onGeneratePdf,
   pdfGenerating = false,
   addBlockMenu = null,
   onImprovedAnswer,
   onInsights,
   onClimbupAi,
-  isPublic,
   theme,
   onToggleTheme,
 }: AnswerToolbarProps) {
@@ -281,31 +277,22 @@ export default function AnswerToolbar({
 
           <button
             className="toolbar-btn success-action"
-            onClick={onSave}
-            aria-label={isPublic ? "Save public answer" : "Save private answer"}
-            data-tooltip={isPublic ? "Save Public" : "Save Private"}
+            onClick={() => onSave(false)}
+            aria-label="Save private answer"
+            data-tooltip="Save Private"
           >
             <ToolIcon kind="save" />
-            <ToolLabel>{isPublic ? "Save Public" : "Save Private"}</ToolLabel>
+            <ToolLabel>Save Private</ToolLabel>
           </button>
-
-          <div
-            className="earning-badge"
-            aria-label={isPublic ? "Public answer" : "Private answer"}
-            data-tooltip={isPublic ? "Public Answer" : "Private Answer"}
-          >
-            <ToolIcon kind={isPublic ? "public" : "private"} />
-            <ToolLabel>{isPublic ? "Public answer" : "Private answer"}</ToolLabel>
-          </div>
 
           <button
             className="toolbar-btn public-action"
-            onClick={onMakePublic}
-            aria-label={isPublic ? "Make answer private" : "Make answer public"}
-            data-tooltip={isPublic ? "Make Private" : "Make Public"}
+            onClick={() => onSave(true)}
+            aria-label="Save public answer"
+            data-tooltip="Save Public"
           >
-            <ToolIcon kind={isPublic ? "private" : "public"} />
-            <ToolLabel>{isPublic ? "Make Private" : "Make Public"}</ToolLabel>
+            <ToolIcon kind="public" />
+            <ToolLabel>Save Public</ToolLabel>
           </button>
 
           <button
