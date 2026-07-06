@@ -2,7 +2,8 @@
 
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
+import { Brain, Laptop, Settings, Lightbulb, PenTool } from "lucide-react";
 
 import Navbar from "@/components/Navbar";
 import { useAuth } from "@/hooks/useAuth";
@@ -26,13 +27,9 @@ function getDisplayName(user: ReturnType<typeof useAuth>["currentUser"]) {
 }
 
 export default function HeroSection() {
-  const videoRef = useRef<HTMLVideoElement>(null);
   const { currentUser, loading, passwordRecovery } = useAuth();
   const displayName = getDisplayName(currentUser);
 
-  const [posterReady, setPosterReady] = useState(false);
-  const [posterAvailable, setPosterAvailable] = useState(true);
-  const [videoReady, setVideoReady] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
   const [entryMode, setEntryMode] = useState<EntryMode>("login");
 
@@ -41,81 +38,19 @@ export default function HeroSection() {
     setAuthOpen(true);
   };
 
-  useEffect(() => {
-    if (!posterReady) return;
-
-    const video = videoRef.current;
-    if (!video) return;
-
-    const reduceMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)"
-    ).matches;
-
-    if (reduceMotion) return;
-
-    let cancelled = false;
-
-    const revealVideo = () => {
-      if (!cancelled) setVideoReady(true);
-    };
-
-    const playVideo = async () => {
-      try {
-        await video.play();
-        revealVideo();
-      } catch {
-        setVideoReady(false);
-      }
-    };
-
-    video.addEventListener("canplaythrough", playVideo, { once: true });
-    video.addEventListener("playing", revealVideo);
-
-    video.load();
-
-    if (video.readyState >= HTMLMediaElement.HAVE_ENOUGH_DATA) {
-      void playVideo();
-    }
-
-    return () => {
-      cancelled = true;
-      video.removeEventListener("canplaythrough", playVideo);
-      video.removeEventListener("playing", revealVideo);
-    };
-  }, [posterReady]);
-
   return (
     <section className="homePage" id="home" aria-labelledby="home-heading">
       <div className="heroBackground" aria-hidden="true">
-        {posterAvailable && (
-          <Image
-            src="/hero-poster.webp"
-            alt=""
-            className={`heroBgImage ${videoReady ? "hideBgImage" : ""}`}
-            fill
-            priority
-            fetchPriority="high"
-            quality={78}
-            sizes="100vw"
-            onLoad={() => setPosterReady(true)}
-            onError={() => {
-              setPosterAvailable(false);
-              setPosterReady(true);
-            }}
-          />
-        )}
-
-        <video
-          ref={videoRef}
-          className={`heroBgVideo ${videoReady ? "showBgVideo" : ""}`}
-          muted
-          loop
-          playsInline
-          preload={posterReady ? "metadata" : "none"}
-          poster="/hero-poster.webp"
-        >
-          {posterReady && <source src="/hero-video.mp4" type="video/mp4" />}
-        </video>
+        <Image
+          src="/hero-bg-v2.webp"
+          alt="ClimbUP Engineering Platform Background"
+          className="heroBgImage"
+          fill
+          priority
+          quality={85}
+          sizes="100vw"
+          style={{ objectFit: "cover" }}
+        />
 
         <div className="heroOverlay" />
         <div className="heroGrid" />
@@ -168,6 +103,36 @@ export default function HeroSection() {
               </a>
             </div>
           )}
+        </div>
+        
+        <div className="heroIllustrationWrapper">
+          <div className="heroIllustration">
+            <Image
+              src="/hero-transparent.webp"
+              alt="Engineering Collaboration 3D"
+              width={650}
+              height={650}
+              priority
+              quality={85}
+              className="hero3dImage"
+            />
+          </div>
+          {/* Animated Study Tools popping out of the 3D Box */}
+          <div className="floating-tool tool-1">
+            <Brain size={28} color="#9ef8dc" strokeWidth={1.5} />
+          </div>
+          <div className="floating-tool tool-2">
+            <Laptop size={26} color="#38d399" strokeWidth={1.5} />
+          </div>
+          <div className="floating-tool tool-3">
+            <Settings size={28} color="#9ef8dc" strokeWidth={1.5} />
+          </div>
+          <div className="floating-tool tool-4">
+            <Lightbulb size={26} color="#38d399" strokeWidth={1.5} />
+          </div>
+          <div className="floating-tool tool-5">
+            <PenTool size={30} color="#00c78c" strokeWidth={1.5} />
+          </div>
         </div>
       </main>
 
