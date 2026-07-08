@@ -232,7 +232,7 @@ export async function getQuestionDetail(
     }
 
     if (user) {
-      const { data: draft, error: draftError } = await supabase
+      const { data: ownAnswer, error: ownAnswerError } = await supabase
         .from("student_answers")
         .select(`
           answer_id,
@@ -247,14 +247,13 @@ export async function getQuestionDetail(
         `)
         .eq("user_id", user.id)
         .eq("question_id", questionId)
-        .eq("status", "draft")
+        .order("updated_at", { ascending: false })
+        .limit(1)
         .maybeSingle();
 
-      if (draftError) {
-        return { data: null, error: draftError.message };
+      if (!ownAnswerError && ownAnswer) {
+        studentAnswer = ownAnswer as StudentAnswerRecord;
       }
-
-      studentAnswer = draft as StudentAnswerRecord | null;
     }
 
     if (studentAnswer) {
@@ -263,6 +262,43 @@ export async function getQuestionDetail(
           question as QuestionRecord,
           null,
           studentAnswer
+        ),
+        error: null,
+      };
+    }
+
+    // Fallback to top public answer (10+ likes)
+    const { data: topPublicAnswer } = await supabase
+      .from("public_answers")
+      .select(`
+        answer_id,
+        answer_content,
+        published_at,
+        full_name,
+        profile_image
+      `)
+      .eq("question_id", questionId)
+      .gte("likes_count", 10)
+      .order("likes_count", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (topPublicAnswer) {
+      return {
+        data: toQuestionDetail(
+          question as QuestionRecord,
+          null,
+          {
+            answer_id: topPublicAnswer.answer_id,
+            answer_content: topPublicAnswer.answer_content,
+            status: "published",
+            updated_at: topPublicAnswer.published_at,
+            published_at: topPublicAnswer.published_at,
+            users: {
+              full_name: topPublicAnswer.full_name,
+              profile_image: topPublicAnswer.profile_image,
+            },
+          } as any
         ),
         error: null,
       };

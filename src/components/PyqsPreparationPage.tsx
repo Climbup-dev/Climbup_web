@@ -9,6 +9,7 @@ import Navbar from "@/components/Navbar";
 import { useAuth } from "@/hooks/useAuth";
 import { createClient } from "@/lib/supabase/client";
 import { getCache, setCache } from "@/lib/cache";
+import AcademicProfileEditor from "@/components/AcademicProfileEditor";
 import "@/styles/PyqsPreparation.css";
 
 type EntryMode = "login" | "register";
@@ -59,6 +60,7 @@ export default function PyqsPreparationClient() {
   const [pageLoading, setPageLoading] = useState(false);
   const [papersLoading, setPapersLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const openAuth = (mode: EntryMode) => {
     setEntryMode(mode);
@@ -152,7 +154,7 @@ export default function PyqsPreparationClient() {
     }
 
     loadUserSubjects();
-  }, [currentUser, supabase]);
+  }, [currentUser, supabase, refreshKey]);
 
   const loadPapers = async (subject: Subject) => {
     if (!supabase) return;
@@ -195,44 +197,49 @@ export default function PyqsPreparationClient() {
 
       <section className="pyqShell">
         <div className="pyqHero">
-          <span>Practice papers</span>
-          <h1>PYQs</h1>
-          <p>Semester-wise question papers.</p>
+          <span>Academic Resource Center</span>
+          <h1>Previous Year Questions</h1>
+          <p>Ace your exams with university-specific PYQs. Set your profile below to instantly unlock past papers tailored to your branch and semester.</p>
         </div>
 
-        {loading || pageLoading ? (
+        {loading ? (
           <div className="pyqState">
             <span className="pyqLoader" />
-            <h2>Loading your PYQs</h2>
-            <p>Fetching subjects from your academic profile...</p>
+            <h2>Authenticating Secure Session</h2>
+            <p>Please wait while we securely connect to your profile...</p>
           </div>
         ) : !currentUser ? (
           <div className="pyqState">
-            <h2>Login required</h2>
-            <p>Sign in to see semester-wise subjects and PYQs.</p>
+            <h2>Unlock Your Academic Potential</h2>
+            <p>Sign in to access personalized PYQs, curated subjects, and premium study materials tailored specifically to your branch and semester.</p>
             <button type="button" onClick={() => openAuth("login")}>
-              Login securely
+              Login Securely
             </button>
           </div>
-        ) : message && isProfileIncomplete ? (
-          <div className="pyqState">
-            <h2>Complete academic profile</h2>
-            <p>{message}</p>
-            <Link href="/profile" prefetch={false}>
-              Go to profile
-            </Link>
-          </div>
         ) : (
-          <div className="pyqLayout">
-            <aside className="pyqSubjectsPanel">
-              <div className="pyqProfileCard">
-                <span>Profile</span>
-                <strong>{semesterLabel}</strong>
-                <p>{branchLabel}</p>
-                <small>{universityName}</small>
-              </div>
-
-              <div className="pyqSubjectHeader">
+          <div className="pyqLayoutContainer" style={{ display: 'flex', flexDirection: 'column', gap: '20px', width: '100%', maxWidth: '1200px', margin: '0 auto' }}>
+            <AcademicProfileEditor 
+              userId={currentUser.id} 
+              onProfileUpdated={() => {
+                setRefreshKey(prev => prev + 1);
+                setTimeout(() => {
+                  document.getElementById('pyq-subjects-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 100);
+              }} 
+            />
+            
+            {!isProfileIncomplete && (
+              <div className="pyqLayout" id="pyq-subjects-section">
+                {pageLoading ? (
+                  <div className="pyqState compact" style={{ gridColumn: '1 / -1', minHeight: '300px' }}>
+                    <span className="pyqLoader" />
+                    <h2>Curating your subjects</h2>
+                    <p>Synchronizing your personalized academic profile...</p>
+                  </div>
+                ) : (
+                  <>
+                    <aside className="pyqSubjectsPanel">
+                  <div className="pyqSubjectHeader">
                 <div>
                   <h2>Subjects</h2>
                 </div>
@@ -275,13 +282,13 @@ export default function PyqsPreparationClient() {
                           {papersLoading ? (
                             <div className="pyqInlineState">
                               <span className="pyqLoader" />
-                              <p>Loading papers...</p>
+                              <p>Retrieving papers...</p>
                             </div>
                           ) : papers.length === 0 ? (
                             <div className="pyqInlineState">
-                              <strong>No papers available</strong>
+                              <strong>No papers discovered</strong>
                               <p>
-                                This subject does not have uploaded PYQs yet.
+                                We haven't uploaded PYQs for this specific subject yet. Check back later!
                               </p>
                             </div>
                           ) : (
@@ -356,12 +363,12 @@ export default function PyqsPreparationClient() {
                   {papersLoading ? (
                     <div className="pyqState compact">
                       <span className="pyqLoader" />
-                      <h2>Loading papers</h2>
+                      <h2>Retrieving papers</h2>
                     </div>
                   ) : papers.length === 0 ? (
                     <div className="pyqState compact">
-                      <h2>No papers available</h2>
-                      <p>This subject does not have uploaded PYQs yet.</p>
+                      <h2>No papers discovered</h2>
+                      <p>We haven't uploaded PYQs for this specific subject yet. Check back soon!</p>
                     </div>
                   ) : (
                     <div className="pyqPaperGrid">
@@ -399,6 +406,10 @@ export default function PyqsPreparationClient() {
                 </>
               )}
             </section>
+                  </>
+                )}
+              </div>
+            )}
           </div>
         )}
 

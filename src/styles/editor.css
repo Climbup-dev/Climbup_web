@@ -2714,6 +2714,13 @@
   z-index: 50;
 }
 
+/* Offset on mobile to prevent overlap with native Cut/Copy/Paste menu */
+@media (max-width: 768px) {
+  .bubble-toolbar {
+    transform: translateY(-55px) !important;
+  }
+}
+
 .bubble-toolbar button {
   display: flex;
   align-items: center;
