@@ -209,7 +209,7 @@ export default function AnswerToolbar({
             data-tooltip="Improve answer"
           >
             <ToolIcon kind="improve" />
-            <ToolLabel>Improve</ToolLabel>
+            <ToolLabel>Improve Answer</ToolLabel>
           </button>
 
           <button
@@ -227,11 +227,11 @@ export default function AnswerToolbar({
           <button
             className="toolbar-btn suggest-action"
             onClick={onImprovedAnswer}
-            aria-label="Open available answers"
-            data-tooltip="Available answers"
+            aria-label="Open Community Answers"
+            data-tooltip="Community Answers"
           >
             <ToolIcon kind="answers" />
-            <ToolLabel>Answers</ToolLabel>
+            <ToolLabel>Community Answers</ToolLabel>
           </button>
 
           <button
