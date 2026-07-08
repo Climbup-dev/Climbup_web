@@ -13,7 +13,6 @@ type AnswerToolbarProps = {
   onDislike: () => void;
   onGeneratePdf: () => void;
   pdfGenerating?: boolean;
-  addBlockMenu?: ReactNode;
   onImprovedAnswer: () => void;
   onInsights: () => void;
   onClimbupAi: () => void;
@@ -193,7 +192,6 @@ export default function AnswerToolbar({
   onCancel,
   onGeneratePdf,
   pdfGenerating = false,
-  addBlockMenu = null,
   onImprovedAnswer,
   onInsights,
   onClimbupAi,
@@ -271,10 +269,6 @@ export default function AnswerToolbar({
         </>
       ) : (
         <>
-          {addBlockMenu && (
-            <div className="toolbar-block-options">{addBlockMenu}</div>
-          )}
-
           <button
             className="toolbar-btn success-action"
             onClick={() => onSave(false)}

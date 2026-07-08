@@ -18,6 +18,7 @@ type QuestionPaper = {
   exam_type: string;
   duration: number;
   total_marks: number;
+  paper_url?: string | null;
   subjects: {
     subject_name: string;
     subject_code: string;
@@ -77,6 +78,7 @@ export default function QuestionPaperClient({ paperId }: { paperId: string }) {
                 exam_type,
                 duration,
                 total_marks,
+                paper_url,
                 subjects:subject_id (
                   subject_name,
                   subject_code
@@ -185,6 +187,33 @@ export default function QuestionPaperClient({ paperId }: { paperId: string }) {
                 <span>Marks: <strong>{paper.total_marks}</strong></span>
                 <span>Duration: <strong>{paper.duration} min</strong></span>
               </div>
+
+              {paper.paper_url && (
+                <a
+                  href={paper.paper_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="pyqViewPdfBtn"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    marginTop: "18px",
+                    padding: "10px 22px",
+                    background: "rgba(140, 240, 208, 0.12)",
+                    color: "#8cf0d0",
+                    border: "1px solid rgba(140, 240, 208, 0.28)",
+                    borderRadius: "10px",
+                    fontSize: "14px",
+                    fontWeight: 800,
+                    textDecoration: "none",
+                    cursor: "pointer",
+                    transition: "all 160ms ease",
+                  }}
+                >
+                  📄 View Original Paper
+                </a>
+              )}
             </header>
 
             {questions.length === 0 ? (

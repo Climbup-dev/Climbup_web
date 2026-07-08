@@ -9,7 +9,9 @@ import StepsBlock from "./StepsBlock";
 import CodeBlock from "./CodeBlock";
 import MermaidBlock from "./MermaidBlock";
 
-export default function AnswerRenderer({ data }: { data: any }) {
+import { useState } from "react";
+
+export default function AnswerRenderer({ data, author, answeredAt }: { data: any, author?: { name: string; avatarUrl: string | null }, answeredAt?: string }) {
   if (!data) return null;
 
   const normalized = normalizeAnswerData(data);
@@ -22,6 +24,22 @@ export default function AnswerRenderer({ data }: { data: any }) {
         <div className="question-label">Question</div>
         <h1>{question}</h1>
       </div>
+
+      {author && (
+        <div className="answer-author-tag">
+          <AnswerAvatar
+            image={author.avatarUrl || ""}
+            initials={author.name === "ClimbUP AI" ? "✨" : author.name.charAt(0).toUpperCase()}
+          />
+          <div className="answer-author-tag-info">
+            <span className="answer-author-tag-label">Answered by</span>
+            <b className="answer-author-tag-name">{author.name}</b>
+            {answeredAt && (
+              <span className="answer-author-tag-date">• {formatAuthorDate(answeredAt)}</span>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="answer-content">
         {blocks.map((block: any, index: number) => renderBlock(block, index))}
@@ -119,4 +137,45 @@ function normalizeAnswerData(data: any) {
       "Question unavailable",
     blocks: [],
   };
+}
+
+function AnswerAvatar({
+  image,
+  initials,
+}: {
+  image: string;
+  initials: string;
+}) {
+  const [failedImage, setFailedImage] = useState("");
+  const showImage = Boolean(image && failedImage !== image);
+
+  return (
+    <span
+      className={`improved-answer-avatar ${showImage ? "has-image" : ""}`}
+      aria-hidden="true"
+    >
+      {showImage ? (
+        <img
+          src={image}
+          alt=""
+          loading="lazy"
+          referrerPolicy="no-referrer"
+          onError={() => setFailedImage(image)}
+        />
+      ) : (
+        initials
+      )}
+    </span>
+  );
+}
+
+function formatAuthorDate(dateStr: string): string {
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return "";
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+  } catch {
+    return "";
+  }
 }

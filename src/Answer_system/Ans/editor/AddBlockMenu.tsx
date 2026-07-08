@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useState, useRef, useEffect, type ReactNode } from "react";
 
 type AddBlockMenuProps = {
   onAdd: (type: string) => void;
@@ -81,23 +81,55 @@ const blockIcons: Record<BlockToolIcon, ReactNode> = {
 };
 
 export default function AddBlockMenu({ onAdd }: AddBlockMenuProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isOpen]);
+
   return (
-    <div className="add-block-menu">
-      {blockTools.map((tool) => (
-        <button
-          aria-label={tool.label}
-          className="block-tool"
-          data-tooltip={tool.label}
-          key={tool.type}
-          onClick={() => onAdd(tool.type)}
-          type="button"
-        >
-          <span className="block-tool-icon" data-kind={tool.icon} aria-hidden>
-            {blockIcons[tool.icon]}
-          </span>
-          <span className="block-tool-label">{tool.label}</span>
-        </button>
-      ))}
+    <div className="inline-add-block-wrapper" ref={menuRef}>
+      <div className="inline-add-line"></div>
+      <button 
+        className={`inline-add-btn ${isOpen ? 'is-open' : ''}`}
+        onClick={() => setIsOpen(!isOpen)}
+        title="Add Block"
+        type="button"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+      </button>
+      <div className="inline-add-line"></div>
+      
+      {isOpen && (
+        <div className="add-block-dropdown">
+          {blockTools.map((tool) => (
+            <button
+              aria-label={tool.label}
+              className="block-tool"
+              key={tool.type}
+              onClick={() => {
+                onAdd(tool.type);
+                setIsOpen(false);
+              }}
+              type="button"
+            >
+              <span className="block-tool-icon" data-kind={tool.icon} aria-hidden>
+                {blockIcons[tool.icon]}
+              </span>
+              <span className="block-tool-label">{tool.label}</span>
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

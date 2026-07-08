@@ -35,6 +35,10 @@ type StudentAnswerRecord = {
   status?: string | null;
   updated_at?: string | null;
   published_at?: string | null;
+  users?: {
+    full_name?: string | null;
+    profile_image?: string | null;
+  } | null;
 };
 
 type AnswerSelection = {
@@ -68,6 +72,10 @@ export type QuestionDetail = {
     status: "draft" | "published" | "ai";
     aiModel: string;
     publishedAt: string;
+    author?: {
+      name: string;
+      avatarUrl: string | null;
+    };
   } | null;
 };
 
@@ -119,6 +127,42 @@ export async function getQuestionDetail(
     let studentAnswer: StudentAnswerRecord | null = null;
 
     if (selection.answerId && selection.answerSource === "student") {
+      // First try to fetch from public_answers view (has author names for all published answers)
+      const { data: publicAnswer } = await supabase
+        .from("public_answers")
+        .select(`
+          answer_id,
+          answer_content,
+          published_at,
+          full_name,
+          profile_image
+        `)
+        .eq("answer_id", selection.answerId)
+        .eq("question_id", questionId)
+        .maybeSingle();
+
+      if (publicAnswer) {
+        return {
+          data: toQuestionDetail(
+            question as QuestionRecord,
+            null,
+            {
+              answer_id: publicAnswer.answer_id,
+              answer_content: publicAnswer.answer_content,
+              status: "published",
+              updated_at: publicAnswer.published_at,
+              published_at: publicAnswer.published_at,
+              users: {
+                full_name: publicAnswer.full_name,
+                profile_image: publicAnswer.profile_image,
+              },
+            } as any
+          ),
+          error: null,
+        };
+      }
+
+      // Fallback for private drafts belonging to the current user
       let selectedStudentAnswerQuery = supabase
         .from("student_answers")
         .select(`
@@ -126,7 +170,11 @@ export async function getQuestionDetail(
           answer_content,
           status,
           updated_at,
-          published_at
+          published_at,
+          users:user_id (
+            full_name,
+            profile_image
+          )
         `)
         .eq("answer_id", selection.answerId)
         .eq("question_id", questionId);
@@ -191,7 +239,11 @@ export async function getQuestionDetail(
           answer_content,
           status,
           updated_at,
-          published_at
+          published_at,
+          users:user_id (
+            full_name,
+            profile_image
+          )
         `)
         .eq("user_id", user.id)
         .eq("question_id", questionId)
@@ -289,9 +341,13 @@ function toQuestionDetail(
       ? {
           answerId: studentAnswer.answer_id,
           source: "student_draft",
-          status: "draft",
+          status: studentAnswer.status === "published" ? "published" : "draft",
           aiModel: "Private draft",
           publishedAt: studentAnswer.updated_at || studentAnswer.published_at || "",
+          author: studentAnswer.users ? {
+            name: studentAnswer.users.full_name || "Anonymous Student",
+            avatarUrl: studentAnswer.users.profile_image || null,
+          } : undefined,
         }
       : answer
       ? {
@@ -300,6 +356,10 @@ function toQuestionDetail(
           status: "ai",
           aiModel: answer.ai_model || "AI",
           publishedAt: answer.created_at || "",
+          author: {
+            name: "ClimbUP AI",
+            avatarUrl: null,
+          },
         }
       : null,
   };

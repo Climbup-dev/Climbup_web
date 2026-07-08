@@ -49,9 +49,14 @@ type AnswerInsight = {
 type EditableAnswerRendererProps = {
   data: any;
   questionId?: string;
-  answerId?: string;
-  answerSource?: "student_draft" | "ai_answer";
-  onSave?: (data: any) => void;
+  answerSource?: "student_draft" | "ai_answer" | "student" | "ai" | null;
+  hasImage?: boolean;
+  onSave?: (data: any) => Promise<void>;
+  author?: {
+    name: string;
+    avatarUrl: string | null;
+  };
+  answeredAt?: string;
 };
 
 const INSIGHT_PROMPTS = [
@@ -78,7 +83,10 @@ export default function EditableAnswerRenderer({
   questionId = "",
   answerId = "",
   answerSource = undefined,
+  hasImage = false,
   onSave = undefined,
+  author,
+  answeredAt,
 }: EditableAnswerRendererProps) {
   const { currentUser } = useAuth();
   const supabase = useMemo(() => createClient(), []);
@@ -193,10 +201,14 @@ export default function EditableAnswerRenderer({
     );
   };
 
-  const addBlock = (type: string) => {
+  const addBlockAt = (type: string, index: number) => {
     const nextBlock = createEmptyBlock(type);
     pendingAddedBlockId.current = nextBlock.id;
-    setEditableBlocks((prev: any[]) => [...prev, nextBlock]);
+    setEditableBlocks((prev: any[]) => {
+      const newBlocks = [...prev];
+      newBlocks.splice(index, 0, nextBlock);
+      return newBlocks;
+    });
 
     window.requestAnimationFrame(() => {
       window.requestAnimationFrame(() => {
@@ -652,6 +664,12 @@ export default function EditableAnswerRenderer({
     setIsGenerating(true);
     setGenerationError("");
 
+    if (hasImage) {
+      setGenerationError("AI is currently unable to read images. Please attempt this question manually.");
+      setIsGenerating(false);
+      return;
+    }
+
     try {
       // 1. Generate answer using secure Next.js proxy API
       const generateResponse = await fetch(`/api/questions/${questionId}/generate`, {
@@ -749,7 +767,6 @@ export default function EditableAnswerRenderer({
       feedback={feedback}
       theme={theme}
       onToggleTheme={toggleTheme}
-      addBlockMenu={isEditing ? <AddBlockMenu onAdd={addBlock} /> : null}
     />
 
     {saveMessage && (
@@ -791,7 +808,7 @@ export default function EditableAnswerRenderer({
             </div>
           </div>
         ) : (
-          <AnswerRenderer data={rendererData} />
+          <AnswerRenderer data={rendererData} author={author} answeredAt={answeredAt} />
         )}
 
         <AnswerFeedbackActions
@@ -814,29 +831,50 @@ export default function EditableAnswerRenderer({
             <h1>{normalized.question}</h1>
           </div>
 
+          {author && (
+            <div className="answer-author-tag">
+              <AnswerAvatar
+                image={author.avatarUrl || ""}
+                initials={author.name === "ClimbUP AI" ? "✨" : author.name.charAt(0).toUpperCase()}
+              />
+              <div className="answer-author-tag-info">
+                <span className="answer-author-tag-label">Answered by</span>
+                <b className="answer-author-tag-name">{author.name}</b>
+                {answeredAt && (
+                  <span className="answer-author-tag-date">• {formatAuthorDate(answeredAt)}</span>
+                )}
+              </div>
+            </div>
+          )}
+
           {editableBlocks.length === 0 ? (
             <div className="block empty-answer">
-              No blocks available. Click Add Block to create one.
+              <AddBlockMenu onAdd={(type) => addBlockAt(type, 0)} />
             </div>
           ) : (
-            editableBlocks.map((block: any, index: number) => {
-              const blockId = block.id || `${block.type}-${index}`;
+            <>
+              <AddBlockMenu onAdd={(type) => addBlockAt(type, 0)} />
+              {editableBlocks.map((block: any, index: number) => {
+                const blockId = block.id || `${block.type}-${index}`;
 
-              return (
-                <div
-                  className="editor-block-scroll-target"
-                  data-editor-block-id={blockId}
-                  key={blockId}
-                >
-                  <BlockEditor
-                    block={block}
-                    index={index}
-                    onChange={updateBlock}
-                    onDelete={deleteBlock}
-                  />
-                </div>
-              );
-            })
+                return (
+                  <div key={blockId}>
+                    <div
+                      className="editor-block-scroll-target"
+                      data-editor-block-id={blockId}
+                    >
+                      <BlockEditor
+                        block={block}
+                        index={index}
+                        onChange={updateBlock}
+                        onDelete={deleteBlock}
+                      />
+                    </div>
+                    <AddBlockMenu onAdd={(type) => addBlockAt(type, index + 1)} />
+                  </div>
+                );
+              })}
+            </>
           )}
         </div>
 
@@ -1093,6 +1131,17 @@ export default function EditableAnswerRenderer({
     )}
   </div>
 );
+}
+
+function formatAuthorDate(dateStr: string): string {
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return "";
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+  } catch {
+    return "";
+  }
 }
 
 function AnswerAvatar({
