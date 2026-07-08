@@ -49,6 +49,7 @@ type AnswerInsight = {
 type EditableAnswerRendererProps = {
   data: any;
   questionId?: string;
+  answerId?: string;
   answerSource?: "student_draft" | "ai_answer" | "student" | "ai" | null;
   hasImage?: boolean;
   onSave?: (data: any) => Promise<void>;
