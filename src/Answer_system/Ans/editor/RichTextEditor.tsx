@@ -109,7 +109,7 @@ export default function RichTextEditor({ value, onChange, placeholder, className
   return (
     <div className={`rich-text-editor-container ${className || ""}`}>
       {editor && (
-        <BubbleMenu editor={editor} tippyOptions={{ duration: 100 }} className="bubble-toolbar">
+        <BubbleMenu editor={editor} className="bubble-toolbar">
           <button
             type="button"
             onClick={() => editor.chain().focus().toggleBold().run()}
