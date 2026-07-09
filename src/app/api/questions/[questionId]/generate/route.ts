@@ -32,6 +32,8 @@ export async function POST(
       }
     }
 
+    console.log("Sending request to Python Backend. AuthHeader present?", !!authHeader, "Token snippet:", authHeader ? authHeader.substring(0, 15) + "..." : "NONE");
+
     // Securely forward the request from the server
     const generateResponse = await fetch(targetUrl, {
       method: "POST",

@@ -700,22 +700,39 @@ export default function EditableAnswerRenderer({
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
+      
+      if (!token) {
+        alert("Unauthorized: Your session expired. Please login again.");
+        setIsGenerating(false);
+        return;
+      }
 
-      // 1. Generate answer using secure Next.js proxy API
-      const generateResponse = await fetch(`/api/questions/${questionId}/generate`, {
+      // 1. Generate answer using Python backend directly
+      const pythonBackendUrl = process.env.NEXT_PUBLIC_PYTHON_BACKEND_URL || "https://bacend-climbup.onrender.com";
+      const targetUrl = `${pythonBackendUrl}/api/generate-only`;
+      
+      const generateResponse = await fetch(targetUrl, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
-          ...(token ? { "Authorization": `Bearer ${token}` } : {})
+          "Authorization": `Bearer ${token}`
         },
         body: JSON.stringify({ 
           question: normalized.question,
-          marks: 5
+          marks: 5,
+          question_id: questionId,
+          skip_answer: false
         }),
       });
 
       if (!generateResponse.ok) {
-        throw new Error("Failed to generate answer from AI server.");
+        if (generateResponse.status === 401) {
+          alert("Unauthorized: Your session expired. Please login again.");
+        } else {
+          throw new Error("Failed to generate answer from AI server.");
+        }
+        setIsGenerating(false);
+        return;
       }
 
       const generateResult = await generateResponse.json();
@@ -756,6 +773,8 @@ export default function EditableAnswerRenderer({
             setEditableBlocks(dbData.answer);
             setCurrentAnswerId(saveResult.ai_answer_id);
             setCurrentAnswerSource('ai_answer');
+            setSaveMessageTone("success");
+            setSaveMessage("Answer automatically generated and saved.");
           }
         }
         
