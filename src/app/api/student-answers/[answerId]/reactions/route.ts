@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
 import nodemailer from "nodemailer";
+import { createRouteHandlerClient, createAdminClient } from "@/lib/supabase/server";
 
 export async function POST(
   request: Request,
@@ -10,46 +10,19 @@ export async function POST(
     const { answerId } = await params;
     const { reaction_type } = await request.json();
 
-    // Initialize Supabase client
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    // 1. Authenticate user securely using cookies
+    const response = NextResponse.json({ ok: true });
+    const supabase = createRouteHandlerClient(request, response);
     
-    // We need service role key to bypass RLS and fetch user emails from auth.users
-    if (!supabaseServiceKey) {
-      console.warn("SUPABASE_SERVICE_ROLE_KEY is missing. Falling back to anon key. Email notifications will fail.");
-    }
-    
-    const supabase = createClient(
-      supabaseUrl,
-      supabaseServiceKey || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-    // Get the user ID from the authorization header (passed by client via cookies/session)
-    // We use the authorization header sent by the fetch call
-    const authHeader = request.headers.get("authorization") || request.headers.get("cookie");
-    // Actually, in Next.js App router, auth should be fetched via server cookies if not passed in header
-    // Let's rely on standard Supabase auth extraction if authHeader is passed
-    let currentUserId = null;
-    let currentUserName = "Someone";
-
-    if (authHeader && authHeader.startsWith("Bearer ")) {
-      const { data: { user } } = await supabase.auth.getUser(authHeader.replace("Bearer ", ""));
-      if (user) {
-        currentUserId = user.id;
-        const { data: profile } = await supabase.from('users').select('full_name').eq('user_id', user.id).single();
-        if (profile?.full_name) currentUserName = profile.full_name;
-      }
-    } else {
-      // Fallback for cookie-based auth if possible, or just reject
-      // (The frontend needs to send the token)
-      console.warn("No Bearer token found in headers.");
-    }
-
-    if (!currentUserId) {
+    if (authError || !user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // 1. Save the reaction to the database (Assuming you have a 'reactions' table)
+    const currentUserId = user.id;
+
+    // 2. Save the reaction to the database
     if (reaction_type) {
       await supabase
         .from("reactions")
@@ -78,12 +51,21 @@ export async function POST(
         .eq("answer_id", answerId)
         .single();
 
-      if (answer && answer.user_id !== currentUserId && supabaseServiceKey) {
-        // Fetch the author's email using the service role key
-        const { data: authorAuth } = await supabase.auth.admin.getUserById(answer.user_id);
-        const authorEmail = authorAuth?.user?.email;
+      if (answer && answer.user_id !== currentUserId) {
+        // Fetch the author's email using the admin client
+        try {
+          const adminClient = createAdminClient();
+          const { data: authorAuth } = await adminClient.auth.admin.getUserById(answer.user_id);
+          const authorEmail = authorAuth?.user?.email;
 
-        if (authorEmail && process.env.SMTP_HOST) {
+          // Also get current user's name for the email template
+          let currentUserName = "Someone";
+          const { data: profile } = await supabase.from('users').select('full_name').eq('user_id', currentUserId).single();
+          if (profile?.full_name) {
+            currentUserName = profile.full_name;
+          }
+
+          if (authorEmail && process.env.SMTP_HOST) {
           // Configure Nodemailer transporter
           const transporter = nodemailer.createTransport({
             host: process.env.SMTP_HOST,
@@ -149,6 +131,9 @@ export async function POST(
 
           // Send the email (do not await, let it run in background to not block response)
           transporter.sendMail(mailOptions).catch(console.error);
+        }
+        } catch (emailError) {
+          console.error("Failed to fetch author email or send notification:", emailError);
         }
       }
     }
