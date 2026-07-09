@@ -94,7 +94,7 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json(
-      { ok: false, error: error.message },
+      { ok: false, error: "An unexpected error occurred while saving your answer. Please try again." },
       { status: 500 }
     );
   }

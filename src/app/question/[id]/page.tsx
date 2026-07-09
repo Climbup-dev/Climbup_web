@@ -86,6 +86,7 @@ export default async function QuestionDetailPage({
                 answerSource={question.answerMeta?.source}
                 data={question.answerData}
                 hasImage={!!(question.imageUrls && question.imageUrls.length > 0)}
+                questionImage={question.imageUrls?.[0]}
                 author={question.answerMeta?.author}
                 answeredAt={question.answerMeta?.publishedAt}
               />

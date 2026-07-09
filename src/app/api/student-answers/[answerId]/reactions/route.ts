@@ -142,7 +142,7 @@ export async function POST(
   } catch (error: any) {
     console.error("Error in reactions route:", error);
     return NextResponse.json(
-      { error: "Internal Server Error", details: error.message },
+      { error: "Internal Server Error", details: "An unexpected error occurred while processing your request." },
       { status: 500 }
     );
   }

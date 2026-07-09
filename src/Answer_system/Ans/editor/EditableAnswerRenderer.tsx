@@ -52,6 +52,7 @@ type EditableAnswerRendererProps = {
   answerId?: string;
   answerSource?: "student_draft" | "ai_answer" | "student" | "ai" | null;
   hasImage?: boolean;
+  questionImage?: string;
   onSave?: (data: any) => Promise<void>;
   author?: {
     name: string;
@@ -59,6 +60,14 @@ type EditableAnswerRendererProps = {
   };
   answeredAt?: string;
 };
+
+const AI_LOADING_MESSAGES = [
+  "Analyzing your question carefully...",
+  "Gathering the best engineering concepts...",
+  "Structuring a perfect step-by-step answer...",
+  "Adding relevant examples and details...",
+  "Finalizing your premium answer..."
+];
 
 const INSIGHT_PROMPTS = [
   {
@@ -85,6 +94,7 @@ export default function EditableAnswerRenderer({
   answerId = "",
   answerSource = undefined,
   hasImage = false,
+  questionImage = undefined,
   onSave = undefined,
   author,
   answeredAt,
@@ -130,6 +140,20 @@ export default function EditableAnswerRenderer({
   
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationError, setGenerationError] = useState("");
+  const [loadingMessage, setLoadingMessage] = useState(AI_LOADING_MESSAGES[0]);
+
+  useEffect(() => {
+    if (!isGenerating) {
+      setLoadingMessage(AI_LOADING_MESSAGES[0]);
+      return;
+    }
+    let currentIndex = 0;
+    const interval = setInterval(() => {
+      currentIndex = (currentIndex + 1) % AI_LOADING_MESSAGES.length;
+      setLoadingMessage(AI_LOADING_MESSAGES[currentIndex]);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [isGenerating]);
   const [theme, setTheme] = useState<AnswerTheme>(() => {
     if (typeof window === "undefined") return "dark";
 
@@ -235,6 +259,7 @@ export default function EditableAnswerRenderer({
 
     const snapshot = createAnswerEditorSnapshot({
       question: normalized.question,
+      questionImage,
       blocks: editableBlocks,
       isPublic: publish,
       feedback,
@@ -412,6 +437,7 @@ export default function EditableAnswerRenderer({
 
     const snapshot = createAnswerEditorSnapshot({
       question: normalized.question,
+      questionImage,
       blocks: editableBlocks,
       isPublic,
       feedback,
@@ -672,12 +698,19 @@ export default function EditableAnswerRenderer({
     }
 
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+
       // 1. Generate answer using secure Next.js proxy API
       const generateResponse = await fetch(`/api/questions/${questionId}/generate`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          ...(token ? { "Authorization": `Bearer ${token}` } : {})
+        },
         body: JSON.stringify({ 
-          question: normalized.question
+          question: normalized.question,
+          marks: 5
         }),
       });
 
@@ -796,7 +829,7 @@ export default function EditableAnswerRenderer({
               {isGenerating ? (
                 <div className="ai-generating-state">
                   <div className="ai-spinner"></div>
-                  <span>Generating answer...</span>
+                  <span className="ai-loading-text" style={{ animation: "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite" }}>{loadingMessage}</span>
                 </div>
               ) : (
                 <button 

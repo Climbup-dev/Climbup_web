@@ -1,4 +1,8 @@
 import { NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
+
+// Bypass SSL verification globally for this route (useful for self-signed or unverified Render certificates)
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
 export async function POST(
   request: Request,
@@ -16,14 +20,30 @@ export async function POST(
     const pythonBackendUrl = process.env.PYTHON_BACKEND_URL || "https://bacend-climbup.onrender.com";
     const targetUrl = `${pythonBackendUrl}/api/generate-only`;
 
+    // Forward auth headers
+    let authHeader = request.headers.get('authorization') || '';
+    const cookieHeader = request.headers.get('cookie') || '';
+
+    if (!authHeader) {
+      const supabase = await createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.access_token) {
+        authHeader = `Bearer ${session.access_token}`;
+      }
+    }
+
     // Securely forward the request from the server
     const generateResponse = await fetch(targetUrl, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        ...(authHeader ? { "Authorization": authHeader } : {}),
+        ...(cookieHeader ? { "Cookie": cookieHeader } : {})
+      },
       body: JSON.stringify({ 
         question: body.question,
-        question_id: questionId
-      }),
+        marks: body.marks || 5
+      })
     });
 
     if (!generateResponse.ok) {

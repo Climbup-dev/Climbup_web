@@ -15,6 +15,7 @@ export type AnswerEditorSnapshot = {
   schemaVersion: 1;
   savedAt: string;
   question: string;
+  questionImage?: string;
   visibility: "public" | "private";
   feedback: "like" | "dislike" | null;
   answer: {
@@ -34,6 +35,7 @@ export type AnswerEditorSnapshot = {
 
 type SnapshotInput = {
   question: string;
+  questionImage?: string;
   blocks: any[];
   isPublic: boolean;
   feedback: "like" | "dislike" | null;
@@ -41,6 +43,7 @@ type SnapshotInput = {
 
 export function createAnswerEditorSnapshot({
   question,
+  questionImage,
   blocks,
   isPublic,
   feedback,
@@ -52,6 +55,7 @@ export function createAnswerEditorSnapshot({
     schemaVersion: 1,
     savedAt: new Date().toISOString(),
     question: cleanQuestion,
+    questionImage,
     visibility: isPublic ? "public" : "private",
     feedback,
     answer: {

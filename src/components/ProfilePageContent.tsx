@@ -35,8 +35,7 @@ type UserProfile = {
 type ProfileStats = {
   publishedAnswers: number;
   totalLikes: number;
-  totalComments: number;
-  totalViews: number;
+  totalInsights: number;
 };
 
 type PublishedAnswer = {
@@ -244,8 +243,7 @@ export default function ProfilePageContent() {
   const [stats, setStats] = useState<ProfileStats>({
     publishedAnswers: 0,
     totalLikes: 0,
-    totalComments: 0,
-    totalViews: 0,
+    totalInsights: 0,
   });
 
   const [publishedAnswers, setPublishedAnswers] = useState<PublishedAnswer[]>([]);
@@ -423,12 +421,16 @@ export default function ProfilePageContent() {
         };
       });
 
+      const { count: insightsCount } = await supabase
+        .from("insights")
+        .select("insight_id", { count: "exact", head: true })
+        .eq("user_id", currentUser.id);
+
       setPublishedAnswers(displayAnswers as any);
       const newStats = {
         publishedAnswers: answers.length,
         totalLikes: answers.reduce((sum, a) => sum + Number(a.likes_count || 0), 0),
-        totalViews: answers.reduce((sum, a) => sum + Number(a.views_count || 0), 0),
-        totalComments: 0,
+        totalInsights: insightsCount || 0,
       };
       setStats(newStats);
       setCache(cacheKey, { answers: displayAnswers, stats: newStats });
@@ -524,8 +526,7 @@ export default function ProfilePageContent() {
             <div className="profileStatsGrid">
               <article><span>Published answers</span><strong>{stats.publishedAnswers}</strong></article>
               <article><span>Total likes</span><strong>{stats.totalLikes}</strong></article>
-              <article><span>Total comments</span><strong>{stats.totalComments}</strong></article>
-              <article><span>Total views</span><strong>{stats.totalViews}</strong></article>
+              <article><span>Total insights</span><strong>{stats.totalInsights}</strong></article>
             </div>
 
             <div className="profileDetails">
@@ -570,7 +571,6 @@ export default function ProfilePageContent() {
 
                       <div className="profileAnswerMeta">
                         <span>👍 {answer.likes_count || 0} likes</span>
-                        <span>👁 {answer.views_count || 0} views</span>
                         <span>Published {formatAccountDate(answer.published_at || answer.created_at)}</span>
                       </div>
                     </article>
