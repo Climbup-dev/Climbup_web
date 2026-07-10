@@ -1406,6 +1406,22 @@
   color: var(--toolbar-icon-color, var(--answer-text));
   background: var(--toolbar-icon-bg, var(--answer-surface-soft));
   border-color: var(--toolbar-icon-border, var(--answer-border));
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.editable-answer-page .toolbar-icon:has(img.toolbar-btn-logo) {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+img.toolbar-btn-logo {
+  object-fit: contain !important;
+  transform: scale(1.6); /* Zoom significantly for effective look */
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.25));
 }
 
 .editable-answer-page .toolbar-btn:hover {

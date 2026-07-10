@@ -1,21 +1,13 @@
-.chatbot-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(2, 6, 23, 0.4);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  z-index: 1000;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.3s ease, visibility 0.3s ease;
+body.chatbot-open .improved-answer-overlay {
+  right: 440px;
 }
-
-.chatbot-overlay.is-open {
-  opacity: 1;
-  visibility: visible;
+.improved-answer-overlay {
+  transition: right 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@media (max-width: 1024px) {
+  body.chatbot-open .improved-answer-overlay {
+    right: 0;
+  }
 }
 
 .chatbot-drawer {
@@ -198,6 +190,25 @@
 }
 .theme-light .chatbot-message.assistant code {
   background: rgba(0, 0, 0, 0.05);
+}
+.chatbot-message.assistant pre {
+  background: rgba(0, 0, 0, 0.4);
+  padding: 12px;
+  border-radius: 8px;
+  overflow-x: auto;
+  margin: 12px 0;
+}
+.theme-light .chatbot-message.assistant pre {
+  background: rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+.chatbot-message.assistant pre code {
+  background: transparent;
+  padding: 0;
+}
+.chatbot-message.assistant ul, .chatbot-message.assistant ol {
+  margin: 8px 0;
+  padding-left: 20px;
 }
 
 .chatbot-input-area {

@@ -1,92 +1,69 @@
 {
   "schema": "climbup.answer-editor.snapshot",
   "schemaVersion": 1,
-  "savedAt": "2026-07-10T10:49:26.548Z",
-  "question": "Derive the time complexity of following code segments: \ni) for(i = n; i > = 1; i = i/2) \n   {  \n        Statement; \n   } \nii) for(i = 0; i < n; i++) \n   { \n        for(j = 0; j < i ; j++) \n        { \n              statement; \n        }\n   }",
-  "visibility": "public",
+  "savedAt": "2026-07-10T13:43:20.429Z",
+  "question": "A stack is to be implemented using an array. The associated declarations are: \nint stack [100]; \nint top = -1; \nGive the statement to perform PUSH and POP operation.",
+  "visibility": "private",
   "feedback": null,
   "answer": {
-    "question": "Derive the time complexity of following code segments: \ni) for(i = n; i > = 1; i = i/2) \n   {  \n        Statement; \n   } \nii) for(i = 0; i < n; i++) \n   { \n        for(j = 0; j < i ; j++) \n        { \n              statement; \n        }\n   }",
+    "question": "A stack is to be implemented using an array. The associated declarations are: \nint stack [100]; \nint top = -1; \nGive the statement to perform PUSH and POP operation.",
     "blocks": [
       {
         "id": "markdown-1",
         "type": "markdown",
         "title": "Introduction and Definition",
         "order": 0,
-        "content": "In computer science, **Asymptotic Analysis** is the method of describing the limiting behavior of a function. **Big-O notation** is the standard mathematical tool used to express the upper bound of an algorithm's running time, providing a worst-case scenario analysis. For engineering students, understanding these derivations is critical for optimizing software performance, managing memory constraints, and ensuring scalability in large-scale systems. The complexity is determined by counting the number of basic operations performed as a function of the input size 'n'. We evaluate these segments by identifying the growth rate of the loop iterations relative to 'n'."
+        "content": "A stack is a fundamental linear data structure that follows the **Last-In-First-Out (LIFO)** principle. In this model, the last element added to the stack is the first one to be removed. Conceptually, it behaves like a stack of plates where you can only add or remove items from the top. In computer science, stacks are essential for managing function calls (the call stack), expression evaluation, syntax parsing, and backtracking algorithms. When implementing a stack using a static array of size 100, we must maintain a pointer variable, typically named 'top', which tracks the index of the most recently inserted element. The initial state of an empty stack is represented by 'top = -1'. Engineering robustness requires that every operation checks for boundary conditions: **Stack Overflow** (when attempting to push into a full array) and **Stack Underflow** (when attempting to pop from an empty array)."
       },
       {
-        "id": "image-2",
-        "type": "image",
-        "title": "Big O Complexity Growth Rates",
+        "id": "markdown-1783690983648",
+        "type": "markdown",
+        "title": "New Text",
         "order": 1,
-        "url": "https://cdn.shopify.com/s/files/1/0417/7869/files/image3_8_1_1024x1024.png?v=1640979023",
-        "alt": "Big O Complexity Growth Rates",
+        "content": "<https://youtu.be/818gGdKTB_U?si=hG78SG8xlUht1R8d>"
+      },
+      {
+        "id": "image-3",
+        "type": "image",
+        "title": "Stack Data Structure Visualization",
+        "order": 2,
+        "url": "https://cdn.programiz.com/sites/tutorial2program/files/stack.png",
+        "alt": "Stack Data Structure Visualization",
         "caption": "",
-        "search_query": "Big O notation growth rate comparison graph",
+        "search_query": "stack data structure array implementation push pop visualization",
         "recommended_websites": [
           "geeksforgeeks.org",
           "programiz.com"
         ]
       },
       {
-        "id": "markdown-3",
-        "type": "markdown",
-        "title": "Analysis of Segment (i): Logarithmic Complexity",
-        "order": 2,
-        "content": "The loop structure is: `for(i = n; i >= 1; i = i/2)`. \n\n**Derivation:**\n1. Let 'k' be the number of iterations. \n2. In each iteration, the value of 'i' is divided by 2. \n3. After 1st iteration: i = n/2\n4. After 2nd iteration: i = n/4 = n/2^2\n5. After 3rd iteration: i = n/8 = n/2^3\n6. After 'k' iterations: i = n/2^k\n7. The loop terminates when i < 1. Thus, we set n/2^k = 1.\n8. Solving for k: n = 2^k, which implies k = log2(n).\n\n**Conclusion:** The time complexity is **O(log n)**. This represents a highly efficient algorithm where the number of steps grows slowly as the input size increases."
-      },
-      {
-        "id": "markdown-4",
-        "type": "markdown",
-        "title": "Analysis of Segment (ii): Quadratic Complexity",
-        "order": 3,
-        "content": "The loop structure is: `for(i = 0; i < n; i++) { for(j = 0; j < i; j++) { statement; } }`.\n\n**Derivation:**\n1. The outer loop runs from i = 0 to n-1.\n2. The inner loop runs from j = 0 to i-1.\n3. Total operations = Summation of inner loop iterations for each 'i'.\n4. Total = (0) + (1) + (2) + ... + (n-1).\n5. This is an arithmetic progression series: Sum = n(n-1) / 2.\n6. Expanding the expression: (n^2 - n) / 2 = 0.5n^2 - 0.5n.\n7. In Big-O analysis, we drop lower-order terms and constant coefficients.\n\n**Conclusion:** The time complexity is **O(n^2)**. This is a quadratic growth rate, common in nested loop structures where the inner loop depends on the outer loop variable."
-      },
-      {
-        "id": "code-5",
+        "id": "code-4",
         "type": "code",
-        "title": "Implementation and Complexity Demonstration",
-        "order": 4,
-        "language": "python",
-        "content": "def analyze_complexities(n):\n    # Segment (i): O(log n)\n    count1 = 0\n    i = n\n    while i >= 1:\n        count1 += 1\n        i //= 2\n    print(f\"Segment (i) iterations for n={n}: {count1}\")\n\n    # Segment (ii): O(n^2)\n    count2 = 0\n    for i in range(n):\n        for j in range(i):\n            count2 += 1\n    print(f\"Segment (ii) iterations for n={n}: {count2}\")\n\n# Input\nn = 10\nanalyze_complexities(n)"
+        "title": "Program / Implementation",
+        "order": 3,
+        "language": "c",
+        "content": "#include <stdio.h>\n\n#define MAX 100\nint stack[MAX];\nint top = -1;\n\n// Function to push an element\nvoid push(int value) {\n    if (top == MAX - 1) {\n        printf(\"Stack Overflow: Cannot push %d\n\", value);\n    } else {\n        top++;\n        stack[top] = value;\n        printf(\"Pushed %d onto stack\n\", value);\n    }\n}\n\n// Function to pop an element\nvoid pop() {\n    if (top == -1) {\n        printf(\"Stack Underflow: Cannot pop from empty stack\n\");\n    } else {\n        printf(\"Popped %d from stack\n\", stack[top]);\n        top--;\n    }\n}\n\nint main() {\n    push(10);\n    push(20);\n    pop();\n    pop();\n    pop(); // Triggers underflow\n    return 0;\n}"
       },
       {
-        "id": "table-6",
-        "type": "table",
-        "title": "Summary of Complexity Results",
+        "id": "markdown-5",
+        "type": "markdown",
+        "title": "Code Explanation",
+        "order": 4,
+        "content": "The implementation relies on two critical operations. The **PUSH** operation first verifies if the stack is full by checking if 'top == 99'. If the condition is false, it increments the 'top' variable and stores the new data at 'stack[top]'. This ensures that the pointer always points to the current active element. Conversely, the **POP** operation verifies if the stack is empty by checking if 'top == -1'. If the stack contains elements, it retrieves the value at 'stack[top]' and then decrements the 'top' pointer. This effectively 'removes' the element by making it inaccessible to future operations. The time complexity for both operations is O(1), making array-based stacks highly efficient for fixed-size requirements."
+      },
+      {
+        "id": "markdown-6",
+        "type": "markdown",
+        "title": "Exam-Focused Points",
         "order": 5,
-        "columns": [
-          "Segment",
-          "Complexity",
-          "Growth Type"
-        ],
-        "rows": [
-          [
-            "i) i = i/2",
-            "O(log n)",
-            "Logarithmic"
-          ],
-          [
-            "ii) Nested loops",
-            "O(n^2)",
-            "Quadratic"
-          ]
-        ]
+        "content": "To secure full marks in an engineering examination, keep these points in mind:\n\n- **LIFO Principle**: Always emphasize that the last element in is the first out.\n- **Boundary Conditions**: Never write push/pop logic without checking for overflow (top == MAX-1) and underflow (top == -1).\n- **Pointer Management**: The order of operations matters. In PUSH, increment 'top' before assignment. In POP, access the value before decrementing 'top'.\n- **Common Mistakes**: Forgetting to initialize 'top' to -1, or using the wrong array index (e.g., using 'top+1' incorrectly).\n- **Efficiency**: Array-based stacks offer constant time complexity O(1) for both operations, which is optimal for static memory allocation."
       },
       {
         "id": "markdown-7",
         "type": "markdown",
-        "title": "Exam-Focused Points",
-        "order": 6,
-        "content": "### Key Observations for Full Marks:\n\n- **Logarithmic Growth:** Always identify the division factor. If the factor is 'k', the complexity is log_k(n).\n- **Arithmetic Series:** When the inner loop depends on the outer loop (e.g., j &lt; i), it almost always results in a summation series leading to O(n^2).\n- **Common Mistakes:**\n  - Confusing O(log n) with O(n).\n  - Forgetting to drop constant factors (e.g., writing O(n^2/2) instead of O(n^2)).\n  - Failing to show the summation series for nested loops.\n- **Scoring Keywords:** Use terms like 'Asymptotic Upper Bound', 'Arithmetic Progression', 'Logarithmic Reduction', and 'Worst-Case Complexity'."
-      },
-      {
-        "id": "markdown-8",
-        "type": "markdown",
         "title": "Conclusion",
-        "order": 7,
-        "content": "In conclusion, the analysis of algorithmic complexity is fundamental to software engineering. Segment (i) demonstrates logarithmic efficiency, which is characteristic of divide-and-conquer algorithms like Binary Search. Segment (ii) demonstrates quadratic complexity, typical of simple sorting algorithms like Bubble Sort or Insertion Sort. Mastering these derivations allows engineers to predict system behavior under heavy loads and make informed decisions regarding algorithm selection. By applying mathematical summation and logarithmic properties, we can accurately quantify the performance of any iterative code structure."
+        "order": 6,
+        "content": "In summary, implementing a stack using a static array is a foundational exercise in data structures. By utilizing a simple integer array and a pointer variable, we can efficiently manage data in a LIFO order. The robustness of the implementation depends entirely on the correct handling of boundary conditions, specifically preventing overflow and underflow. Understanding these mechanics is vital for higher-level engineering concepts such as recursion, compiler design, and memory management. Mastery of this implementation provides the necessary groundwork for more complex dynamic data structures like linked lists and trees."
       }
     ]
   },

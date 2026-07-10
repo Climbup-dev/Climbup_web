@@ -72,37 +72,16 @@ const IconSvg = ({ children }: { children: ReactNode }) => (
 
 const toolIcons: Record<ToolIconKind, ReactNode> = {
   improve: (
-    <IconSvg>
-      <path d="M4 20l4.5-1.1 9.8-9.8a2.1 2.1 0 0 0 0-3l-.4-.4a2.1 2.1 0 0 0-3 0l-9.8 9.8L4 20z" />
-      <path d="M13.8 6.8l3.4 3.4" />
-      <path d="M5 5h4" />
-      <path d="M7 3v4" />
-    </IconSvg>
+    <Image src="/icons/improve.png" width={36} height={36} alt="Improve" className="toolbar-btn-logo" />
   ),
   pdf: (
-    <IconSvg>
-      <path d="M6 3h8l4 4v14H6z" />
-      <path d="M14 3v5h5" />
-      <text x="7.2" y="16.7" fill="currentColor" stroke="none" fontSize="5.2" fontWeight="900">
-        PDF
-      </text>
-    </IconSvg>
+    <Image src="/icons/pdf.png" width={36} height={36} alt="PDF" className="toolbar-btn-logo" />
   ),
   answers: (
-    <IconSvg>
-      <path d="M4 6.5h11a3 3 0 0 1 3 3v1.5a3 3 0 0 1-3 3H9l-4 3v-3.1A3 3 0 0 1 4 11z" />
-      <path d="M8 10h6" />
-      <path d="M8 13h4" />
-    </IconSvg>
+    <Image src="/icons/community.png" width={36} height={36} alt="Community Answers" className="toolbar-btn-logo" />
   ),
   skills: (
-    <IconSvg>
-      <path d="M4 19h16" />
-      <path d="M6 19v-6" />
-      <path d="M12 19v-9" />
-      <path d="M18 19v-12" />
-      <path d="M5 8l4-4 4 4 6-6" />
-    </IconSvg>
+    <Image src="/icons/skills.png" width={36} height={36} alt="Skills" className="toolbar-btn-logo" />
   ),
   save: (
     <IconSvg>
@@ -134,17 +113,7 @@ const toolIcons: Record<ToolIconKind, ReactNode> = {
     </IconSvg>
   ),
   theme: (
-    <IconSvg>
-      <circle cx="12" cy="12" r="4" />
-      <path d="M12 2v2" />
-      <path d="M12 20v2" />
-      <path d="M4.9 4.9l1.4 1.4" />
-      <path d="M17.7 17.7l1.4 1.4" />
-      <path d="M2 12h2" />
-      <path d="M20 12h2" />
-      <path d="M4.9 19.1l1.4-1.4" />
-      <path d="M17.7 6.3l1.4-1.4" />
-    </IconSvg>
+    <Image src="/icons/sun.png" width={36} height={36} alt="Theme" className="toolbar-btn-logo" />
   ),
   cancel: (
     <IconSvg>

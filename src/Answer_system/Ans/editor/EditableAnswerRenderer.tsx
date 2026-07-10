@@ -118,7 +118,11 @@ export default function EditableAnswerRenderer({
   const [saveMessage, setSaveMessage] = useState("");
   const [saveMessageTone, setSaveMessageTone] =
     useState<SaveMessageTone>("success");
-  const [currentAnswerId, setCurrentAnswerId] = useState(initialInsightAnswerId);
+  const [currentAnswerId, setCurrentAnswerId] = useState(() => {
+    return answerId || (answerSource === "student_draft"
+      ? data?.answer_id
+      : data?.answer?.answer_id || "");
+  });
   const [currentAnswerSource, setCurrentAnswerSource] = useState(
     initialReactionSource
   );
@@ -277,10 +281,10 @@ export default function EditableAnswerRenderer({
 
         const pythonBackendUrl = process.env.NEXT_PUBLIC_PYTHON_BACKEND_URL || "https://bacend-climbup.onrender.com";
         const answerText = snapshot.answer.blocks.map((b: any) => {
-          if (Array.isArray(b.content)) {
-            return b.content.map((c: any) => c.text || "").join("");
-          }
-          return b.text || "";
+          if (typeof b.content === 'string') return b.content;
+          if (b.type === 'image' && b.url) return `[Image: ${b.url}] ${b.search_query || ''}`;
+          if (b.type === 'code' && b.code) return `\`\`\`\n${b.code}\n\`\`\``;
+          return b.text || b.description || "";
         }).join("\\n");
         
         const verifyRes = await fetch(`${pythonBackendUrl}/api/verify-answer`, {
@@ -304,7 +308,7 @@ export default function EditableAnswerRenderer({
         const verifyData = await verifyRes.json();
         
         if (!verifyData.is_valid) {
-          setSaveMessage(`Cannot make public. Climbup rejected your answer: ${verifyData.reason}`);
+          setSaveMessage(`Cannot publish yet. Please fix this issue: ${verifyData.reason}`);
           setSaveMessageTone("error");
           return; // Abort saving as public
         }

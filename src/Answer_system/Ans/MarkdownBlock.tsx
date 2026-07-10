@@ -94,6 +94,26 @@ export function renderMarkdown(text: string) {
       return;
     }
 
+    const youtubeRegex = /^<?(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})[^\s>]*>?$/;
+    const ytMatch = trimmed.match(youtubeRegex);
+    
+    if (ytMatch && ytMatch[1]) {
+      flushLists();
+      const videoId = ytMatch[1];
+      nodes.push(
+        <div key={`yt-${index}`} className="youtube-video-wrapper" style={{ position: 'relative', paddingBottom: '56.25%', height: 0, overflow: 'hidden', margin: '24px 0', borderRadius: '12px', boxShadow: '0 8px 24px rgba(0,0,0,0.12)' }}>
+          <iframe 
+            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none' }}
+            src={`https://www.youtube.com/embed/${videoId}`} 
+            title="YouTube video player" 
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+            allowFullScreen 
+          />
+        </div>
+      );
+      return;
+    }
+
     flushLists();
     nodes.push(<p key={index}>{renderInline(trimmed)}</p>);
   });

@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { createClient } from "@/lib/supabase/client";
 import "../styles/Chatbot.css";
 
@@ -54,6 +56,18 @@ export default function ClimbupAIChatbot() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isLoading]);
+
+  // Toggle body class for layout shift (now used for shifting popups)
+  useEffect(() => {
+    if (isOpen) {
+      document.body.classList.add("chatbot-open");
+    } else {
+      document.body.classList.remove("chatbot-open");
+    }
+    return () => {
+      document.body.classList.remove("chatbot-open");
+    };
+  }, [isOpen]);
 
   const sendMessage = async () => {
     if (!input.trim() || isLoading) return;
@@ -119,11 +133,6 @@ export default function ClimbupAIChatbot() {
 
   return (
     <div className={`chatbot-wrapper ${theme === "light" ? "theme-light" : "theme-dark"}`}>
-      <div 
-        className={`chatbot-overlay ${isOpen ? "is-open" : ""}`}  
-        onClick={() => setIsOpen(false)}
-      />
-      
       <div className={`chatbot-drawer ${isOpen ? "is-open" : ""}`}>
         <div className="chatbot-header">
           <div className="chatbot-header-title">
@@ -143,9 +152,9 @@ export default function ClimbupAIChatbot() {
             <div key={idx} className={`chatbot-message-wrapper ${msg.role}`}>
               <div className="chatbot-message-role">{msg.role === "assistant" ? "Climbup AI" : "You"}</div>
               <div className={`chatbot-message ${msg.role}`}>
-                {msg.content.split("\\n").map((line, i) => (
-                  <p key={i}>{line}</p>
-                ))}
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {msg.content}
+                </ReactMarkdown>
               </div>
             </div>
           ))}
