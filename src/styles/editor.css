@@ -1523,9 +1523,9 @@
   position: fixed;
   inset: 0;
   z-index: 140;
-  display: grid;
-  place-items: center;
-  padding: 18px;
+  display: flex;
+  justify-content: flex-end;
+  padding: 0;
   background:
     linear-gradient(180deg, rgba(2, 21, 38, 0.72), rgba(2, 21, 38, 0.82)),
     rgba(2, 21, 38, 0.66);
@@ -1539,7 +1539,7 @@
 }
 
 .improved-answer-overlay.is-closing .improved-answer-popup {
-  animation: answerPopupOut 180ms cubic-bezier(0.4, 0, 0.8, 0.2) both;
+  animation: drawerSlideOut 400ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .improved-answer-popup {
@@ -1554,23 +1554,28 @@
   --answer-accent: #38d399;
   --answer-accent-soft: #9ef8dc;
   --answer-blue: #8cf0d0;
-  width: min(820px, 100%);
-  height: auto;
-  max-height: min(78vh, 720px);
-  overflow: hidden;
+  width: 100%;
+  max-width: 560px;
+  height: 100%;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   color: var(--answer-text);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent 34%),
     linear-gradient(145deg, #081d2b, var(--answer-surface));
-  border: 1px solid var(--answer-border-strong);
-  border-radius: 16px;
-  box-shadow:
-    0 26px 70px rgba(0, 0, 0, 0.38),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
-  animation: answerPopupIn 260ms cubic-bezier(0.2, 0.85, 0.24, 1) both;
-  transform-origin: center bottom;
+  border-left: 1px solid var(--answer-border-strong);
+  box-shadow: -10px 0 40px rgba(0, 0, 0, 0.38);
+  animation: drawerSlideIn 400ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes drawerSlideIn {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+@keyframes drawerSlideOut {
+  from { transform: translateX(0); }
+  to { transform: translateX(100%); }
 }
 
 .improved-answer-head {
@@ -1840,16 +1845,15 @@
 }
 
 .insights-popup {
-  width: min(1120px, calc(100vw - 32px));
-  max-height: min(82vh, 760px);
+  /* Inherit dimensions from .improved-answer-popup drawer */
 }
 
 .insights-layout {
-  display: grid;
-  grid-template-columns: minmax(320px, 0.82fr) minmax(0, 1.18fr);
-  gap: 18px;
-  overflow: hidden;
-  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  overflow-y: auto;
+  padding: 24px;
 }
 
 .insight-form,
@@ -1860,14 +1864,12 @@
 .insight-form {
   display: grid;
   align-content: start;
-  gap: 15px;
-  padding: 16px;
-  background:
-    linear-gradient(145deg, rgba(56, 211, 153, 0.09), rgba(255, 255, 255, 0.025)),
-    var(--answer-surface-soft);
-  border: 1px solid var(--answer-border-strong);
-  border-left: 5px solid var(--answer-accent);
-  border-radius: 8px;
+  gap: 18px;
+  padding: 24px;
+  background: linear-gradient(145deg, rgba(16, 185, 129, 0.05), rgba(255, 255, 255, 0.01)), var(--answer-surface);
+  border: 1px solid rgba(16, 185, 129, 0.15);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
   animation: answerPanelIn 260ms cubic-bezier(0.2, 0.85, 0.24, 1) 70ms both;
 }
 
@@ -1879,16 +1881,18 @@
 }
 
 .insight-composer-mark {
-  width: 42px;
-  height: 42px;
+  width: 48px;
+  height: 48px;
   display: grid;
   place-items: center;
-  flex: 0 0 42px;
-  color: #021526;
-  background: var(--answer-accent-soft);
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 950;
+  flex: 0 0 48px;
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 900;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1);
 }
 
 .insight-composer-top h3 {
@@ -1976,6 +1980,25 @@
 .insight-form-actions .toolbar-btn {
   width: auto;
   justify-content: center;
+  padding: 14px 24px;
+  font-size: 15px;
+  font-weight: 700;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  border: none;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+  transition: all 0.2s ease;
+}
+
+.insight-form-actions .toolbar-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.35);
+}
+
+.insight-form-actions .toolbar-btn:active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25);
 }
 
 .insight-inline-state {
@@ -2002,8 +2025,6 @@
   display: grid;
   align-content: start;
   gap: 12px;
-  max-height: min(58vh, 520px);
-  overflow-y: auto;
   padding: 14px;
   background: rgba(255, 255, 255, 0.025);
   border: 1px solid var(--answer-border);
@@ -2117,21 +2138,20 @@
 .editable-answer-page.answer-theme-light .improved-answer-popup {
   --answer-surface: #ffffff;
   --answer-surface-soft: #f8fafc;
-  --answer-surface-muted: #eef6f3;
-  --answer-text: #101827;
+  --answer-surface-muted: #f1f5f9;
+  --answer-text: #0f172a;
   --answer-text-soft: #334155;
   --answer-muted: #64748b;
-  --answer-border: #dbe4ef;
-  --answer-border-strong: #b7c6d8;
+  --answer-border: rgba(0, 0, 0, 0.08);
+  --answer-border-strong: rgba(0, 0, 0, 0.12);
   --answer-accent: #10b981;
-  --answer-accent-soft: #a7f3d0;
-  --answer-blue: #2563eb;
+  --answer-accent-soft: #d1fae5;
+  --answer-blue: #3b82f6;
   background:
-    linear-gradient(180deg, rgba(16, 185, 129, 0.07), transparent 34%),
+    linear-gradient(180deg, rgba(16, 185, 129, 0.03), transparent 20%),
     linear-gradient(145deg, #ffffff, #f8fafc);
-  box-shadow:
-    0 26px 70px rgba(15, 23, 42, 0.14),
-    inset 0 1px 0 rgba(255, 255, 255, 0.92);
+  border-left: 1px solid var(--answer-border-strong);
+  box-shadow: -15px 0 50px rgba(0, 0, 0, 0.1);
 }
 
 .editable-answer-page.answer-theme-light .improved-answer-head {

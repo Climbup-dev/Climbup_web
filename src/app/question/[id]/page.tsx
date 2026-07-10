@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import EditableAnswerRenderer from "@/Answer_system/Ans/editor/EditableAnswerRenderer";
 import QuestionDetailFrame from "@/components/QuestionDetailFrame";
+import ClimbupAIChatbot from "@/components/ClimbupAIChatbot";
 import { getQuestionDetail } from "@/lib/question-detail";
 
 type PageProps = {
@@ -35,6 +36,7 @@ export default async function QuestionDetailPage({
 
   return (
     <QuestionDetailFrame>
+      <ClimbupAIChatbot />
       <main className="questionDetailPage">
         <section className="questionDetailShell">
           <Link className="questionDetailBack" href={backHref} prefetch={false}>

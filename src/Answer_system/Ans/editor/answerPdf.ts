@@ -105,17 +105,9 @@ function buildPdfHtml(snapshot: AnswerEditorSnapshot, logoUrl: string) {
   <body>
     <main class="pdf-page">
       <div class="pdf-watermark" aria-hidden="true">
-        <img src="${escapeAttribute(logoUrl)}" alt="" />
-        <span>ClimbUP</span>
+        <span>myclimbup.xyz</span>
       </div>
       <header class="pdf-header">
-        <div class="header-top">
-          <img class="header-logo" src="${escapeAttribute(logoUrl)}" alt="ClimbUP" />
-          <div class="header-text">
-            <strong>ClimbUP Academic Resource</strong>
-          </div>
-        </div>
-        <hr />
         <h1>${safeQuestion}</h1>
         ${snapshot.questionImage ? `<img class="question-image" src="${escapeAttribute(snapshot.questionImage)}" alt="Question Image" />` : ""}
         <div class="pdf-meta">
@@ -385,13 +377,14 @@ function pdfStyles() {
   return `
     @page {
       size: A4;
-      margin: 15mm;
+      margin: 0;
     }
 
     * { box-sizing: border-box; }
 
     body {
       margin: 0;
+      padding: 15mm;
       color: #000000;
       background: #ffffff;
       font-family: "Times New Roman", Times, serif;
@@ -410,34 +403,36 @@ function pdfStyles() {
 
     .pdf-watermark {
       position: fixed; top: 50%; left: 50%; z-index: -1;
-      display: grid; place-items: center; gap: 10px;
-      width: 100%; height: 100%; pointer-events: none; opacity: 0.12;
-      transform: translate(-50%, -50%) rotate(-30deg);
+      display: grid; place-items: center;
+      width: 100%; height: 100%; pointer-events: none;
+      transform: translate(-50%, -50%) rotate(-45deg);
     }
-    .pdf-watermark img { width: 300px; height: 300px; object-fit: contain; filter: grayscale(1) blur(4px); }
-    .pdf-watermark span { color: #000; font-size: 50px; font-weight: bold; font-family: sans-serif; text-transform: uppercase; filter: blur(3px); }
+    .pdf-watermark span { 
+      color: #cbd5e1; /* Light grayish color */
+      font-size: 65px; 
+      font-weight: 800; 
+      font-family: Arial, sans-serif; 
+      letter-spacing: 0.04em;
+      text-transform: lowercase; 
+      white-space: nowrap;
+      opacity: 0.35; /* More faded/faint */
+    }
 
     .pdf-header {
       text-align: center;
       margin-bottom: 20px;
       font-family: Arial, sans-serif;
     }
-    .header-top {
-      display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 10px;
-    }
-    .header-logo { width: 40px; height: 40px; object-fit: contain; filter: grayscale(1); }
-    .header-text { text-align: right; font-size: 9pt; color: #333; }
-    .header-text strong { display: block; font-size: 11pt; color: #000; }
-    
-    .pdf-header hr {
-      border: none; border-top: 2px solid #000; margin: 0 0 15px;
-    }
     
     h1 {
-      margin: 0 0 5px; font-size: 16pt; line-height: 1.2;
-      text-transform: capitalize;
-      color: #0f172a;
+      margin: 0 0 12px; font-size: 13.5pt; line-height: 1.5;
+      color: #b91c1c;
+      font-weight: 700;
+      text-align: left;
+      border-bottom: 2px solid #fecaca;
+      padding-bottom: 10px;
+      white-space: pre-wrap;
+      word-break: break-word;
     }
     
     .question-image {
@@ -449,7 +444,8 @@ function pdfStyles() {
 
     .pdf-meta {
       font-size: 9pt; color: #555;
-      display: flex; justify-content: center; gap: 15px;
+      display: flex; justify-content: flex-start; gap: 15px;
+      margin-bottom: 10px;
     }
 
     .pdf-section {

@@ -141,6 +141,7 @@ export default function EditableAnswerRenderer({
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationError, setGenerationError] = useState("");
   const [loadingMessage, setLoadingMessage] = useState(AI_LOADING_MESSAGES[0]);
+  const [showAiWarning, setShowAiWarning] = useState(false);
 
   useEffect(() => {
     if (!isGenerating) {
@@ -669,7 +670,7 @@ export default function EditableAnswerRenderer({
     if (typeof window !== "undefined") {
       window.dispatchEvent(
         new CustomEvent("climbup-ai-open", {
-          detail: { question: normalized.question },
+          detail: { question: normalized.question, theme: theme },
         })
       );
     }
@@ -687,7 +688,12 @@ export default function EditableAnswerRenderer({
     });
   };
 
-  const handleGenerateWithAi = async () => {
+  const handleGenerateWithAi = () => {
+    setShowAiWarning(true);
+  };
+
+  const confirmGenerateWithAi = async () => {
+    setShowAiWarning(false);
     setIsGenerating(true);
     setGenerationError("");
 
@@ -855,7 +861,7 @@ export default function EditableAnswerRenderer({
                   className="toolbar-btn primary large-action ai-generate-btn"
                   onClick={handleGenerateWithAi}
                 >
-                  ✨ Generate with AI
+                  ✨ Generate by Climbup
                 </button>
               )}
             </div>
@@ -1180,6 +1186,22 @@ export default function EditableAnswerRenderer({
             </div>
           </div>
         </section>
+      </div>
+    )}
+
+    {showAiWarning && (
+      <div className="custom-ai-modal-overlay">
+        <div className="custom-ai-modal-content">
+          <div className="modal-icon-wrapper">
+            <span className="modal-icon">🤖</span>
+          </div>
+          <h3>AI Generation Warning</h3>
+          <p>AI can occasionally make mistakes. Please verify the generated answer thoroughly for accuracy.</p>
+          <div className="modal-actions">
+            <button type="button" className="modal-btn-cancel" onClick={() => setShowAiWarning(false)}>Cancel</button>
+            <button type="button" className="modal-btn-okay" onClick={confirmGenerateWithAi}>Okay</button>
+          </div>
+        </div>
       </div>
     )}
   </div>
