@@ -254,7 +254,6 @@ export default function EditableAnswerRenderer({
   };
 
   const saveChanges = async (publish: boolean) => {
-    setIsPublic(publish);
     setSaveMessage("");
     setSaveMessageTone("success");
 
@@ -265,6 +264,60 @@ export default function EditableAnswerRenderer({
       isPublic: publish,
       feedback,
     });
+
+    if (publish) {
+      try {
+        setSaveMessage("Verifying answer against community guidelines...");
+        const { data: { session } } = await supabase.auth.getSession();
+        const token = session?.access_token;
+
+        if (!token) {
+          throw new Error("You must be logged in to publish answers.");
+        }
+
+        const pythonBackendUrl = process.env.NEXT_PUBLIC_PYTHON_BACKEND_URL || "https://bacend-climbup.onrender.com";
+        const answerText = snapshot.answer.blocks.map((b: any) => {
+          if (Array.isArray(b.content)) {
+            return b.content.map((c: any) => c.text || "").join("");
+          }
+          return b.text || "";
+        }).join("\\n");
+        
+        const verifyRes = await fetch(`${pythonBackendUrl}/api/verify-answer`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            question: normalized.question,
+            answer: answerText
+          })
+        });
+
+        if (!verifyRes.ok) {
+          const errText = await verifyRes.text();
+          console.error("Verification backend error:", verifyRes.status, errText);
+          throw new Error(`Server Error (${verifyRes.status}): ${errText.substring(0, 50)}...`);
+        }
+
+        const verifyData = await verifyRes.json();
+        
+        if (!verifyData.is_valid) {
+          setSaveMessage(`Cannot make public. Climbup rejected your answer: ${verifyData.reason}`);
+          setSaveMessageTone("error");
+          return; // Abort saving as public
+        }
+        setSaveMessage("Answer approved by Climbup");
+      } catch (error: any) {
+        console.error("Verification failed:", error);
+        setSaveMessageTone("error");
+        setSaveMessage(error.message || "Failed to verify the answer. Please try again.");
+        return; // Abort saving if verification fails
+      }
+    }
+
+    setIsPublic(publish);
 
     const updatedData = {
       ...data,
