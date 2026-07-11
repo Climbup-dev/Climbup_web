@@ -2,8 +2,10 @@
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, Fragment } from "react";
 
+import { Award, Clock, FileText, ChevronLeft, Download } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { useAuth } from "@/hooks/useAuth";
 import { createClient } from "@/lib/supabase/client";
@@ -39,7 +41,17 @@ const AuthModal = dynamic(() => import("@/components/AuthModal"), {
   loading: () => null,
 });
 
+const INSPIRING_QUOTES = [
+  "Your potential is endless. Let's unlock it.",
+  "Every question solved is a step closer to success.",
+  "Focus, determination, and consistency.",
+  "The best time to start is now.",
+  "Great things never come from comfort zones.",
+  "Preparing your academic arsenal..."
+];
+
 export default function QuestionPaperClient({ paperId }: { paperId: string }) {
+  const router = useRouter();
   const { passwordRecovery } = useAuth();
   const supabase = useMemo(() => createClient(), []);
 
@@ -54,6 +66,18 @@ export default function QuestionPaperClient({ paperId }: { paperId: string }) {
     setEntryMode(mode);
     setAuthOpen(true);
   };
+
+  const [navigatingQuestionId, setNavigatingQuestionId] = useState<string | null>(null);
+  const [quoteIndex, setQuoteIndex] = useState(0);
+
+  useEffect(() => {
+    if (navigatingQuestionId) {
+      const interval = setInterval(() => {
+        setQuoteIndex((prev) => (prev + 1) % INSPIRING_QUOTES.length);
+      }, 2500);
+      return () => clearInterval(interval);
+    }
+  }, [navigatingQuestionId]);
 
   useEffect(() => {
     let active = true;
@@ -153,9 +177,12 @@ export default function QuestionPaperClient({ paperId }: { paperId: string }) {
         </Link>
 
         {loading ? (
-          <div className="questionPaperState">
-            <span className="questionPaperLoader" />
-            <h1>Loading question paper</h1>
+          <div className="questionPaperState" style={{ animation: "pyqPanelIn 0.3s ease-out" }}>
+            <div style={{ textAlign: "center", maxWidth: "400px", padding: "40px", background: "linear-gradient(135deg, rgba(8, 34, 53, 0.95), rgba(2, 21, 38, 0.98))", border: "1px solid rgba(56, 211, 153, 0.25)", borderRadius: "24px", boxShadow: "0 40px 100px rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(255, 255, 255, 0.05)" }}>
+              <span className="questionPaperLoader" style={{ width: "50px", height: "50px", margin: "0 auto 24px", border: "3px solid rgba(56, 211, 153, 0.1)", borderTopColor: "#38d399", borderRadius: "50%", animation: "spin 1s linear infinite", display: "inline-block" }} />
+              <h3 style={{ color: "#fff", fontSize: "22px", fontWeight: "700", margin: "0 0 12px" }}>Opening Exam Paper...</h3>
+              <p style={{ color: "#9ef8dc", fontSize: "15px", fontStyle: "italic", margin: 0 }}>Every expert was once a beginner.</p>
+            </div>
           </div>
         ) : message ? (
           <div className="questionPaperState">
@@ -182,8 +209,12 @@ export default function QuestionPaperClient({ paperId }: { paperId: string }) {
               </p>
 
               <div className="paperInfoGrid">
-                <span>Marks: <strong>{paper.total_marks}</strong></span>
-                <span>Duration: <strong>{paper.duration} min</strong></span>
+                <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
+                  <Award size={16} color="#38d399" /> Marks: <strong>{paper.total_marks}</strong>
+                </span>
+                <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
+                  <Clock size={16} color="#38d399" /> Duration: <strong>{paper.duration} min</strong>
+                </span>
               </div>
 
               {paper.paper_url && (
@@ -192,24 +223,8 @@ export default function QuestionPaperClient({ paperId }: { paperId: string }) {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="pyqViewPdfBtn"
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    marginTop: "18px",
-                    padding: "10px 22px",
-                    background: "rgba(140, 240, 208, 0.12)",
-                    color: "#8cf0d0",
-                    border: "1px solid rgba(140, 240, 208, 0.28)",
-                    borderRadius: "10px",
-                    fontSize: "14px",
-                    fontWeight: 800,
-                    textDecoration: "none",
-                    cursor: "pointer",
-                    transition: "all 160ms ease",
-                  }}
                 >
-                  📄 View Original Paper
+                  <Download size={18} /> View Original Paper
                 </a>
               )}
             </header>
@@ -272,13 +287,20 @@ export default function QuestionPaperClient({ paperId }: { paperId: string }) {
                         <div style={{ flex: 1, height: "1.5px", background: "linear-gradient(to left, transparent, rgba(56, 189, 248, 0.35))" }}></div>
                       </div>
                     )}
-                    <Link
+                    <div
                       className="paperQuestionRow"
-                      href={`/question/${question.question_id}`}
-                      prefetch={false}
+                      onClick={() => {
+                        setNavigatingQuestionId(question.question_id);
+                        router.push(`/question/${question.question_id}`);
+                      }}
+                      style={{ cursor: "pointer" }}
                     >
                     <div className="questionNumber">
-                      {question.question_number || `Q${index + 1}`}
+                      {navigatingQuestionId === question.question_id ? (
+                        <span className="pyqMiniSpinner" />
+                      ) : (
+                        question.question_number || `Q${index + 1}`
+                      )}
                     </div>
 
                     <div className="questionContent">
@@ -326,7 +348,7 @@ export default function QuestionPaperClient({ paperId }: { paperId: string }) {
                         </div>
                       )}
                     </div>
-                  </Link>
+                  </div>
                   </Fragment>
                   );
                 })}
@@ -343,6 +365,16 @@ export default function QuestionPaperClient({ paperId }: { paperId: string }) {
           initialMode={entryMode}
           onClose={() => setAuthOpen(false)}
         />
+      )}
+
+      {navigatingQuestionId && (
+        <div className="pyqInspiringLoaderOverlay">
+          <div className="pyqInspiringLoaderBox">
+            <div className="pyqInspiringSpinner"></div>
+            <h3>Opening Answer...</h3>
+            <p>"{INSPIRING_QUOTES[quoteIndex]}"</p>
+          </div>
+        </div>
       )}
     </main>
   );
