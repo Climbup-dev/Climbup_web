@@ -182,8 +182,6 @@ export default function QuestionPaperClient({ paperId }: { paperId: string }) {
               </p>
 
               <div className="paperInfoGrid">
-                <span>Year: <strong>{paper.year}</strong></span>
-                <span>Exam: <strong>{paper.exam_type}</strong></span>
                 <span>Marks: <strong>{paper.total_marks}</strong></span>
                 <span>Duration: <strong>{paper.duration} min</strong></span>
               </div>

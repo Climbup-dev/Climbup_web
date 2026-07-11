@@ -176,38 +176,34 @@
   flex: 1;
   position: relative;
   max-width: 600px;
-  border-radius: 28px;
-  overflow: hidden;
-  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(158, 248, 220, 0.15);
-  transform: translateY(0);
-  transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.4s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.showcaseImageWrapper:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 40px 80px rgba(0, 0, 0, 0.4);
-  border-color: rgba(158, 248, 220, 0.3);
+@keyframes floatAnimation {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-16px); }
+  100% { transform: translateY(0px); }
 }
 
 .showcaseImage {
-  width: 100%;
+  width: 125%;
+  margin-left: -12.5%;
   height: auto;
   display: block;
-  object-fit: cover;
-  transition: transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+  object-fit: contain;
+  animation: floatAnimation 6s ease-in-out infinite;
+  filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.4)) drop-shadow(0 10px 20px rgba(56, 211, 153, 0.15));
+  transition: filter 0.4s ease;
+  z-index: 2;
 }
 
 .showcaseImageWrapper:hover .showcaseImage {
-  transform: scale(1.05);
+  filter: drop-shadow(0 30px 50px rgba(0, 0, 0, 0.5)) drop-shadow(0 15px 30px rgba(56, 211, 153, 0.35));
 }
 
-.imageGlow {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at center, transparent 30%, rgba(2, 21, 38, 0.5) 100%);
-  pointer-events: none;
-}
+
 
 
 /* VISION */
@@ -248,14 +244,32 @@
 
   .showcaseRow,
   .showcaseRow.reversed {
-    flex-direction: column-reverse;
-    gap: 48px;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .showcaseContent {
+    display: contents;
+  }
+
+  .showcaseNumber { order: 1; }
+  .showcaseContent h3 { order: 2; }
+  .showcaseContent p { 
+    order: 3;
+    margin-bottom: 16px;
   }
 
   .showcaseImageWrapper {
+    order: 4;
     max-width: 100%;
+    margin: 32px 0 40px;
   }
-
+  
+  .showcaseFeatures { order: 5; }
+  .showcaseAction { 
+    order: 6;
+    align-self: flex-start;
+  }
 }
 
 @media (max-width: 640px) {
@@ -286,10 +300,6 @@
     margin-top: 40px;
   }
 
-  .showcaseRow,
-  .showcaseRow.reversed {
-    gap: 36px;
-  }
 
   .showcaseContent h3 {
     font-size: 28px;

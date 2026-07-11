@@ -120,38 +120,34 @@
   flex: 1;
   position: relative;
   max-width: 500px;
-  border-radius: 24px;
-  overflow: hidden;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
-  border: 1px solid rgba(158, 248, 220, 0.15);
-  transform: translateY(0);
-  transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.4s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.pyqHeroImageWrapper:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.35);
-  border-color: rgba(158, 248, 220, 0.3);
+@keyframes floatHeroAnimation {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-16px); }
+  100% { transform: translateY(0px); }
 }
 
 .pyqHeroImage {
-  width: 100%;
+  width: 135%;
+  margin-left: -17.5%;
   height: auto;
   display: block;
-  object-fit: cover;
-  transition: transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+  object-fit: contain;
+  animation: floatHeroAnimation 6s ease-in-out infinite;
+  filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.4)) drop-shadow(0 10px 20px rgba(56, 211, 153, 0.15));
+  transition: filter 0.4s ease;
+  z-index: 2;
 }
 
 .pyqHeroImageWrapper:hover .pyqHeroImage {
-  transform: scale(1.05);
+  filter: drop-shadow(0 30px 50px rgba(0, 0, 0, 0.5)) drop-shadow(0 15px 30px rgba(56, 211, 153, 0.35));
 }
 
-.pyqHeroImageGlow {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at center, transparent 30%, rgba(2, 21, 38, 0.5) 100%);
-  pointer-events: none;
-}
+
 
 .pyqPanelHeading p,
 .pyqState p {
@@ -1007,4 +1003,74 @@
   .pyqLoader {
     animation-duration: 1ms;
   }
+}
+
+/* Inspiring Loader CSS */
+.pyqMiniSpinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(56, 211, 153, 0.2);
+  border-top-color: #38d399;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.pyqInspiringLoaderOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(2, 17, 30, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+.pyqInspiringLoaderBox {
+  text-align: center;
+  max-width: 400px;
+  padding: 40px;
+  background: linear-gradient(135deg, rgba(8, 34, 53, 0.95), rgba(2, 21, 38, 0.98));
+  border: 1px solid rgba(56, 211, 153, 0.25);
+  border-radius: 24px;
+  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  transform: translateY(10px);
+  animation: slideUpFade 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.pyqInspiringSpinner {
+  width: 50px;
+  height: 50px;
+  margin: 0 auto 24px;
+  border: 3px solid rgba(56, 211, 153, 0.1);
+  border-top-color: #38d399;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.pyqInspiringLoaderBox h3 {
+  color: #fff;
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0 0 12px;
+}
+
+.pyqInspiringLoaderBox p {
+  color: #9ef8dc;
+  font-size: 16px;
+  font-style: italic;
+  line-height: 1.5;
+  margin: 0;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.3s ease;
+}
+
+@keyframes slideUpFade {
+  to { transform: translateY(0); opacity: 1; }
 }

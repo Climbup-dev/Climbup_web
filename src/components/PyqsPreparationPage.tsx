@@ -45,6 +45,15 @@ const AuthModal = dynamic(() => import("@/components/AuthModal"), {
   loading: () => null,
 });
 
+const INSPIRING_QUOTES = [
+  "Your potential is endless. Let's unlock it.",
+  "Every question solved is a step closer to success.",
+  "Focus, determination, and consistency.",
+  "The best time to start is now.",
+  "Great things never come from comfort zones.",
+  "Preparing your academic arsenal..."
+];
+
 export default function PyqsPreparationClient() {
   const router = useRouter();
   const { currentUser, loading, passwordRecovery } = useAuth();
@@ -57,6 +66,18 @@ export default function PyqsPreparationClient() {
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [papers, setPapers] = useState<QuestionPaper[]>([]);
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
+
+  const [navigatingPaperId, setNavigatingPaperId] = useState<string | null>(null);
+  const [quoteIndex, setQuoteIndex] = useState(0);
+
+  useEffect(() => {
+    if (navigatingPaperId) {
+      const interval = setInterval(() => {
+        setQuoteIndex((prev) => (prev + 1) % INSPIRING_QUOTES.length);
+      }, 2500);
+      return () => clearInterval(interval);
+    }
+  }, [navigatingPaperId]);
 
   const [pageLoading, setPageLoading] = useState(false);
   const [papersLoading, setPapersLoading] = useState(false);
@@ -221,8 +242,7 @@ export default function PyqsPreparationClient() {
             </ul>
           </div>
           <div className="pyqHeroImageWrapper">
-            <Image src="/features/learning_v3.jpg" alt="Learning PYQs" width={500} height={375} className="pyqHeroImage" priority />
-            <div className="pyqHeroImageGlow"></div>
+            <Image src="/features/learning_v3.png" alt="Learning PYQs" width={500} height={375} className="pyqHeroImage" priority />
           </div>
         </div>
 
@@ -397,7 +417,10 @@ export default function PyqsPreparationClient() {
                         <div
                           key={paper.paper_id}
                           className="pyqPaperCard"
-                          onClick={() => router.push(`/pyqs/${paper.paper_id}`)}
+                          onClick={() => {
+                            setNavigatingPaperId(paper.paper_id);
+                            router.push(`/pyqs/${paper.paper_id}`);
+                          }}
                           style={{ cursor: "pointer" }}
                         >
                           <h3 style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -413,7 +436,11 @@ export default function PyqsPreparationClient() {
                               </em>
                             </div>
                             <div className="pyqCardArrow">
-                              <ChevronRight size={24} color="#38d399" />
+                              {navigatingPaperId === paper.paper_id ? (
+                                <span className="pyqMiniSpinner" />
+                              ) : (
+                                <ChevronRight size={24} color="#38d399" />
+                              )}
                             </div>
                           </div>
                         </div>
@@ -442,6 +469,16 @@ export default function PyqsPreparationClient() {
           initialMode={entryMode}
           onClose={closeAuth}
         />
+      )}
+
+      {navigatingPaperId && (
+        <div className="pyqInspiringLoaderOverlay">
+          <div className="pyqInspiringLoaderBox">
+            <div className="pyqInspiringSpinner"></div>
+            <h3>Preparing your study space...</h3>
+            <p>"{INSPIRING_QUOTES[quoteIndex]}"</p>
+          </div>
+        </div>
       )}
     </main>
   );

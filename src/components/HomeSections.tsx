@@ -70,8 +70,7 @@ export default function HomeSections() {
                 </button>
               </div>
               <div className="showcaseImageWrapper">
-                <Image src="/features/learning_v3.jpg" alt="Learning Hub" width={600} height={450} className="showcaseImage" />
-                <div className="imageGlow"></div>
+                <Image src="/features/learning_v3.png" alt="Learning Hub" width={600} height={450} className="showcaseImage" />
               </div>
             </div>
 
@@ -95,8 +94,7 @@ export default function HomeSections() {
                 </button>
               </div>
               <div className="showcaseImageWrapper">
-                <Image src="/features/discovery_v3.jpg" alt="Discovery Network" width={600} height={450} className="showcaseImage" />
-                <div className="imageGlow"></div>
+                <Image src="/features/discovery_v3.png" alt="Discovery Network" width={600} height={450} className="showcaseImage" />
               </div>
             </div>
 
@@ -118,8 +116,7 @@ export default function HomeSections() {
                 </button>
               </div>
               <div className="showcaseImageWrapper">
-                <Image src="/features/mentorship_v3.jpg" alt="Senior Mentorship" width={600} height={450} className="showcaseImage" />
-                <div className="imageGlow"></div>
+                <Image src="/features/mentorship_v3.png" alt="Senior Mentorship" width={600} height={450} className="showcaseImage" />
               </div>
             </div>
           </div>
