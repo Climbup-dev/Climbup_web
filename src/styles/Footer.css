@@ -2,7 +2,9 @@
   position: relative;
   overflow: hidden;
   color: #eafcf6;
-  background: linear-gradient(180deg, #03111c 0%, #010a12 48%, #01070c 100%);
+  background: 
+    radial-gradient(circle at 50% 100%, rgba(56, 211, 153, 0.05), transparent 60%),
+    linear-gradient(180deg, #03111c 0%, #010a12 48%, #01070c 100%);
   border-top: 1px solid rgba(158, 248, 220, 0.12);
   font-family: Inter, system-ui, sans-serif;
 }
@@ -52,14 +54,14 @@
 .footerFlow h3 {
   margin: 0 0 6px;
   color: #fff;
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 900;
 }
 
 .footerFlow p {
   margin: 0;
-  color: rgba(234, 252, 246, 0.52);
-  font-size: 12px;
+  color: rgba(234, 252, 246, 0.65);
+  font-size: 14px;
   line-height: 1.6;
 }
 
@@ -100,14 +102,14 @@
 .footerBrand h3 {
   margin: 28px 0 14px;
   color: #fff;
-  font-size: 19px;
+  font-size: 22px;
   font-weight: 900;
 }
 
 .footerBrand p {
   margin: 0;
-  color: rgba(234, 252, 246, 0.58);
-  font-size: 13px;
+  color: rgba(234, 252, 246, 0.7);
+  font-size: 15px;
   line-height: 1.75;
 }
 
@@ -130,7 +132,7 @@
 .footerLinkGroup h3 {
   margin: 0 0 24px;
   color: #fff;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 950;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -147,9 +149,9 @@
 .footerLinkGroup a {
   width: fit-content;
   display: inline-flex;
-  color: rgba(234, 252, 246, 0.52);
-  font-size: 12px;
-  font-weight: 750;
+  color: rgba(234, 252, 246, 0.65);
+  font-size: 14px;
+  font-weight: 600;
   text-decoration: none;
   transition: color 160ms ease, transform 160ms ease;
 }
@@ -175,21 +177,20 @@
 }
 
 .footerTrust span {
-  width: 25px;
-  height: 25px;
+  width: 28px;
+  height: 28px;
   display: grid;
   place-items: center;
   color: #021526;
   background: #9ef8dc;
   border-radius: 50%;
-  font-size: 10px;
-  font-weight: 950;
+  box-shadow: 0 0 15px rgba(56, 211, 153, 0.2);
 }
 
 .footerTrust p {
   margin: 0;
-  color: rgba(234, 252, 246, 0.5);
-  font-size: 11px;
+  color: rgba(234, 252, 246, 0.65);
+  font-size: 13px;
   line-height: 1.6;
 }
 
@@ -197,7 +198,7 @@
   display: block;
   margin-bottom: 4px;
   color: #fff;
-  font-size: 12px;
+  font-size: 15px;
   font-weight: 850;
 }
 
@@ -211,8 +212,8 @@
 
 .footerBottom p,
 .footerBottom span {
-  color: rgba(234, 252, 246, 0.42);
-  font-size: 10px;
+  color: rgba(234, 252, 246, 0.55);
+  font-size: 13px;
 }
 
 .footerBottom > div {
@@ -225,8 +226,8 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  color: rgba(234, 252, 246, 0.65);
-  font-size: 10px;
+  color: rgba(234, 252, 246, 0.85);
+  font-size: 13px;
   font-weight: 900;
   text-decoration: none;
 }

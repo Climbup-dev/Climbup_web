@@ -16,28 +16,6 @@ const AuthModal = dynamic(() => import("@/components/AuthModal"), {
   loading: () => null,
 });
 
-const teamMembers = [
-  {
-    name: "Amir Shaikh",
-    role: "Founder & Team Leader",
-    badge: "Leader",
-    image: "/team/amir.jpeg",
-    copy: "Leading ClimbUP with the vision of building a student-powered learning and discovery platform.",
-  },
-  {
-    name: "Saloni Patle",
-    role: "Frontend Developer",
-    image: "/team/saloni.jpeg",
-    copy: "Focused on creating clean, smooth, and student-friendly user experiences.",
-  },
-  {
-    name: "Nilesh Kagne",
-    role: "Content & Research Member",
-    image: "/team/Nilesh.jpeg",
-    copy: "Helps shape learning content and placement preparation resources.",
-  },
-];
-
 export default function HomeSections() {
   const { currentUser, loading, passwordRecovery } = useAuth();
   const router = useRouter();
@@ -48,6 +26,15 @@ export default function HomeSections() {
   const openAuth = (mode: EntryMode) => {
     setEntryMode(mode);
     setAuthOpen(true);
+  };
+
+  const handleFeatureClick = (href: string) => {
+    if (loading) return;
+    if (currentUser) {
+      router.push(href);
+      return;
+    }
+    openAuth("login");
   };
 
   return (
@@ -75,6 +62,12 @@ export default function HomeSections() {
                   <li><CheckCircle2 size={16} /> Save 80% time searching internet & books</li>
                   <li><CheckCircle2 size={16} /> Ask AI to easily resolve doubts</li>
                 </ul>
+                <button 
+                  className="showcaseAction" 
+                  onClick={() => handleFeatureClick("/pyqs")}
+                >
+                  Explore PYQs <span>→</span>
+                </button>
               </div>
               <div className="showcaseImageWrapper">
                 <Image src="/features/learning_v3.jpg" alt="Learning Hub" width={600} height={450} className="showcaseImage" />
@@ -94,6 +87,12 @@ export default function HomeSections() {
                   <li><CheckCircle2 size={16} /> Share skill insights & build confidence</li>
                   <li><CheckCircle2 size={16} /> Build a strong peer learning network</li>
                 </ul>
+                <button 
+                  className="showcaseAction" 
+                  onClick={() => handleFeatureClick("/discoveries")}
+                >
+                  See Discoveries <span>→</span>
+                </button>
               </div>
               <div className="showcaseImageWrapper">
                 <Image src="/features/discovery_v3.jpg" alt="Discovery Network" width={600} height={450} className="showcaseImage" />
@@ -105,58 +104,24 @@ export default function HomeSections() {
             <div className="showcaseRow">
               <div className="showcaseContent">
                 <span className="showcaseNumber">03</span>
-                <h3>Guided by Seniors</h3>
-                <p>Drop your own discoveries or get guided by experienced seniors to crack your next exam or land your dream job.</p>
+                <h3>Career & Job Preparation</h3>
+                <p>Prepare for internships, placements, and aptitude tests. Get insider tips and real interview experiences from placed seniors to land your dream job.</p>
                 <ul className="showcaseFeatures">
-                  <li><CheckCircle2 size={16} /> Senior mentorship & tips</li>
-                  <li><CheckCircle2 size={16} /> Placement & interview prep</li>
+                  <li><CheckCircle2 size={16} /> Aptitude & interview prep</li>
+                  <li><CheckCircle2 size={16} /> Real interview experiences</li>
                 </ul>
+                <button 
+                  className="showcaseAction" 
+                  onClick={() => handleFeatureClick("/jobs")}
+                >
+                  Start Job Prep <span>→</span>
+                </button>
               </div>
               <div className="showcaseImageWrapper">
                 <Image src="/features/mentorship_v3.jpg" alt="Senior Mentorship" width={600} height={450} className="showcaseImage" />
                 <div className="imageGlow"></div>
               </div>
             </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="startupSection teamSection" id="our-team">
-        <div className="sectionContainer">
-          <div className="sectionIntro sectionIntroLeft">
-            <span className="sectionLabel">Our Team</span>
-            <h2>Small Team. Strong Vision.</h2>
-            <p>
-              ClimbUP is built by a focused student team working to make
-              learning easier, smarter, and more collaborative.
-            </p>
-          </div>
-
-          <div className="teamGrid">
-            {teamMembers.map((member, index) => (
-              <article
-                className={`teamCard ${index === 0 ? "teamLeaderCard" : ""}`}
-                key={member.name}
-              >
-                <div className="teamImageBox">
-                  <Image
-                    src={member.image}
-                    alt={member.name}
-                    width={120}
-                    height={120}
-                    className="teamImage"
-                    loading="lazy"
-                    sizes="120px"
-                  />
-                </div>
-
-                {member.badge && <span className="teamBadge">{member.badge}</span>}
-
-                <h3>{member.name}</h3>
-                <strong>{member.role}</strong>
-                <p>{member.copy}</p>
-              </article>
-            ))}
           </div>
         </div>
       </section>

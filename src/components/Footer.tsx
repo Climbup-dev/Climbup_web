@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { CheckCircle2 } from "lucide-react";
 import "@/styles/Footer.css";
 
 const footerGroups = [
@@ -94,7 +95,7 @@ export default function Footer() {
 
         <section className="footerTrust" id="footer-trust">
           <div>
-            <span>✓</span>
+            <span><CheckCircle2 size={16} /></span>
             <p>
               <strong>Secure authentication</strong>
               Protected student account access.
@@ -102,7 +103,7 @@ export default function Footer() {
           </div>
 
           <div>
-            <span>✓</span>
+            <span><CheckCircle2 size={16} /></span>
             <p>
               <strong>Privacy controls</strong>
               Publish discoveries only when you choose.
@@ -110,7 +111,7 @@ export default function Footer() {
           </div>
 
           <div>
-            <span>✓</span>
+            <span><CheckCircle2 size={16} /></span>
             <p>
               <strong>Student-first mission</strong>
               Built to help students learn and grow together.
