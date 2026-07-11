@@ -63,22 +63,120 @@
 .profileDropdown .profileLogout:hover:not(:disabled), .profileDropdown .profileLogout:focus-visible { color: #fff; background: rgba(248, 113, 113, 0.13); outline: 0; }
 .profileLogout:disabled { cursor: wait; opacity: 0.6; }
 
+/* Mobile Menu Base Classes (Hidden on Desktop) */
+.mobileMenuBtn {
+  display: none;
+  background: transparent;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.desktopAuthButtons {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 @keyframes profile-pop { from { opacity: 0; transform: translateY(-8px) scale(0.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
 
 @media (max-width: 1050px) {
   .navbar { padding: 0 26px; }
   .navLinks { display: none; }
+  
+  /* Show Mobile Menu Button and hide desktop auth buttons */
+  .mobileMenuBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .desktopAuthButtons {
+    display: none;
+  }
+}
+
+/* Mobile Menu Overlay Styles */
+.mobileMenuOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(2, 21, 38, 0.98);
+  backdrop-filter: blur(20px);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  padding: 24px 26px;
+  animation: menuFadeIn 0.3s ease-out both;
+}
+
+@keyframes menuFadeIn {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.mobileMenuHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 60px;
+}
+
+.mobileMenuClose {
+  background: transparent;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.mobileNavLinks {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.mobileNavLinks a {
+  color: #fff;
+  font-size: 28px;
+  font-weight: 800;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.mobileNavLinks a:active,
+.mobileNavLinks a.active {
+  color: #38d399;
+}
+
+.mobileAuthButtons {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-bottom: 40px;
+}
+
+.mobileAuthButtons button {
+  width: 100%;
+  height: 54px;
+  font-size: 18px;
 }
 
 @media (max-width: 640px) {
   .navbar { height: 78px; padding: 0 16px; }
   .brand img { width: 42px; height: 42px; }
   .brand span, .userIdentity { display: none; }
-  .navActions { gap: 8px; }
-  .loginBtn, .signupBtn, .logoutBtn { height: 40px; padding: 0 13px; border-radius: 11px; font-size: 13px; }
+  .navActions { gap: 12px; }
+  
   .userAvatar { width: 38px; height: 38px; }
   .profileTrigger { min-height: 46px; padding-right: 5px; }
   .profileChevron { display: none; }
   .profileDropdown { position: fixed; top: 70px; right: 12px; width: min(280px, calc(100vw - 24px)); }
   .authStatus { font-size: 12px; }
+
+  .mobileMenuOverlay { padding: 16px; }
+  .mobileNavLinks a { font-size: 24px; }
 }

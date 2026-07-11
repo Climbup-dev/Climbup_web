@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { Menu, X } from "lucide-react";
 
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/useToast";
@@ -30,6 +31,7 @@ export default function Navbar({ onLogin, onSignUp }: NavbarProps) {
   const [signingOut, setSigningOut] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [avatarError, setAvatarError] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
 
   const displayName =
@@ -80,6 +82,20 @@ export default function Navbar({ onLogin, onSignUp }: NavbarProps) {
     };
   }, [profileOpen]);
 
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [mobileMenuOpen]);
+
+  const closeMenu = () => setMobileMenuOpen(false);
+
   return (
     <nav className="navbar" aria-label="Main navigation">
       <Link className="brand" href="/" aria-label="ClimbUP home">
@@ -87,13 +103,11 @@ export default function Navbar({ onLogin, onSignUp }: NavbarProps) {
         <span>ClimbUP</span>
       </Link>
 
-      <div className="navLinks" aria-label="Home sections">
-        <div className="navLinks" aria-label="Main sections">
-          <Link className={pathname === "/" ? "active" : undefined} href="/">Home</Link>
-          <Link className={pathname === "/pyqs" ? "active" : undefined} href="/pyqs">PYQs</Link>
-          <Link className={pathname === "/discoveries" ? "active" : undefined} href="/discoveries">Discoveries</Link>
-          <Link className={pathname === "/jobs" ? "active" : undefined} href="/jobs">Job Prepration</Link>
-        </div>
+      <div className="navLinks" aria-label="Main sections">
+        <Link className={pathname === "/" ? "active" : undefined} href="/">Home</Link>
+        <Link className={pathname === "/pyqs" ? "active" : undefined} href="/pyqs">PYQs</Link>
+        <Link className={pathname === "/discoveries" ? "active" : undefined} href="/discoveries">Discoveries</Link>
+        <Link className={pathname === "/jobs" ? "active" : undefined} href="/jobs">Job Preparation</Link>
       </div>
 
       <div className="navActions">
@@ -153,12 +167,45 @@ export default function Navbar({ onLogin, onSignUp }: NavbarProps) {
             )}
           </div>
         ) : (
-          <>
+          <div className="desktopAuthButtons">
             <button type="button" className="loginBtn" onClick={onLogin}>Log In</button>
             <button type="button" className="signupBtn" onClick={onSignUp}>Sign Up</button>
-          </>
+          </div>
         )}
+
+        <button className="mobileMenuBtn" aria-label="Open Menu" onClick={() => setMobileMenuOpen(true)}>
+          <Menu size={28} />
+        </button>
       </div>
+
+      {/* Mobile Menu Overlay */}
+      {mobileMenuOpen && (
+        <div className="mobileMenuOverlay">
+          <div className="mobileMenuHeader">
+            <Link className="brand mobileBrand" href="/" onClick={closeMenu}>
+              <Image src="/logo.png" alt="ClimbUP logo" width={42} height={42} />
+              <span>ClimbUP</span>
+            </Link>
+            <button className="mobileMenuClose" aria-label="Close Menu" onClick={closeMenu}>
+              <X size={32} />
+            </button>
+          </div>
+          
+          <div className="mobileNavLinks">
+            <Link className={pathname === "/" ? "active" : undefined} href="/" onClick={closeMenu}>Home</Link>
+            <Link className={pathname === "/pyqs" ? "active" : undefined} href="/pyqs" onClick={closeMenu}>PYQs</Link>
+            <Link className={pathname === "/discoveries" ? "active" : undefined} href="/discoveries" onClick={closeMenu}>Discoveries</Link>
+            <Link className={pathname === "/jobs" ? "active" : undefined} href="/jobs" onClick={closeMenu}>Job Preparation</Link>
+          </div>
+
+          {!currentUser && (
+            <div className="mobileAuthButtons">
+              <button type="button" className="loginBtn" onClick={() => { closeMenu(); onLogin(); }}>Log In</button>
+              <button type="button" className="signupBtn" onClick={() => { closeMenu(); onSignUp(); }}>Sign Up</button>
+            </div>
+          )}
+        </div>
+      )}
     </nav>
   );
 }
