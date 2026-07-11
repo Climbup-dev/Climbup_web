@@ -72,6 +72,8 @@ export default function HomeSections() {
                 <ul className="showcaseFeatures">
                   <li><CheckCircle2 size={16} /> Exam-focused PYQ solutions</li>
                   <li><CheckCircle2 size={16} /> Fast concept mastery</li>
+                  <li><CheckCircle2 size={16} /> Save 80% time searching internet & books</li>
+                  <li><CheckCircle2 size={16} /> Ask AI to easily resolve doubts</li>
                 </ul>
               </div>
               <div className="showcaseImageWrapper">
@@ -89,6 +91,8 @@ export default function HomeSections() {
                 <ul className="showcaseFeatures">
                   <li><CheckCircle2 size={16} /> Share 'Aha!' moments</li>
                   <li><CheckCircle2 size={16} /> Real-time peer collaboration</li>
+                  <li><CheckCircle2 size={16} /> Share skill insights & build confidence</li>
+                  <li><CheckCircle2 size={16} /> Build a strong peer learning network</li>
                 </ul>
               </div>
               <div className="showcaseImageWrapper">
