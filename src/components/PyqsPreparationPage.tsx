@@ -1,10 +1,11 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-
+import { CheckCircle2, FileText, Clock, Award, ChevronRight } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { useAuth } from "@/hooks/useAuth";
 import { createClient } from "@/lib/supabase/client";
@@ -62,9 +63,18 @@ export default function PyqsPreparationClient() {
   const [message, setMessage] = useState("");
   const [refreshKey, setRefreshKey] = useState(0);
 
+  const requiresLogin = !loading && !currentUser;
+
   const openAuth = (mode: EntryMode) => {
     setEntryMode(mode);
     setAuthOpen(true);
+  };
+
+  const closeAuth = () => {
+    setAuthOpen(false);
+    if (!currentUser) {
+      window.location.assign("/");
+    }
   };
 
   const isProfileIncomplete =
@@ -197,9 +207,23 @@ export default function PyqsPreparationClient() {
 
       <section className="pyqShell">
         <div className="pyqHero">
-          <span>Academic Resource Center</span>
-          <h1>Previous Year Questions</h1>
-          <p>Ace your exams with university-specific PYQs. Set your profile below to instantly unlock past papers tailored to your branch and semester.</p>
+          <div className="pyqHeroContent">
+            <span>Academic Resource Center</span>
+            <h1>Previous Year Questions</h1>
+            <p>Ace your exams with university-specific PYQs. Set your profile below to instantly unlock past papers tailored to your branch and semester.</p>
+            <ul className="pyqHeroFeatures">
+              <li><CheckCircle2 size={16} /> Fast concept mastery</li>
+              <li><CheckCircle2 size={16} /> Save 80% time searching internet & books</li>
+              <li><CheckCircle2 size={16} /> Multiple student answers and their skill insights</li>
+              <li><CheckCircle2 size={16} /> Ask AI to easily resolve doubts</li>
+              <li><CheckCircle2 size={16} /> Edit fast and save privately or publicly</li>
+              <li><CheckCircle2 size={16} /> Add YouTube solutions for easy exam-time review</li>
+            </ul>
+          </div>
+          <div className="pyqHeroImageWrapper">
+            <Image src="/features/learning_v3.jpg" alt="Learning PYQs" width={500} height={375} className="pyqHeroImage" priority />
+            <div className="pyqHeroImageGlow"></div>
+          </div>
         </div>
 
         {loading ? (
@@ -300,25 +324,22 @@ export default function PyqsPreparationClient() {
                                   onClick={() => router.push(`/pyqs/${paper.paper_id}`)}
                                   style={{ cursor: "pointer" }}
                                 >
-                                  <div style={{ display: "flex", flexDirection: "column", gap: "8px", flex: 1 }}>
-                                    <span>{paper.exam_type}</span>
-                                    <strong>{paper.paper_title}</strong>
-                                    <em>
-                                      {paper.year} | {paper.total_marks} marks |{" "}
-                                      {paper.duration} min
-                                    </em>
+                                  <div style={{ display: "flex", flexDirection: "column", gap: "10px", flex: 1 }}>
+                                    <strong style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                      <FileText size={16} color="#38d399" /> {paper.paper_title}
+                                    </strong>
+                                    <div style={{ display: "flex", gap: "8px" }}>
+                                      <em style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                                        <Award size={14} /> {paper.total_marks} marks
+                                      </em>
+                                      <em style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                                        <Clock size={14} /> {paper.duration} min
+                                      </em>
+                                    </div>
                                   </div>
-                                  {paper.paper_url && (
-                                    <a
-                                      href={paper.paper_url}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="pyqViewPdfBtn"
-                                      onClick={(e) => e.stopPropagation()}
-                                    >
-                                      View Paper
-                                    </a>
-                                  )}
+                                  <div className="pyqCardArrow" style={{ display: "flex", alignItems: "center" }}>
+                                    <ChevronRight size={20} color="rgba(158, 248, 220, 0.4)" />
+                                  </div>
                                 </div>
                               ))}
                             </div>
@@ -379,25 +400,21 @@ export default function PyqsPreparationClient() {
                           onClick={() => router.push(`/pyqs/${paper.paper_id}`)}
                           style={{ cursor: "pointer" }}
                         >
-                          <span>{paper.exam_type}</span>
-                          <h3>{paper.paper_title}</h3>
-                          <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "flex-end", gap: "12px" }}>
-                            <div>
-                              <strong>{paper.year}</strong>
-                              <em>{paper.total_marks} marks</em>
-                              <em>{paper.duration} min</em>
+                          <h3 style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <FileText size={20} color="#38d399" /> {paper.paper_title}
+                          </h3>
+                          <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "flex-end", gap: "12px", width: "100%" }}>
+                            <div style={{ display: "flex", gap: "8px" }}>
+                              <em style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                                <Award size={14} /> {paper.total_marks} marks
+                              </em>
+                              <em style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                                <Clock size={14} /> {paper.duration} min
+                              </em>
                             </div>
-                            {paper.paper_url && (
-                              <a
-                                href={paper.paper_url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="pyqViewPdfBtn"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                View Paper
-                              </a>
-                            )}
+                            <div className="pyqCardArrow">
+                              <ChevronRight size={24} color="#38d399" />
+                            </div>
                           </div>
                         </div>
                       ))}
@@ -418,12 +435,12 @@ export default function PyqsPreparationClient() {
         )}
       </section>
 
-      {(authOpen || passwordRecovery) && (
+      {(authOpen || passwordRecovery || requiresLogin) && (
         <AuthModal
           key={entryMode}
-          open={authOpen}
+          open={authOpen || requiresLogin}
           initialMode={entryMode}
-          onClose={() => setAuthOpen(false)}
+          onClose={closeAuth}
         />
       )}
     </main>

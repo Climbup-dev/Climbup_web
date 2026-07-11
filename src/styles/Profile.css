@@ -196,11 +196,10 @@
 
 .profileFormGrid {
   display: grid;
-  grid-template-columns: 320px minmax(300px, 430px) 190px;
+  grid-template-columns: minmax(240px, 1.2fr) minmax(260px, 1.8fr) minmax(160px, 1fr);
   gap: 18px;
   align-items: start;
-  max-width: 100%;
-  justify-content: start;
+  width: 100%;
 }
 
 .profileSelectField {
@@ -218,7 +217,7 @@
 .profileFormGrid label > span {
   color: #9ef8dc;
   font-size: 11px;
-  font-weight: 950;
+  font-weight: 800;
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
@@ -273,7 +272,7 @@
   flex: 1 1 auto;
   overflow: hidden;
   font-size: clamp(15px, 1.5vw, 18px);
-  font-weight: 900;
+  font-weight: 600;
   line-height: 1.25;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -355,7 +354,7 @@
   border-radius: 999px;
   font: inherit;
   font-size: 14px;
-  font-weight: 950;
+  font-weight: 800;
   cursor: pointer;
   box-shadow:
     0 0 34px rgba(56, 211, 153, 0.26),

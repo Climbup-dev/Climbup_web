@@ -96,6 +96,18 @@ export default function Navbar({ onLogin, onSignUp }: NavbarProps) {
 
   const closeMenu = () => setMobileMenuOpen(false);
 
+  const handleProtectedNavigation = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (loading) {
+      e.preventDefault();
+      return;
+    }
+    if (!currentUser) {
+      e.preventDefault();
+      if (mobileMenuOpen) closeMenu();
+      onLogin();
+    }
+  };
+
   return (
     <nav className="navbar" aria-label="Main navigation">
       <Link className="brand" href="/" aria-label="ClimbUP home">
@@ -105,9 +117,9 @@ export default function Navbar({ onLogin, onSignUp }: NavbarProps) {
 
       <div className="navLinks" aria-label="Main sections">
         <Link className={pathname === "/" ? "active" : undefined} href="/">Home</Link>
-        <Link className={pathname === "/pyqs" ? "active" : undefined} href="/pyqs">PYQs</Link>
-        <Link className={pathname === "/discoveries" ? "active" : undefined} href="/discoveries">Discoveries</Link>
-        <Link className={pathname === "/jobs" ? "active" : undefined} href="/jobs">Job Preparation</Link>
+        <Link className={pathname === "/pyqs" ? "active" : undefined} href="/pyqs" onClick={handleProtectedNavigation}>PYQs</Link>
+        <Link className={pathname === "/discoveries" ? "active" : undefined} href="/discoveries" onClick={handleProtectedNavigation}>Discoveries</Link>
+        <Link className={pathname === "/jobs" ? "active" : undefined} href="/jobs" onClick={handleProtectedNavigation}>Job Preparation</Link>
       </div>
 
       <div className="navActions">
@@ -193,9 +205,9 @@ export default function Navbar({ onLogin, onSignUp }: NavbarProps) {
           
           <div className="mobileNavLinks">
             <Link className={pathname === "/" ? "active" : undefined} href="/" onClick={closeMenu}>Home</Link>
-            <Link className={pathname === "/pyqs" ? "active" : undefined} href="/pyqs" onClick={closeMenu}>PYQs</Link>
-            <Link className={pathname === "/discoveries" ? "active" : undefined} href="/discoveries" onClick={closeMenu}>Discoveries</Link>
-            <Link className={pathname === "/jobs" ? "active" : undefined} href="/jobs" onClick={closeMenu}>Job Preparation</Link>
+            <Link className={pathname === "/pyqs" ? "active" : undefined} href="/pyqs" onClick={(e) => { handleProtectedNavigation(e); if(currentUser) closeMenu(); }}>PYQs</Link>
+            <Link className={pathname === "/discoveries" ? "active" : undefined} href="/discoveries" onClick={(e) => { handleProtectedNavigation(e); if(currentUser) closeMenu(); }}>Discoveries</Link>
+            <Link className={pathname === "/jobs" ? "active" : undefined} href="/jobs" onClick={(e) => { handleProtectedNavigation(e); if(currentUser) closeMenu(); }}>Job Preparation</Link>
           </div>
 
           {!currentUser && (
