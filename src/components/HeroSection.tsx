@@ -160,6 +160,7 @@ export default function HeroSection() {
               height={650}
               priority
               quality={85}
+              sizes="(max-width: 960px) 100vw, 50vw"
               className="hero3dImage"
             />
           </div>

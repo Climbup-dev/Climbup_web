@@ -16,30 +16,6 @@ const AuthModal = dynamic(() => import("@/components/AuthModal"), {
   loading: () => null,
 });
 
-const features = [
-  {
-    mark: "PYQ",
-    label: "PYQs",
-    title: "PYQ Preparation",
-    copy: "Previous year questions with exam-focused answers, better explanations, and smarter preparation.",
-    href: "/pyqs",
-  },
-  {
-    mark: "DISC",
-    label: "Discover",
-    title: "Discoveries",
-    copy: "Share concepts, shortcuts, patterns, and valuable insights discovered while studying.",
-    href: "/discoveries",
-  },
-  {
-    mark: "JOB",
-    label: "Jobs",
-    title: "Job Preparation",
-    copy: "Prepare for internships, placements, aptitude, interviews, and career opportunities.",
-    href: "/jobs",
-  },
-];
-
 const teamMembers = [
   {
     name: "Amir Shaikh",
@@ -72,17 +48,6 @@ export default function HomeSections() {
   const openAuth = (mode: EntryMode) => {
     setEntryMode(mode);
     setAuthOpen(true);
-  };
-
-  const handleFeatureClick = (href: string) => {
-    if (loading) return;
-
-    if (currentUser) {
-      router.push(href);
-      return;
-    }
-
-    openAuth("login");
   };
 
   return (

@@ -244,68 +244,12 @@
   60%, 100% { transform: rotate(0deg); }
 }
 
-.heroWelcome strong {
-  color: #fff;
-  font-weight: 800;
-  letter-spacing: 0.5px;
-  background: linear-gradient(135deg, #fff, #38d399);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  filter: drop-shadow(0 0 12px rgba(56, 211, 153, 0.4));
-}
 
 .heroActions {
   display: flex;
   align-items: center;
   gap: 15px;
   flex-wrap: wrap;
-}
-
-.heroWelcome {
-  width: fit-content;
-  max-width: min(100%, 620px);
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 15px 22px;
-  color: #ffffff;
-  background: rgba(2, 21, 38, 0.62);
-  border: 1px solid rgba(158, 248, 220, 0.3);
-  border-radius: 999px;
-  backdrop-filter: blur(16px);
-  box-shadow:
-    0 18px 44px rgba(0, 0, 0, 0.32),
-    0 0 34px rgba(56, 211, 153, 0.16);
-  transition:
-    transform 220ms ease,
-    border-color 220ms ease,
-    box-shadow 220ms ease;
-}
-
-.heroWelcome:hover {
-  transform: translateY(-2px);
-  border-color: rgba(158, 248, 220, 0.46);
-  box-shadow:
-    0 22px 50px rgba(0, 0, 0, 0.34),
-    0 0 40px rgba(56, 211, 153, 0.22);
-}
-
-.heroWelcome span {
-  color: rgba(234, 252, 246, 0.76);
-  font-size: 15px;
-  font-weight: 800;
-}
-
-.heroWelcome strong {
-  min-width: 0;
-  overflow: hidden;
-  color: #9ef8dc;
-  font-size: clamp(22px, 3vw, 34px);
-  line-height: 1.05;
-  font-weight: 950;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .joinClimbBtn,
