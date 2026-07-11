@@ -27,10 +27,10 @@ function getDisplayName(user: ReturnType<typeof useAuth>["currentUser"]) {
 }
 
 const CYCLES = [
-  { prefix: "Crack", suffix: "Exams." },
+  { prefix: "Marks &", suffix: "Skills." },
   { prefix: "Build", suffix: "Projects." },
   { prefix: "Share", suffix: "Ideas." },
-  { prefix: "Secure", suffix: "Placements." },
+  { prefix: "Get", suffix: "Placed." },
 ];
 
 export default function HeroSection() {
@@ -109,7 +109,7 @@ export default function HeroSection() {
           {currentUser ? (
             <div className="heroWelcome" role="status">
               <span className="waveEmoji">👋</span>
-              <span>Welcome back,</span>
+              <span>Hey,</span>
               <strong>{displayName}</strong>
             </div>
           ) : (

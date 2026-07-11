@@ -207,7 +207,7 @@
   text-shadow: none;
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
+  white-space: nowrap; /* Force single line to absolutely prevent layout shifting */
   gap: 4px 12px;
 }
 
@@ -227,15 +227,10 @@
 .heroWelcome {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px 28px;
-  background: linear-gradient(135deg, rgba(56, 211, 153, 0.1), rgba(2, 21, 38, 0.8));
-  border: 1px solid rgba(56, 211, 153, 0.3);
-  border-radius: 100px;
-  font-size: 18px;
+  gap: 8px;
+  font-size: 20px;
+  font-weight: 500;
   color: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(16px);
-  box-shadow: 0 8px 24px rgba(56, 211, 153, 0.15);
   animation: heroContentIn 800ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
@@ -566,7 +561,7 @@
   }
 
   .heroEyebrow {
-    margin-bottom: 21px;
+    margin-bottom: 12px;
     font-size: 10px;
   }
 
