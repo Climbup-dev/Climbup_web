@@ -72,16 +72,16 @@ const IconSvg = ({ children }: { children: ReactNode }) => (
 
 const toolIcons: Record<ToolIconKind, ReactNode> = {
   improve: (
-    <Image src="/icons/improve.png" width={36} height={36} alt="Improve" className="toolbar-btn-logo" />
+    <Image src="/icons/improve.png?v=3" width={36} height={36} alt="Improve" className="icon-3d" unoptimized={true} />
   ),
   pdf: (
-    <Image src="/icons/pdf.png" width={36} height={36} alt="PDF" className="toolbar-btn-logo" />
+    <Image src="/icons/pdf.png?v=3" width={36} height={36} alt="PDF" className="icon-3d" unoptimized={true} />
   ),
   answers: (
-    <Image src="/icons/community.png" width={36} height={36} alt="Community Answers" className="toolbar-btn-logo" />
+    <Image src="/icons/community.png?v=3" width={36} height={36} alt="Community Answers" className="icon-3d" unoptimized={true} />
   ),
   skills: (
-    <Image src="/icons/skills.png" width={36} height={36} alt="Skills" className="toolbar-btn-logo" />
+    <Image src="/icons/skills.png?v=3" width={36} height={36} alt="Skills" className="icon-3d" unoptimized={true} />
   ),
   save: (
     <IconSvg>
@@ -113,7 +113,7 @@ const toolIcons: Record<ToolIconKind, ReactNode> = {
     </IconSvg>
   ),
   theme: (
-    <Image src="/icons/sun.png" width={36} height={36} alt="Theme" className="toolbar-btn-logo" />
+    <Image src="/icons/sun.png?v=3" width={36} height={36} alt="Theme" className="icon-3d" unoptimized={true} />
   ),
   cancel: (
     <IconSvg>

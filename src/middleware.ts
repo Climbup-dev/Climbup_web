@@ -55,12 +55,16 @@ export async function middleware(request: NextRequest) {
   // 2. Enforce Frontend Security
   if (!isPublic && !user) {
     const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = "/auth/popup"; // or wherever your login is, but you have an auth modal. 
-    // Since you use an auth modal on the same page, redirecting to home is safest.
     redirectUrl.pathname = "/";
     redirectUrl.searchParams.set("login_required", "true");
     return NextResponse.redirect(redirectUrl);
   }
+
+  // 3. Add Advanced Security Headers (Prevents Clickjacking, MIME sniffing, etc.)
+  response.headers.set("X-Frame-Options", "DENY");
+  response.headers.set("X-Content-Type-Options", "nosniff");
+  response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  response.headers.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
 
   return response;
 }

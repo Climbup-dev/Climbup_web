@@ -4,7 +4,7 @@
     rgba(1, 7, 16, 0.76);
   backdrop-filter: blur(16px) saturate(120%);
   -webkit-backdrop-filter: blur(16px) saturate(120%);
-  animation: climbup-overlay-in 260ms ease-out both;
+  animation: climbup-overlay-in 450ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .auth-modal {
@@ -14,7 +14,7 @@
     #021526;
   border: 1px solid rgba(158, 248, 220, 0.24);
   box-shadow: 0 34px 100px rgba(0, 0, 0, 0.48), 0 0 55px rgba(56, 211, 153, 0.13);
-  animation: climbup-modal-in 300ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: climbup-modal-in 450ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .auth-modal::before {
@@ -71,9 +71,25 @@
   border-color: rgba(158, 248, 220, 0.2);
 }
 
+.auth-input:-webkit-autofill,
+.auth-input:-webkit-autofill:hover, 
+.auth-input:-webkit-autofill:focus, 
+.auth-input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px #041222 inset !important;
+  -webkit-text-fill-color: #fff !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
 .auth-input::placeholder { color: rgba(255, 255, 255, 0.38); }
-.auth-input:hover:not(:disabled) { border-color: rgba(158, 248, 220, 0.42); }
-.auth-input:focus { border-color: #38d399; box-shadow: 0 0 0 4px rgba(56, 211, 153, 0.14), 0 0 22px rgba(56, 211, 153, 0.1); }
+.auth-input:hover:not(:disabled) { 
+  border-color: rgba(158, 248, 220, 0.42); 
+  background: rgba(255, 255, 255, 0.08); 
+}
+.auth-input:focus { 
+  border-color: #38d399; 
+  background: rgba(255, 255, 255, 0.1); 
+  box-shadow: 0 0 0 4px rgba(56, 211, 153, 0.14), 0 0 22px rgba(56, 211, 153, 0.1); 
+}
 .auth-input:disabled { color: rgba(255, 255, 255, 0.55); background: rgba(255, 255, 255, 0.035); }
 
 .auth-primary-button {
@@ -104,8 +120,8 @@
 .auth-error { color: #fecaca; background: rgba(127, 29, 29, 0.32); border-color: rgba(248, 113, 113, 0.34); }
 .auth-success { color: #bbf7d0; background: rgba(20, 83, 45, 0.32); border-color: rgba(74, 222, 128, 0.3); }
 
-.auth-modal-overlay-closing { animation: climbup-overlay-out 240ms ease-in both; }
-.auth-modal-closing { animation: climbup-modal-out 240ms ease-in both; }
+.auth-modal-overlay-closing { animation: climbup-overlay-out 350ms cubic-bezier(0.4, 0, 0.2, 1) both; }
+.auth-modal-closing { animation: climbup-modal-out 350ms cubic-bezier(0.4, 0, 0.2, 1) both; }
 
 .oauth-popup-status {
   min-height: 100vh;

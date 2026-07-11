@@ -30,7 +30,7 @@ type AuthStep = "form" | "otp" | "new-password";
 
 const LIMITS = {
   otpCooldown: 60,
-  closeDuration: 250,
+  closeDuration: 350,
   minPassword: 8,
   maxPassword: 128,
   maxName: 80,
@@ -317,10 +317,19 @@ export default function AuthModal({
       document.activeElement instanceof HTMLElement ? document.activeElement : null;
 
     const previousOverflow = document.body.style.overflow;
+    const previousPaddingRight = document.body.style.paddingRight;
+    
+    // Prevent layout shift (vibration) by compensating for the hidden scrollbar
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+    if (scrollbarWidth > 0) {
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
+    }
     document.body.style.overflow = "hidden";
 
     return () => {
-      document.body.style.overflow = previousOverflow;
+      // Force unlock scroll. Restoring previousOverflow fails if multiple modals mount simultaneously.
+      document.body.style.overflow = "";
+      document.body.style.paddingRight = "";
       previousFocusRef.current?.focus();
     };
   }, [effectiveOpen]);
@@ -763,29 +772,57 @@ export default function AuthModal({
           tabIndex={-1}
           onKeyDown={handleModalKeyDown}
         >
-          <button
-            type="button"
-            className="auth-modal-close"
-            onClick={closeModal}
-            disabled={isBusy}
-            aria-label="Close authentication dialog"
-          >
-            <span aria-hidden="true">×</span>
-          </button>
-
-          <div className="auth-brand">
-            <Image
-              className="auth-logo-image"
-              src="/logo.png"
-              alt="ClimbUP logo"
-              width={76}
-              height={76}
-              priority
-            />
+          <div className="auth-modal-sidebar">
+            <div className="sidebar-content">
+              <Image
+                src="/logo.png"
+                alt="ClimbUP logo"
+                width={80}
+                height={80}
+                priority
+                className="sidebar-logo"
+              />
+              <h2 className="animated-tagline">
+                {Array.from("Learn Faster.").map((char, i) => (
+                  <span key={`l1-${i}`} style={{ animationDelay: `${0.3 + i * 0.04}s` }}>{char === " " ? "\u00A0" : char}</span>
+                ))}
+                <br/>
+                {Array.from("Grow Together.").map((char, i) => (
+                  <span key={`l2-${i}`} style={{ animationDelay: `${0.3 + (13 + i) * 0.04}s` }}>{char === " " ? "\u00A0" : char}</span>
+                ))}
+                <br/>
+                {Array.from("Climb Higher.").map((char, i) => (
+                  <span key={`l3-${i}`} style={{ animationDelay: `${0.3 + (27 + i) * 0.04}s` }}>{char === " " ? "\u00A0" : char}</span>
+                ))}
+              </h2>
+              <p>The ultimate knowledge network built by engineering students, for engineering students.</p>
+            </div>
           </div>
+          
+          <div className="auth-modal-form-container">
+            <button
+              type="button"
+              className="auth-modal-close"
+              onClick={closeModal}
+              disabled={isBusy}
+              aria-label="Close authentication dialog"
+            >
+              <span aria-hidden="true">×</span>
+            </button>
 
-          <h2 id={titleId} className="auth-title">{modalTitle}</h2>
-          <p id={descriptionId} className="auth-description">{modalDescription}</p>
+            <div className="auth-brand mobile-only">
+              <Image
+                className="auth-logo-image"
+                src="/logo.png"
+                alt="ClimbUP logo"
+                width={64}
+                height={64}
+                priority
+              />
+            </div>
+
+          <h2 id={titleId} key={`title-${mode}-${step}`} className="auth-title">{modalTitle}</h2>
+          <p id={descriptionId} key={`desc-${mode}-${step}`} className="auth-description">{modalDescription}</p>
 
           <div className="auth-trust-tags" aria-label="Account security information">
             <span>Privacy protected</span>
@@ -798,6 +835,7 @@ export default function AuthModal({
 
           {step === "form" ? (
             <form
+              key={`form-${mode}`}
               className="auth-form"
               onSubmit={
                 mode === "register"
@@ -1098,6 +1136,7 @@ export default function AuthModal({
             and{" "}
             <a href="/privacy" target="_blank" rel="noopener noreferrer">Privacy Policy</a>.
           </p>
+        </div>
         </div>
       </div>
     </div>,

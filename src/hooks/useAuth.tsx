@@ -204,12 +204,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (!window.opener) return;
 
     const params = new URLSearchParams(window.location.search);
     const code = params.get("code");
-    const oauthError =
-      params.get("error_description") || params.get("error");
+    const oauthError = params.get("error_description") || params.get("error");
+    const type = params.get("type");
+
+    // Fix for Password Reset links (Supabase auto-exchanges the code, we just need to trigger the UI)
+    if (type === "recovery") {
+      setPasswordRecovery(true);
+      // Instantly clean the URL so the ugly code string disappears before the user even sees it
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
+    if (!window.opener) return;
 
     if (!code && !oauthError) return;
 
@@ -676,7 +684,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const cleanEmail = email.trim().toLowerCase();
       const redirectTo =
-        typeof window !== "undefined" ? window.location.origin : undefined;
+        typeof window !== "undefined" ? `${window.location.origin}?type=recovery` : undefined;
 
       const { error } = await supabase.auth.resetPasswordForEmail(
         cleanEmail,
@@ -698,7 +706,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (mountedRef.current) {
         setCurrentUser(data.user);
-        setPasswordRecovery(false);
+        // Do not clear password recovery here. The AuthModal's startSmoothClose 
+        // will clear it after the closing animation finishes.
       }
     },
     [supabase]
