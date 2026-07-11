@@ -86,10 +86,17 @@ export default function HeroSection() {
 
       <main className="heroSection">
         <div className="heroContent">
-          <span className="heroEyebrow">
-            <span className="eyebrowDot" />
-            Built by engineering students
-          </span>
+          {currentUser ? (
+            <span className="heroEyebrow" style={{ textTransform: 'none', letterSpacing: '0.2px' }}>
+              <span className="waveEmoji" style={{ fontSize: '16px', marginRight: '4px' }}>👋</span>
+              Welcome back, <strong style={{ color: '#fff', fontWeight: 800, marginLeft: '4px' }}>{displayName}</strong>
+            </span>
+          ) : (
+            <span className="heroEyebrow">
+              <span className="eyebrowDot" />
+              Built by engineering students
+            </span>
+          )}
 
           <h1 className="heroTitle" id="home-heading">
             <span>Learn Faster.</span>
@@ -107,10 +114,21 @@ export default function HeroSection() {
           </p>
 
           {currentUser ? (
-            <div className="heroWelcome" role="status">
-              <span className="waveEmoji">👋</span>
-              <span>Hey,</span>
-              <strong>{displayName}</strong>
+            <div className="heroActionsContainer">
+              <div className="heroActions">
+                <button
+                  type="button"
+                  className="joinClimbBtn"
+                  onClick={() => window.location.href = '#features'}
+                >
+                  Start Learning
+                  <strong aria-hidden="true">→</strong>
+                </button>
+
+                <a className="heroSecondaryLink" href="#about">
+                  How it works
+                </a>
+              </div>
             </div>
           ) : (
             <div className="heroActionsContainer">

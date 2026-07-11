@@ -223,16 +223,7 @@
   color: rgba(255, 255, 255, 0.75);
 }
 
-/* Welcome Back Banner for logged-in users */
-.heroWelcome {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 20px;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.9);
-  animation: heroContentIn 800ms cubic-bezier(0.22, 1, 0.36, 1) both;
-}
+
 
 .waveEmoji {
   font-size: 22px;
@@ -561,8 +552,9 @@
   }
 
   .heroEyebrow {
-    margin-bottom: 12px;
-    font-size: 10px;
+    margin-bottom: 16px;
+    font-size: 13px;
+    padding: 8px 16px;
   }
 
   .heroTitle {
@@ -587,17 +579,7 @@
     width: 100%;
   }
 
-  .heroWelcome {
-    width: 100%;
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 6px;
-    border-radius: 24px;
-  }
 
-  .heroWelcome strong {
-    max-width: 100%;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
