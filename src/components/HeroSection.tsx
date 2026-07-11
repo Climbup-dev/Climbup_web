@@ -154,8 +154,8 @@ export default function HeroSection() {
         <div className="heroIllustrationWrapper">
           <div className="heroIllustration">
             <Image
-              src="/hero-transparent.webp"
-              alt="Engineering Collaboration 3D"
+              src="/hero_3d_v6.jpg"
+              alt="Students learning and discovering together"
               width={650}
               height={650}
               priority

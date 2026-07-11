@@ -149,6 +149,8 @@
   height: auto;
   object-fit: contain;
   filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.4)) contrast(1.05) brightness(1.05);
+  -webkit-mask-image: radial-gradient(circle at center, black 40%, transparent 68%);
+  mask-image: radial-gradient(circle at center, black 40%, transparent 68%);
 }
 
 .heroEyebrow {
@@ -561,7 +563,6 @@
     font-size: clamp(34px, 11vw, 50px);
     line-height: 1.06;
     letter-spacing: -0.035em;
-    min-height: 4.3em; /* Reserve space for 4 lines to prevent screen jumping when text wraps */
   }
 
   .heroDescription {
