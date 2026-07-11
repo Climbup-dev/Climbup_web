@@ -82,7 +82,9 @@
 
 .showcaseContent {
   flex: 1;
-  max-width: 480px;
+  max-width: 540px;
+  position: relative;
+  z-index: 10;
 }
 
 .showcaseNumber {
