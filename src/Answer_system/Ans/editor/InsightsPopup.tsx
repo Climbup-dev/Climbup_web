@@ -57,6 +57,7 @@ export default function InsightsPopup({ answerId, closing, onClose, AnswerAvatar
   const [insightsNotice, setInsightsNotice] = useState("");
   const [editingInsightId, setEditingInsightId] = useState("");
   const [insightText, setInsightText] = useState("");
+  const [topOffset, setTopOffset] = useState(92);
 
   const loadInsights = async () => {
     setInsightsError("");
@@ -85,6 +86,24 @@ export default function InsightsPopup({ answerId, closing, onClose, AnswerAvatar
 
   useEffect(() => {
     loadInsights();
+    
+    // Prevent background scrolling and match chatbot sticky behavior
+    const scrollY = window.scrollY;
+    setTopOffset(Math.max(0, 92 - scrollY));
+
+    const originalOverflow = document.body.style.overflow;
+    const originalPaddingRight = document.body.style.paddingRight;
+    
+    // Calculate scrollbar width to prevent layout shift (vibration)
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+    
+    document.body.style.paddingRight = `${scrollbarWidth}px`;
+    document.body.style.overflow = "hidden";
+    
+    return () => {
+      document.body.style.paddingRight = originalPaddingRight;
+      document.body.style.overflow = originalOverflow;
+    };
   }, [answerId]);
 
   const submitInsight = async () => {
@@ -157,6 +176,7 @@ export default function InsightsPopup({ answerId, closing, onClose, AnswerAvatar
   return (
     <div
       className={`improved-answer-overlay ${closing ? "is-closing" : ""}`}
+      style={{ top: `${topOffset}px` }}
       role="presentation"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) {
@@ -181,6 +201,41 @@ export default function InsightsPopup({ answerId, closing, onClose, AnswerAvatar
         </div>
 
         <div className="insights-layout">
+          <div className="insights-list">
+            <div className="insights-list-head">
+              <span>{insights.length} reflections</span>
+              <strong>Student learning trail</strong>
+            </div>
+
+            {isLoadingInsights ? (
+              <div className="improved-answer-state">Loading insights...</div>
+            ) : insights.length === 0 ? (
+              <div className="improved-answer-state">
+                No reflections yet. Be the first to share what this answer sharpened.
+              </div>
+            ) : (
+              insights.map((insight) => (
+                <article className="insight-card" key={insight.insightId}>
+                  <span className="insight-card-kind">Skill reflection</span>
+                  <div className="improved-answer-author">
+                    <AnswerAvatar image={insight.authorImage} initials={insight.authorInitials} />
+                    <div>
+                      <b>{insight.authorName}</b>
+                      <small>{formatInsightDate(insight.updatedAt)}</small>
+                    </div>
+                  </div>
+                  <p>{insight.insight}</p>
+                  {insight.canEdit && (
+                    <div className="insight-card-actions">
+                      <button type="button" onClick={() => editInsight(insight)}>Edit</button>
+                      <button type="button" className="danger" onClick={() => deleteInsight(insight.insightId)}>Delete</button>
+                    </div>
+                  )}
+                </article>
+              ))
+            )}
+          </div>
+
           <div className="insight-form">
             <div className="insight-composer-top">
               <span className="insight-composer-mark" aria-hidden>IN</span>
@@ -230,41 +285,6 @@ export default function InsightsPopup({ answerId, closing, onClose, AnswerAvatar
 
             {insightsNotice && <div className="insight-inline-state success">{insightsNotice}</div>}
             {insightsError && <div className="insight-inline-state error">{insightsError}</div>}
-          </div>
-
-          <div className="insights-list">
-            <div className="insights-list-head">
-              <span>{insights.length} reflections</span>
-              <strong>Student learning trail</strong>
-            </div>
-
-            {isLoadingInsights ? (
-              <div className="improved-answer-state">Loading insights...</div>
-            ) : insights.length === 0 ? (
-              <div className="improved-answer-state">
-                No reflections yet. Be the first to share what this answer sharpened.
-              </div>
-            ) : (
-              insights.map((insight) => (
-                <article className="insight-card" key={insight.insightId}>
-                  <span className="insight-card-kind">Skill reflection</span>
-                  <div className="improved-answer-author">
-                    <AnswerAvatar image={insight.authorImage} initials={insight.authorInitials} />
-                    <div>
-                      <b>{insight.authorName}</b>
-                      <small>{formatInsightDate(insight.updatedAt)}</small>
-                    </div>
-                  </div>
-                  <p>{insight.insight}</p>
-                  {insight.canEdit && (
-                    <div className="insight-card-actions">
-                      <button type="button" onClick={() => editInsight(insight)}>Edit</button>
-                      <button type="button" className="danger" onClick={() => deleteInsight(insight.insightId)}>Delete</button>
-                    </div>
-                  )}
-                </article>
-              ))
-            )}
           </div>
         </div>
       </section>

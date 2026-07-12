@@ -29,6 +29,7 @@ export default function CommunityAnswersPopup({
   const [answerCards, setAnswerCards] = useState<ImprovedAnswerCard[]>([]);
   const [isLoadingImproved, setIsLoadingImproved] = useState(true);
   const [improvedError, setImprovedError] = useState("");
+  const [topOffset, setTopOffset] = useState(92);
 
   useEffect(() => {
     async function loadAnswers() {
@@ -54,11 +55,30 @@ export default function CommunityAnswersPopup({
       }
     }
     loadAnswers();
+
+    // Prevent background scrolling and match chatbot sticky behavior
+    const scrollY = window.scrollY;
+    setTopOffset(Math.max(0, 92 - scrollY));
+
+    const originalOverflow = document.body.style.overflow;
+    const originalPaddingRight = document.body.style.paddingRight;
+    
+    // Calculate scrollbar width to prevent layout shift (vibration)
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+    
+    document.body.style.paddingRight = `${scrollbarWidth}px`;
+    document.body.style.overflow = "hidden";
+    
+    return () => {
+      document.body.style.paddingRight = originalPaddingRight;
+      document.body.style.overflow = originalOverflow;
+    };
   }, [questionId, currentAnswerId]);
 
   return (
     <div
       className={`improved-answer-overlay ${closing ? "is-closing" : ""}`}
+      style={{ top: `${topOffset}px` }}
       role="presentation"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) {

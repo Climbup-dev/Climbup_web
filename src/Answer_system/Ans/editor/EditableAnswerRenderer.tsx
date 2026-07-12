@@ -3,6 +3,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @next/next/no-img-element */
 
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { createPortal } from "react-dom";
 import AnswerRenderer from "../AnswerRenderer";
 import AnswerToolbar, { AnswerFeedbackActions } from "./AnswerToolbar";
 import AddBlockMenu from "./AddBlockMenu";
@@ -876,23 +877,29 @@ export default function EditableAnswerRenderer({
       onToggleTheme={toggleTheme}
     />
 
-    {showImprovedPopup && (
-      <CommunityAnswersPopup
-        questionId={questionId}
-        currentAnswerId={currentAnswerId}
-        closing={closingPopup === "answers"}
-        onClose={() => closePopup("answers")}
-        AnswerAvatar={AnswerAvatar}
-      />
+    {showImprovedPopup && typeof document !== "undefined" && createPortal(
+      <div className={`editable-answer-page answer-theme-${theme}`}>
+        <CommunityAnswersPopup
+          questionId={questionId}
+          currentAnswerId={currentAnswerId}
+          closing={closingPopup === "answers"}
+          onClose={() => closePopup("answers")}
+          AnswerAvatar={AnswerAvatar}
+        />
+      </div>,
+      document.body
     )}
 
-    {showInsightsPopup && (
-      <InsightsPopup
-        answerId={currentAnswerId}
-        closing={closingPopup === "insights"}
-        onClose={() => closePopup("insights")}
-        AnswerAvatar={AnswerAvatar}
-      />
+    {showInsightsPopup && typeof document !== "undefined" && createPortal(
+      <div className={`editable-answer-page answer-theme-${theme}`}>
+        <InsightsPopup
+          answerId={currentAnswerId}
+          closing={closingPopup === "insights"}
+          onClose={() => closePopup("insights")}
+          AnswerAvatar={AnswerAvatar}
+        />
+      </div>,
+      document.body
     )}
 
     {showAiWarning && (

@@ -264,7 +264,7 @@ function getAnswerPreview(value: unknown) {
     .replace(/\s+/g, " ")
     .trim();
 
-  return text.slice(0, 180) || "Open this answer.";
+  return text.length > 140 ? text.slice(0, 140).trim() + "..." : text || "Open this answer.";
 }
 
 function sanitizeText(value: unknown) {
@@ -327,23 +327,26 @@ function extractText(value: unknown): string {
   }
 
   if (Array.isArray(value)) {
-    return value.map(extractText).join(" ");
+    return value.map(extractText).filter(Boolean).join(". ");
   }
 
   if (typeof value === "object") {
     const record = value as Record<string, unknown>;
+    
+    // For blocks, prefer 'content' over mashing everything together
+    if (record.content || record.text || record.answer) {
+      return extractText(record.content || record.text || record.answer);
+    }
+
     const usefulKeys = [
       "title",
-      "content",
-      "text",
       "description",
-      "answer",
       "blocks",
       "items",
       "rows",
     ];
 
-    return usefulKeys.map((key) => extractText(record[key])).join(" ");
+    return usefulKeys.map((key) => extractText(record[key])).filter(Boolean).join(" ");
   }
 
   return String(value);

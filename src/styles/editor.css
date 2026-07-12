@@ -2,7 +2,6 @@
   width: 100%;
   padding-top: 0;
   padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
-  animation: answerPageFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @keyframes answerPageFadeIn {
@@ -63,15 +62,15 @@
 
 .toolbar-btn {
   position: relative;
-  min-height: 42px;
+  min-height: 36px;
   width: auto;
-  min-width: 42px;
+  min-width: 36px;
   flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 2px;
-  padding: 6px 14px;
+  padding: 4px 10px;
   color: #111827;
   background: #ffffff;
   border-radius: 10px;
@@ -84,20 +83,20 @@
 .toolbar-label,
 .block-tool-label {
   display: inline-block;
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 700;
-  padding-left: 6px;
+  padding-left: 4px;
   padding-right: 4px;
 }
 .toolbar-btn-logo {
-  width: 34px;
-  height: 34px;
-  flex: 0 0 34px;
+  width: 26px;
+  height: 26px;
+  flex: 0 0 26px;
   object-fit: contain;
-  padding: 4px;
+  padding: 3px;
   background: #ffffff;
   border: 1px solid rgba(2, 21, 38, 0.1);
-  border-radius: 8px;
+  border-radius: 6px;
 }
 
 .toolbar-icon {
@@ -1223,6 +1222,7 @@
 
 .editable-answer-page .answer-container {
   padding-top: 10px;
+  animation: answerPageFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @media (max-width: 900px) {
@@ -1244,10 +1244,10 @@
   }
 
   .toolbar-btn {
-    min-width: 42px;
-    min-height: 42px;
-    padding: 6px;
-    font-size: 13px;
+    min-width: 36px;
+    min-height: 36px;
+    padding: 4px;
+    font-size: 12.5px;
   }
 
   .large-action,
@@ -1536,7 +1536,10 @@
 
 .improved-answer-overlay {
   position: fixed;
-  inset: 0;
+  top: 92px;
+  right: 0;
+  bottom: 0;
+  left: 0;
   z-index: 140;
   display: flex;
   justify-content: flex-end;
@@ -1819,10 +1822,10 @@
   overflow: hidden;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
-  margin: 0;
+  margin: 4px 0 0 0;
   color: var(--answer-text-soft);
   font-size: 14px;
-  line-height: 1.55;
+  line-height: 1.6;
   overflow-wrap: anywhere;
 }
 
@@ -2423,7 +2426,8 @@
 
   .improved-answer-popup {
     width: 100%;
-    max-height: 86vh;
+    height: 100%;
+    max-height: 100%;
     border-radius: 14px;
   }
 
