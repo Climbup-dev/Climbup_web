@@ -67,18 +67,6 @@ export default function QuestionPaperClient({ paperId }: { paperId: string }) {
     setAuthOpen(true);
   };
 
-  const [navigatingQuestionId, setNavigatingQuestionId] = useState<string | null>(null);
-  const [quoteIndex, setQuoteIndex] = useState(0);
-
-  useEffect(() => {
-    if (navigatingQuestionId) {
-      const interval = setInterval(() => {
-        setQuoteIndex((prev) => (prev + 1) % INSPIRING_QUOTES.length);
-      }, 2500);
-      return () => clearInterval(interval);
-    }
-  }, [navigatingQuestionId]);
-
   useEffect(() => {
     let active = true;
 
@@ -290,17 +278,12 @@ export default function QuestionPaperClient({ paperId }: { paperId: string }) {
                     <div
                       className="paperQuestionRow"
                       onClick={() => {
-                        setNavigatingQuestionId(question.question_id);
                         router.push(`/question/${question.question_id}`);
                       }}
                       style={{ cursor: "pointer" }}
                     >
                     <div className="questionNumber">
-                      {navigatingQuestionId === question.question_id ? (
-                        <span className="pyqMiniSpinner" />
-                      ) : (
-                        question.question_number || `Q${index + 1}`
-                      )}
+                      {question.question_number || `Q${index + 1}`}
                     </div>
 
                     <div className="questionContent">
@@ -365,16 +348,6 @@ export default function QuestionPaperClient({ paperId }: { paperId: string }) {
           initialMode={entryMode}
           onClose={() => setAuthOpen(false)}
         />
-      )}
-
-      {navigatingQuestionId && (
-        <div className="pyqInspiringLoaderOverlay">
-          <div className="pyqInspiringLoaderBox">
-            <div className="pyqInspiringSpinner"></div>
-            <h3>Opening Answer...</h3>
-            <p>"{INSPIRING_QUOTES[quoteIndex]}"</p>
-          </div>
-        </div>
       )}
     </main>
   );

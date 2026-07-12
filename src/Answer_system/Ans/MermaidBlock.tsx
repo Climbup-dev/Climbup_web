@@ -36,7 +36,22 @@ export default function MermaidBlock({ block }: { block: any }) {
         mermaid.initialize({
           startOnLoad: false,
           securityLevel: "strict",
-          theme: "default",
+          theme: "base",
+          themeVariables: {
+            background: "transparent",
+            primaryColor: "rgba(2, 21, 38, 0.6)",
+            primaryTextColor: "#ffffff",
+            primaryBorderColor: "#38d399",
+            lineColor: "#9ef8dc",
+            secondaryColor: "rgba(56, 211, 153, 0.1)",
+            tertiaryColor: "rgba(2, 21, 38, 0.8)",
+            edgeLabelBackground: "#021526",
+            nodeBorder: "#38d399",
+            clusterBkg: "rgba(255, 255, 255, 0.03)",
+            clusterBorder: "rgba(158, 248, 220, 0.2)",
+            fontFamily: "Inter, sans-serif",
+            fontSize: "16px"
+          },
           flowchart: {
             htmlLabels: false,
             curve: "basis",

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createAdminClient } from '@/lib/supabase/server';
+import { createAdminClient, createRouteHandlerClient } from '@/lib/supabase/server';
 
 export async function POST(
   request: Request,
@@ -13,6 +13,16 @@ export async function POST(
       return NextResponse.json({ error: 'Answer content is required' }, { status: 400 });
     }
 
+    // 1. Authenticate the request first to prevent unauthorized access
+    const response = NextResponse.json({ ok: true });
+    const authClient = createRouteHandlerClient(request, response);
+    const { data: { user }, error: authError } = await authClient.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized access. Please log in.' }, { status: 401 });
+    }
+
+    // 2. Proceed with admin client to bypass RLS for system-level insertion
     const supabase = createAdminClient();
 
     // Store as standard blocks array format

@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import EditableAnswerRenderer from "@/Answer_system/Ans/editor/EditableAnswerRenderer";
 import QuestionDetailFrame from "@/components/QuestionDetailFrame";
+import QuestionHeader from "@/components/QuestionHeader";
 import ClimbupAIChatbot from "@/components/ClimbupAIChatbot";
 import { getQuestionDetail } from "@/lib/question-detail";
 
@@ -36,12 +37,12 @@ export default async function QuestionDetailPage({
 
   return (
     <QuestionDetailFrame>
-      <ClimbupAIChatbot />
-      <main className="questionDetailPage">
-        <section className="questionDetailShell">
-          <Link className="questionDetailBack" href={backHref} prefetch={false}>
-            Back to Question Paper
-          </Link>
+      <div className="answerPageSplitLayout">
+        <main className="questionDetailPage">
+          <section className="questionDetailShell">
+            <Link className="questionDetailBack" href={backHref} prefetch={false}>
+              Back to Question Paper
+            </Link>
 
           {error ? (
             <div className="questionDetailState">
@@ -55,31 +56,10 @@ export default async function QuestionDetailPage({
             </div>
           ) : (
             <>
-              <header className="questionDetailHeader">
-                <h1>{question.title}</h1>
-                {question.imageUrls && question.imageUrls.length > 0 && (
-                  <div className="questionImages" style={{ display: "flex", gap: "16px", flexWrap: "wrap", marginTop: "24px" }}>
-                    {question.imageUrls.map((url, i) => (
-                      <img
-                        key={i}
-                        src={url}
-                        alt="Question Figure"
-                        style={{ 
-                          maxWidth: "100%", 
-                          maxHeight: "320px", 
-                          objectFit: "contain",
-                          borderRadius: "12px", 
-                          border: "1.5px solid rgba(158, 248, 220, 0.28)",
-                          backgroundColor: "rgba(255, 255, 255, 0.96)",
-                          padding: "8px",
-                          position: "relative",
-                          zIndex: 2
-                        }}
-                      />
-                    ))}
-                  </div>
-                )}
-              </header>
+              <QuestionHeader 
+                title={question.title} 
+                imageUrls={question.imageUrls} 
+              />
 
               <EditableAnswerRenderer
                 key={`${question.id}-${question.answerMeta?.answerId || "no-answer"}`}
@@ -91,11 +71,16 @@ export default async function QuestionDetailPage({
                 questionImage={question.imageUrls?.[0]}
                 author={question.answerMeta?.author}
                 answeredAt={question.answerMeta?.publishedAt}
+                questionTitle={question.title}
               />
             </>
           )}
         </section>
       </main>
+      <aside className="chatbotSidePanel">
+        <ClimbupAIChatbot embedded={true} initialContextQuestion={question?.title || ""} />
+      </aside>
+      </div>
     </QuestionDetailFrame>
   );
 }

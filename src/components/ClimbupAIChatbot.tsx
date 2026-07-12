@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, memo } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { createClient } from "@/lib/supabase/client";
@@ -11,16 +11,101 @@ type Message = {
   content: string;
 };
 
-export default function ClimbupAIChatbot() {
-  const [isOpen, setIsOpen] = useState(false);
+const TypewriterMessage = memo(({ content, animate, onUpdate }: { content: string, animate: boolean, onUpdate?: () => void }) => {
+  const [displayedContent, setDisplayedContent] = useState(animate ? "" : content);
+
+  const [isTyping, setIsTyping] = useState(animate);
+
+  useEffect(() => {
+    if (!animate) {
+      setDisplayedContent(content);
+      setIsTyping(false);
+      return;
+    }
+    
+    let i = 0;
+    setIsTyping(true);
+    const interval = setInterval(() => {
+      if (i < content.length) {
+        i += 4; // typing speed
+        setDisplayedContent(content.slice(0, i));
+      } else {
+        clearInterval(interval);
+        setIsTyping(false);
+      }
+    }, 15);
+    
+    return () => clearInterval(interval);
+  }, [content, animate]);
+
+  useEffect(() => {
+    if (onUpdate) {
+      onUpdate();
+    }
+  }, [displayedContent, onUpdate]);
+
+  return (
+    <div className={`typewriter-content ${isTyping ? "is-typing" : ""}`}>
+      <ReactMarkdown remarkPlugins={[remarkGfm]}>{displayedContent}</ReactMarkdown>
+    </div>
+  );
+});
+
+type ClimbupAIChatbotProps = {
+  embedded?: boolean;
+  initialContextQuestion?: string;
+  initialSubject?: string;
+};
+
+export default function ClimbupAIChatbot({ 
+  embedded = false,
+  initialContextQuestion = "",
+  initialSubject = "Academic Discussion"
+}: ClimbupAIChatbotProps) {
+  const [isOpen, setIsOpen] = useState(embedded);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [contextQuestion, setContextQuestion] = useState("");
+  const [contextQuestion, setContextQuestion] = useState(initialContextQuestion);
+  const [subject, setSubject] = useState(initialSubject);
   const [theme, setTheme] = useState("dark");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const supabase = createClient();
+
+  // Set initial greeting
+  useEffect(() => {
+    async function setInitialGreeting() {
+      // Only set if we haven't already
+      if (messages.length === 0) {
+        const { data: { user } } = await supabase.auth.getUser();
+        let userName = "";
+        
+        if (user?.user_metadata?.full_name) {
+          // Extract first name
+          userName = user.user_metadata.full_name.split(" ")[0] + ", ";
+        } else if (user?.user_metadata?.name) {
+          userName = user.user_metadata.name.split(" ")[0] + ", ";
+        }
+
+        let greetingText = `Hi ${userName}I'm ClimbUP AI! `;
+        if (initialContextQuestion) {
+          greetingText += `I'm here to help you understand this question step-by-step. Which part is confusing you?`;
+        } else {
+          greetingText += `I'm here to help. What would you like to explore today?`;
+        }
+
+        setMessages([
+          {
+            role: "assistant",
+            content: greetingText,
+          },
+        ]);
+      }
+    }
+    setInitialGreeting();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Listen for the custom event to open the chatbot
   useEffect(() => {
@@ -29,6 +114,9 @@ export default function ClimbupAIChatbot() {
       setIsOpen(true);
       if (customEvent.detail?.question) {
         setContextQuestion(customEvent.detail.question);
+      }
+      if (customEvent.detail?.subject) {
+        setSubject(customEvent.detail.subject);
       }
       if (customEvent.detail?.theme) {
         setTheme(customEvent.detail.theme);
@@ -52,9 +140,25 @@ export default function ClimbupAIChatbot() {
     return () => window.removeEventListener("climbup-ai-open", handleOpen);
   }, []);
 
-  // Auto-scroll to bottom
+  // Listen for the fill input event
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const handleFillInput = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail?.text) {
+        setInput(customEvent.detail.text);
+      }
+    };
+    window.addEventListener("climbup-ai-fill-input", handleFillInput);
+    return () => window.removeEventListener("climbup-ai-fill-input", handleFillInput);
+  }, []);
+
+  // Auto-scroll to bottom
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
   }, [messages, isLoading]);
 
   // Toggle body class for layout shift (now used for shifting popups)
@@ -101,7 +205,7 @@ export default function ClimbupAIChatbot() {
           "Authorization": `Bearer ${token}`,
         },
         body: JSON.stringify({
-          subject: "Academic Discussion",
+          subject: subject,
           context: contextQuestion,
           messages: payloadMessages,
         }),
@@ -132,32 +236,39 @@ export default function ClimbupAIChatbot() {
   };
 
   return (
-    <div className={`chatbot-wrapper ${theme === "light" ? "theme-light" : "theme-dark"}`}>
-      <div className={`chatbot-drawer ${isOpen ? "is-open" : ""}`}>
+    <div className={`chatbot-wrapper ${theme === "light" ? "theme-light" : "theme-dark"} ${embedded ? "chatbot-embedded" : ""}`}>
+      <div className={`chatbot-drawer ${isOpen || embedded ? "is-open" : ""}`}>
         <div className="chatbot-header">
           <div className="chatbot-header-title">
             <h2>Climbup AI</h2>
             <span>Beta</span>
           </div>
-          <button className="chatbot-close-btn" onClick={() => setIsOpen(false)} aria-label="Close Chat">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-          </button>
+          {!embedded && (
+            <button className="chatbot-close-btn" onClick={() => setIsOpen(false)} aria-label="Close Chat">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          )}
         </div>
 
         <div className="chatbot-messages">
-          {messages.map((msg, idx) => (
-            <div key={idx} className={`chatbot-message-wrapper ${msg.role}`}>
-              <div className="chatbot-message-role">{msg.role === "assistant" ? "Climbup AI" : "You"}</div>
-              <div className={`chatbot-message ${msg.role}`}>
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                  {msg.content}
-                </ReactMarkdown>
+          {messages.map((msg, idx) => {
+            const isLastAi = msg.role === "assistant" && idx === messages.length - 1;
+            return (
+              <div key={idx} className={`chatbot-message-wrapper ${msg.role}`}>
+                <div className="chatbot-message-role">{msg.role === "assistant" ? "Climbup AI" : "You"}</div>
+                <div className={`chatbot-message ${msg.role}`}>
+                  {msg.role === "assistant" ? (
+                    <TypewriterMessage content={msg.content} animate={isLastAi} onUpdate={scrollToBottom} />
+                  ) : (
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
           {isLoading && (
             <div className="chatbot-message-wrapper assistant">
               <div className="chatbot-message-role">Climbup AI</div>

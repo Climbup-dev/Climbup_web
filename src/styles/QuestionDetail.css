@@ -1,6 +1,37 @@
+.answerPageSplitLayout {
+  display: grid;
+  grid-template-columns: 1fr 420px;
+  align-items: start;
+}
+
+@media (max-width: 1200px) {
+  .answerPageSplitLayout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.chatbotSidePanel {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  border-left: 1px solid rgba(158, 248, 220, 0.1);
+  z-index: 100;
+  padding: 16px 16px 16px 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: opacity 0.3s ease;
+}
+
+
+
+@media (max-width: 1200px) {
+  .chatbotSidePanel {
+    display: none; /* Chatbot will handle mobile visibility differently, or we just hide the embedded panel and let it float */
+  }
+}
+
 .questionDetailPage {
-  min-height: 100vh;
-  overflow-x: hidden;
   color: #eefcf8;
   background:
     radial-gradient(circle at 14% 8%, rgba(56, 211, 153, 0.12), transparent 30rem),
@@ -72,11 +103,101 @@
   box-shadow: 0 18px 42px rgba(0, 0, 0, 0.18);
 }
 
-.questionDetailHeader {
+/* --- Static Question Header --- */
+.questionDetailHeader-static {
+  padding: clamp(16px, 3vw, 24px);
+  margin-bottom: 24px;
+  background:
+    linear-gradient(145deg, rgba(8, 34, 53, 0.98), rgba(3, 17, 28, 0.96)),
+    #082235;
+  border: 1px solid rgba(140, 240, 208, 0.16);
+  border-left: 3px solid rgba(251, 113, 133, 0.7);
+  border-radius: 14px;
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.18);
   position: relative;
-  overflow: hidden;
-  padding: clamp(18px, 3vw, 28px);
-  margin-bottom: 18px;
+}
+
+/* --- Sticky Floating Button Header --- */
+.questionDetailHeader-sticky-container {
+  position: sticky;
+  top: 16px;
+  z-index: 150;
+  display: flex;
+  justify-content: center;
+  height: 0;
+  margin-bottom: 24px;
+}
+
+.question-hover-btn {
+  background: rgba(45, 15, 20, 0.95);
+  border: 1px solid rgba(251, 113, 133, 0.4);
+  color: #fb7185;
+  padding: 10px 20px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  backdrop-filter: blur(12px);
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(251, 113, 133, 0.2);
+  transition: opacity 0.3s ease, transform 0.2s ease, background 0.2s ease;
+  display: flex;
+  align-items: center;
+}
+
+.question-hover-btn:hover {
+  background: rgba(45, 15, 20, 1);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(251, 113, 133, 0.35);
+}
+
+.questionDetailHeader-dropdown {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%) translateY(-10px) scale(0.96);
+  width: min(100%, 800px); 
+  height: max-content;
+  max-height: 85vh;
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+  background:
+    linear-gradient(145deg, rgba(45, 15, 20, 0.98), rgba(20, 5, 8, 0.98)),
+    rgba(45, 15, 20, 0.9);
+  border: 1px solid rgba(251, 113, 133, 0.25);
+  border-radius: 16px;
+  box-shadow: 0 24px 60px rgba(251, 113, 133, 0.3);
+  backdrop-filter: blur(16px);
+  transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.3s ease, visibility 0.3s;
+  display: flex;
+  flex-direction: column;
+}
+
+.questionDetailHeader-sticky-container:hover .questionDetailHeader-dropdown {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0) scale(1);
+  overflow-y: auto;
+}
+
+.questionDetailHeader-sticky-container:hover .question-hover-btn {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.questionDetailHeader-dropdown-content {
+  padding: 24px;
+}
+
+
+
+.questionDetailHeader h1 {
+  font-size: clamp(20px, 4vw, 26px); /* Reduced font size from 32px */
+  line-height: 1.3;
+  margin: 0;
 }
 
 .questionDetailHeader::after {
@@ -329,7 +450,14 @@
 
 .questionDetailPage .answer-toolbar {
   width: max-content;
-  max-width: calc(100vw - 32px);
+  max-width: 100%;
+  bottom: 32px;
+}
+
+@media (max-width: 1200px) {
+  .questionDetailPage .answer-toolbar {
+    max-width: 100%;
+  }
 }
 
 .questionDetailPage .answer-feedback-actions {
@@ -342,10 +470,9 @@
   }
 }
 
-@media (min-width: 1100px) {
+@media (min-width: 1200px) {
   .questionDetailShell {
     width: min(1500px, calc(100% - 40px));
-    padding-right: 72px;
   }
 }
 

@@ -15,10 +15,12 @@ type AnswerToolbarProps = {
   pdfGenerating?: boolean;
   onImprovedAnswer: () => void;
   onInsights: () => void;
-  onClimbupAi: () => void;
-  feedback: "like" | "dislike" | null;
   theme: "light" | "dark";
   onToggleTheme: () => void;
+  onToggleFocus?: () => void;
+  isFocusMode?: boolean;
+  feedback?: "like" | "dislike" | null;
+  onClimbupAi?: () => void;
 };
 
 type AnswerFeedbackActionsProps = Pick<
@@ -163,9 +165,10 @@ export default function AnswerToolbar({
   pdfGenerating = false,
   onImprovedAnswer,
   onInsights,
-  onClimbupAi,
   theme,
   onToggleTheme,
+  onToggleFocus,
+  isFocusMode = false,
 }: AnswerToolbarProps) {
   return (
     <div className="answer-toolbar">
@@ -213,17 +216,7 @@ export default function AnswerToolbar({
             <ToolLabel>Skill insights</ToolLabel>
           </button>
 
-          <button
-            className="toolbar-btn ai-action"
-            onClick={onClimbupAi}
-            aria-label="Open ClimbUP AI"
-            data-tooltip="ClimbUP AI"
-          >
-            <ClimbupMark />
-            <ToolLabel>Climbup AI</ToolLabel>
-          </button>
-
-          <div className="toolbar-spacer" />
+<div className="toolbar-spacer" />
 
           <button
             className="toolbar-btn theme-action"
