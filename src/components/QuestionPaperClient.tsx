@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState, Fragment } from "react";
 
 import { Award, Clock, FileText, ChevronLeft, Download } from "lucide-react";
 import Navbar from "@/components/Navbar";
+import MathText from "@/components/MathText";
 import { useAuth } from "@/hooks/useAuth";
 import { createClient } from "@/lib/supabase/client";
 import "@/styles/QuestionPaper.css";
@@ -289,7 +290,9 @@ export default function QuestionPaperClient({ paperId }: { paperId: string }) {
                     <div className="questionContent">
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "16px" }}>
                         
-                        <p style={{ margin: 0 }}>{question.question_text}</p>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <MathText text={question.question_text} />
+                        </div>
                         
                         {question.marks ? (
                           <div style={{ flexShrink: 0 }}>

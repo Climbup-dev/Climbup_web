@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import Navbar from "@/components/Navbar";
+import MathText from "@/components/MathText";
 import { useAuth } from "@/hooks/useAuth";
 import { createClient } from "@/lib/supabase/client";
 import { getCache, setCache, clearCache } from "@/lib/cache";
@@ -561,7 +562,9 @@ export default function ProfilePageContent() {
                         <strong>Score {Number(answer.verification_score || 0)}%</strong>
                       </div>
 
-                      <h3>{answer.questions?.question_text || "Question not available"}</h3>
+                      <div style={{ flex: 1, minWidth: 0, marginTop: '12px', marginBottom: '8px', fontWeight: 600, fontSize: '1.17em' }}>
+                        <MathText text={answer.questions?.question_text || "Question not available"} />
+                      </div>
 
                       <p>
                         {answer.answer_content.length > 180

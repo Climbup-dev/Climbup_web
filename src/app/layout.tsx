@@ -51,6 +51,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" data-scroll-behavior="smooth">
+      <head>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" />
+      </head>
       <body className={plusJakartaSans.className}>
         <Providers>{children}</Providers>
       </body>
