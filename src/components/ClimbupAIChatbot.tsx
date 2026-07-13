@@ -69,9 +69,20 @@ export default function ClimbupAIChatbot({
   const [contextQuestion, setContextQuestion] = useState(initialContextQuestion);
   const [subject, setSubject] = useState(initialSubject);
   const [theme, setTheme] = useState("dark");
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const supabase = createClient();
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setSelectedImage(reader.result as string); 
+    };
+    reader.readAsDataURL(file);
+  };
 
   // Set initial greeting
   useEffect(() => {
@@ -174,14 +185,17 @@ export default function ClimbupAIChatbot({
   }, [isOpen]);
 
   const sendMessage = async () => {
-    if (!input.trim() || isLoading) return;
+    if ((!input.trim() && !selectedImage) || isLoading) return;
 
-    const userText = input.trim();
+    const userText = input.trim() || "[Attached Image]";
     const userMsg: Message = { role: "user", content: userText };
     const updatedMessages = [...messages, userMsg];
     
+    // Capture the current image payload and reset local states early
+    const imagePayload = selectedImage;
     setMessages(updatedMessages);
     setInput("");
+    setSelectedImage(null);
     setIsLoading(true);
 
     try {
@@ -208,6 +222,7 @@ export default function ClimbupAIChatbot({
           subject: subject,
           context: contextQuestion,
           messages: payloadMessages,
+          image_url: imagePayload,
         }),
       });
 
@@ -282,31 +297,60 @@ export default function ClimbupAIChatbot({
           <div ref={messagesEndRef} />
         </div>
 
-        <div className="chatbot-input-area">
-          <input
-            className="chatbot-input"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                sendMessage();
-              }
-            }}
-            placeholder="Ask a doubt..."
-            disabled={isLoading}
-          />
-          <button 
-            className="chatbot-send-btn" 
-            onClick={sendMessage} 
-            disabled={isLoading || !input.trim()}
-            aria-label="Send"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="22" y1="2" x2="11" y2="13"></line>
-              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-            </svg>
-          </button>
+        <div className="chatbot-input-area" style={{ flexDirection: 'column', gap: '8px', padding: '12px' }}>
+          {selectedImage && (
+            <div style={{ position: 'relative', alignSelf: 'flex-start', marginBottom: '4px' }}>
+              <img src={selectedImage} alt="preview" style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px', border: '1px solid #e2e8f0' }} />
+              <button 
+                onClick={() => setSelectedImage(null)}
+                style={{ position: 'absolute', top: -6, right: -6, background: '#ef4444', color: 'white', borderRadius: '50%', width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', cursor: 'pointer', fontSize: '12px', padding: 0 }}
+              >
+                ×
+              </button>
+            </div>
+          )}
+          <div style={{ display: 'flex', width: '100%', alignItems: 'center', gap: '8px' }}>
+            <input 
+              type="file" 
+              accept="image/*" 
+              id="chat-image-upload" 
+              style={{ display: 'none' }}
+              onChange={handleImageSelect} 
+              disabled={isLoading}
+            />
+            <label htmlFor="chat-image-upload" style={{ cursor: 'pointer', padding: '8px', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                <polyline points="21 15 16 10 5 21"></polyline>
+              </svg>
+            </label>
+            <input
+              className="chatbot-input"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  sendMessage();
+                }
+              }}
+              placeholder="Ask a doubt..."
+              disabled={isLoading}
+              style={{ flex: 1, margin: 0 }}
+            />
+            <button 
+              className="chatbot-send-btn" 
+              onClick={sendMessage} 
+              disabled={isLoading || (!input.trim() && !selectedImage)}
+              aria-label="Send"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="22" y1="2" x2="11" y2="13"></line>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
     </div>
