@@ -3,12 +3,16 @@ import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import remarkGfm from 'remark-gfm';
 import rehypeKatex from 'rehype-katex';
+import 'katex/dist/katex.min.css';
 
 interface MathTextProps {
   text: string;
 }
 
 const MathText: React.FC<MathTextProps> = ({ text }) => {
+  // Yeh line table markdown ko fix karegi
+  const processedText = text ? text.replace(/([^\n])\n(\s*\|)/g, '$1\n\n$2') : '';
+
   return (
     <div className="math-text-container" style={{ fontSize: '1rem', lineHeight: '1.6' }}>
       <ReactMarkdown
@@ -28,7 +32,7 @@ const MathText: React.FC<MathTextProps> = ({ text }) => {
           )
         }}
       >
-        {text}
+        {processedText}
       </ReactMarkdown>
     </div>
   );

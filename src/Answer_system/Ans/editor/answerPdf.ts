@@ -103,6 +103,7 @@ function buildPdfHtml(snapshot: AnswerEditorSnapshot, logoUrl: string) {
     <style>${pdfStyles()}</style>
   </head>
   <body>
+    <div class="pdf-page-border"></div>
     <main class="pdf-page">
       <div class="pdf-watermark" aria-hidden="true">
         <span>myclimbup.xyz</span>
@@ -377,28 +378,35 @@ function pdfStyles() {
   return `
     @page {
       size: A4;
-      margin: 0;
+      margin: 15mm;
     }
 
     * { box-sizing: border-box; }
 
     body {
       margin: 0;
-      padding: 15mm;
-      color: #000000;
+      padding: 0;
+      color: #0f172a;
       background: #ffffff;
       font-family: "Times New Roman", Times, serif;
-      font-size: 11pt;
-      line-height: 1.5;
+      font-size: 11.5pt;
+      line-height: 1.6;
       text-rendering: optimizeLegibility;
+    }
+    
+    .pdf-page-border {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      border: 3px solid #0284c7;
+      border-radius: 6px;
+      pointer-events: none;
+      z-index: 999;
     }
 
     .pdf-page { 
       width: 100%; 
       position: relative; 
-      border: 2px solid #222;
-      padding: 30px;
-      border-radius: 4px;
+      padding: 25px;
     }
 
     .pdf-watermark {
@@ -408,60 +416,64 @@ function pdfStyles() {
       transform: translate(-50%, -50%) rotate(-45deg);
     }
     .pdf-watermark span { 
-      color: #cbd5e1; /* Light grayish color */
-      font-size: 65px; 
+      color: #e2e8f0; 
+      font-size: 70px; 
       font-weight: 800; 
       font-family: Arial, sans-serif; 
-      letter-spacing: 0.04em;
+      letter-spacing: 0.05em;
       text-transform: lowercase; 
       white-space: nowrap;
-      opacity: 0.35; /* More faded/faint */
+      opacity: 0.25; 
     }
 
     .pdf-header {
       text-align: center;
-      margin-bottom: 20px;
-      font-family: Arial, sans-serif;
+      margin-bottom: 25px;
+      font-family: "Plus Jakarta Sans", Arial, sans-serif;
     }
     
     h1 {
-      margin: 0 0 12px; font-size: 13.5pt; line-height: 1.5;
-      color: #b91c1c;
-      font-weight: 700;
-      text-align: left;
-      border-bottom: 2px solid #fecaca;
-      padding-bottom: 10px;
+      margin: 0 0 16px; font-size: 18pt; line-height: 1.4;
+      color: #0f172a;
+      font-weight: 800;
+      text-align: center;
+      border-bottom: 3px solid #0ea5e9;
+      padding-bottom: 15px;
       white-space: pre-wrap;
       word-break: break-word;
     }
     
     .question-image {
       max-width: 100%; max-height: 300px;
-      margin: 15px auto; display: block;
+      margin: 20px auto; display: block;
       border-radius: 8px; border: 1px solid #cbd5e1;
       box-shadow: 0 4px 12px rgba(0,0,0,0.05);
     }
 
     .pdf-meta {
-      font-size: 9pt; color: #555;
-      display: flex; justify-content: flex-start; gap: 15px;
-      margin-bottom: 10px;
+      font-size: 10pt; color: #475569;
+      display: flex; justify-content: space-between;
+      margin-bottom: 15px;
+      padding: 12px;
+      background: #f8fafc;
+      border-radius: 6px;
+      border-left: 4px solid #94a3b8;
     }
 
     .pdf-section {
-      margin: 15px 0;
+      margin: 20px 0;
     }
     .pdf-section h2 {
-      margin: 0 0 10px; font-size: 13pt; font-weight: bold;
-      border-bottom: 2px solid #0ea5e9; padding-bottom: 3px;
+      margin: 0 0 12px; font-size: 14pt; font-weight: bold;
+      border-bottom: 2px solid #38bdf8; padding-bottom: 6px;
       color: #0369a1;
     }
 
-    h3 { margin: 12px 0 5px; font-size: 12pt; color: #1d4ed8; page-break-after: avoid; }
-    h4 { margin: 10px 0 3px; font-size: 11pt; font-style: italic; color: #4338ca; page-break-after: avoid; }
-    p { margin: 0 0 8px; color: #1e293b; }
-    ul, ol { margin: 4px 0 8px 20px; padding: 0; color: #1e293b; }
-    li { margin-bottom: 4px; }
+    h3 { margin: 16px 0 6px; font-size: 12.5pt; color: #1d4ed8; page-break-after: avoid; }
+    h4 { margin: 12px 0 4px; font-size: 11.5pt; font-style: italic; color: #4338ca; page-break-after: avoid; }
+    p { margin: 0 0 10px; color: #1e293b; text-align: justify; }
+    ul, ol { margin: 6px 0 10px 24px; padding: 0; color: #1e293b; }
+    li { margin-bottom: 6px; }
     strong { font-weight: bold; color: #0f766e; }
     
     mark { background: transparent; font-weight: bold; text-decoration: underline; color: #000; }
@@ -472,25 +484,28 @@ function pdfStyles() {
     }
     
     code, .math {
-      padding: 1px 3px; border: 1px solid #ddd; border-radius: 3px; background: #fafafa;
+      padding: 2px 4px; border: 1px solid #e2e8f0; border-radius: 4px; background: #f8fafc; color: #c2410c;
     }
     
     pre {
-      margin: 10px 0; padding: 10px; white-space: pre-wrap; word-wrap: break-word;
-      background: #fdfdfd; border: 1px solid #999; border-left: 3px solid #666;
+      margin: 12px 0; padding: 12px; white-space: pre-wrap; word-wrap: break-word;
+      background: #f8fafc; border: 1px solid #cbd5e1; border-left: 4px solid #0284c7;
+      border-radius: 4px;
       page-break-inside: avoid;
     }
 
     .code-meta {
-      display: block; font-size: 8pt; font-weight: bold; color: #555; margin-bottom: 5px; text-transform: uppercase;
+      display: block; font-size: 8.5pt; font-weight: bold; color: #64748b; margin-bottom: 6px; text-transform: uppercase;
     }
 
     table {
-      width: 100%; border-collapse: collapse; margin: 10px 0;
-      page-break-inside: avoid; font-family: Arial, sans-serif; font-size: 10pt;
+      width: 100%; border-collapse: collapse; margin: 15px 0;
+      page-break-inside: avoid; font-family: "Plus Jakarta Sans", Arial, sans-serif; font-size: 10.5pt;
     }
-    th, td { padding: 6px 8px; border: 1px solid #000; text-align: left; vertical-align: top; }
-    th { background: #f0f0f0; font-weight: bold; }
+    th, td { padding: 10px 12px; border: 1px solid #cbd5e1; text-align: left; vertical-align: top; }
+    th { background: #f1f5f9; font-weight: 700; color: #334155; }
+    td { color: #475569; }
+    tr:nth-child(even) { background-color: #f8fafc; }
 
     .pdf-steps { margin: 10px 0; }
     .pdf-step {
