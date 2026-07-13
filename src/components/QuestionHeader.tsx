@@ -4,10 +4,9 @@ import { useEffect, useRef, useState } from "react";
 
 type QuestionHeaderProps = {
   title: string;
-  imageUrls?: string[];
 };
 
-export default function QuestionHeader({ title, imageUrls }: QuestionHeaderProps) {
+export default function QuestionHeader({ title }: QuestionHeaderProps) {
   const [isStickyVisible, setIsStickyVisible] = useState(false);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
@@ -45,26 +44,6 @@ export default function QuestionHeader({ title, imageUrls }: QuestionHeaderProps
           <h1 style={{ fontSize: "clamp(20px, 4vw, 26px)", lineHeight: 1.4, margin: 0, fontWeight: 700, color: "#fb7185" }}>
             {title}
           </h1>
-          {imageUrls && imageUrls.length > 0 && (
-            <div className="questionImages" style={{ display: "flex", gap: "16px", flexWrap: "wrap", marginTop: "24px" }}>
-              {imageUrls.map((url, i) => (
-                <img
-                  key={`static-${i}`}
-                  src={url}
-                  alt="Question Figure"
-                  style={{ 
-                    maxWidth: "100%", 
-                    maxHeight: "320px", 
-                    objectFit: "contain",
-                    borderRadius: "12px", 
-                    border: "1.5px solid rgba(251, 113, 133, 0.28)",
-                    backgroundColor: "rgba(255, 255, 255, 0.96)",
-                    padding: "8px"
-                  }}
-                />
-              ))}
-            </div>
-          )}
         </header>
       </div>
 
@@ -96,26 +75,6 @@ export default function QuestionHeader({ title, imageUrls }: QuestionHeaderProps
               Question
             </div>
             <h1 style={{ fontSize: "clamp(18px, 3vw, 22px)", lineHeight: 1.4, margin: 0, fontWeight: 700, color: "#f8fafc" }}>{title}</h1>
-            {imageUrls && imageUrls.length > 0 && (
-              <div className="questionImages" style={{ display: "flex", gap: "16px", flexWrap: "wrap", marginTop: "24px" }}>
-                {imageUrls.map((url, i) => (
-                  <img
-                    key={`sticky-${i}`}
-                    src={url}
-                    alt="Question Figure"
-                    style={{ 
-                      maxWidth: "100%", 
-                      maxHeight: "320px", 
-                      objectFit: "contain",
-                      borderRadius: "12px", 
-                      border: "1.5px solid rgba(251, 113, 133, 0.28)",
-                      backgroundColor: "rgba(255, 255, 255, 0.96)",
-                      padding: "8px"
-                    }}
-                  />
-                ))}
-              </div>
-            )}
           </div>
         </div>
       </div>

@@ -14,6 +14,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { useRouter } from "next/navigation";
 
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/useToast";
@@ -212,6 +213,7 @@ export default function AuthModal({
     clearPasswordRecovery,
   } = useAuth();
   const { showToast } = useToast();
+  const router = useRouter();
 
   const titleId = useId();
   const descriptionId = useId();
@@ -357,6 +359,7 @@ export default function AuthModal({
       !passwordRecovery &&
       !closingRef.current
     ) {
+      router.refresh(); // Invalidate client-side router cache so middleware sees new cookies
       startSmoothClose();
     }
   }, [
@@ -365,6 +368,7 @@ export default function AuthModal({
     currentUser,
     passwordRecovery,
     startSmoothClose,
+    router,
   ]);
 
   useEffect(() => {

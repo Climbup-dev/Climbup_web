@@ -15,6 +15,7 @@ import type {
   Session,
   User as SupabaseUser,
 } from "@supabase/supabase-js";
+import { useRouter } from "next/navigation";
 
 import { useToast } from "@/hooks/useToast";
 import { createClient } from "@/lib/supabase/client";
@@ -105,6 +106,7 @@ function closePopupWindow(popup: Window | null) {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const router = useRouter();
   const [currentUser, setCurrentUser] = useState<SupabaseUser | null>(null);
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -311,6 +313,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         setCurrentUser(user);
         setLoading(false);
+
+        if (event === "SIGNED_IN" || event === "SIGNED_OUT") {
+          router.refresh();
+        }
 
         // Run outside the auth callback to avoid blocking Supabase auth events.
         window.setTimeout(() => {
