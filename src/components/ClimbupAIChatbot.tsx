@@ -9,6 +9,7 @@ import "../styles/Chatbot.css";
 type Message = {
   role: "user" | "assistant";
   content: string;
+  image_url?: string | null;
 };
 
 const TypewriterMessage = memo(({ content, animate, onUpdate }: { content: string, animate: boolean, onUpdate?: () => void }) => {
@@ -188,7 +189,7 @@ export default function ClimbupAIChatbot({
     if ((!input.trim() && !selectedImage) || isLoading) return;
 
     const userText = input.trim() || "[Attached Image]";
-    const userMsg: Message = { role: "user", content: userText };
+    const userMsg: Message = { role: "user", content: userText, image_url: selectedImage };
     const updatedMessages = [...messages, userMsg];
     
     // Capture the current image payload and reset local states early
@@ -278,7 +279,16 @@ export default function ClimbupAIChatbot({
                   {msg.role === "assistant" ? (
                     <TypewriterMessage content={msg.content} animate={isLastAi} onUpdate={scrollToBottom} />
                   ) : (
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                      {msg.image_url && (
+                        <img 
+                          src={msg.image_url} 
+                          alt="Attached by user" 
+                          style={{ maxWidth: "100%", maxHeight: "200px", borderRadius: "8px", objectFit: "contain", border: "1px solid rgba(255,255,255,0.1)" }} 
+                        />
+                      )}
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
+                    </div>
                   )}
                 </div>
               </div>
