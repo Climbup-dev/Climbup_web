@@ -85,6 +85,27 @@ export default function ClimbupAIChatbot({
     reader.readAsDataURL(file);
   };
 
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (item.type.indexOf("image") !== -1 || item.type.indexOf("pdf") !== -1) {
+        const file = item.getAsFile();
+        if (file) {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            setSelectedImage(reader.result as string);
+          };
+          reader.readAsDataURL(file);
+          e.preventDefault();
+          break;
+        }
+      }
+    }
+  };
+
   // Set initial greeting
   useEffect(() => {
     async function setInitialGreeting() {
@@ -188,7 +209,8 @@ export default function ClimbupAIChatbot({
   const sendMessage = async () => {
     if ((!input.trim() && !selectedImage) || isLoading) return;
 
-    const userText = input.trim() || "[Attached Image]";
+    const attachedLabel = selectedImage?.startsWith("data:application/pdf") ? "[Attached PDF]" : "[Attached Image]";
+    const userText = input.trim() || attachedLabel;
     const userMsg: Message = { role: "user", content: userText, image_url: selectedImage };
     const updatedMessages = [...messages, userMsg];
     
@@ -281,11 +303,17 @@ export default function ClimbupAIChatbot({
                   ) : (
                     <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                       {msg.image_url && (
-                        <img 
-                          src={msg.image_url} 
-                          alt="Attached by user" 
-                          style={{ maxWidth: "100%", maxHeight: "200px", borderRadius: "8px", objectFit: "contain", border: "1px solid rgba(255,255,255,0.1)" }} 
-                        />
+                        msg.image_url.startsWith("data:application/pdf") ? (
+                          <div style={{ padding: "8px", background: "rgba(255,255,255,0.1)", borderRadius: "8px", display: "inline-block", fontSize: "12px", border: "1px solid rgba(255,255,255,0.2)" }}>
+                            📄 Attached PDF Document
+                          </div>
+                        ) : (
+                          <img 
+                            src={msg.image_url} 
+                            alt="Attached by user" 
+                            style={{ maxWidth: "100%", maxHeight: "200px", borderRadius: "8px", objectFit: "contain", border: "1px solid rgba(255,255,255,0.1)" }} 
+                          />
+                        )
                       )}
                       <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
                     </div>
@@ -310,7 +338,13 @@ export default function ClimbupAIChatbot({
         <div className="chatbot-input-area" style={{ flexDirection: 'column', gap: '8px', padding: '12px' }}>
           {selectedImage && (
             <div style={{ position: 'relative', alignSelf: 'flex-start', marginBottom: '4px' }}>
-              <img src={selectedImage} alt="preview" style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px', border: '1px solid #e2e8f0' }} />
+              {selectedImage.startsWith("data:application/pdf") ? (
+                <div style={{ width: '60px', height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px', border: '1px solid #e2e8f0', background: '#f8fafc', color: '#ef4444', fontWeight: 'bold', fontSize: '12px' }}>
+                  PDF
+                </div>
+              ) : (
+                <img src={selectedImage} alt="preview" style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px', border: '1px solid #e2e8f0' }} />
+              )}
               <button 
                 onClick={() => setSelectedImage(null)}
                 style={{ position: 'absolute', top: -6, right: -6, background: '#ef4444', color: 'white', borderRadius: '50%', width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', cursor: 'pointer', fontSize: '12px', padding: 0 }}
@@ -322,13 +356,13 @@ export default function ClimbupAIChatbot({
           <div style={{ display: 'flex', width: '100%', alignItems: 'center', gap: '8px' }}>
             <input 
               type="file" 
-              accept="image/*" 
+              accept="image/*,application/pdf" 
               id="chat-image-upload" 
               style={{ display: 'none' }}
               onChange={handleImageSelect} 
               disabled={isLoading}
             />
-            <label htmlFor="chat-image-upload" style={{ cursor: 'pointer', padding: '8px', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' }}>
+            <label htmlFor="chat-image-upload" style={{ cursor: 'pointer', padding: '8px', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' }} title="Upload image or PDF">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
                 <circle cx="8.5" cy="8.5" r="1.5"></circle>
@@ -345,7 +379,8 @@ export default function ClimbupAIChatbot({
                   sendMessage();
                 }
               }}
-              placeholder="Ask a doubt..."
+              onPaste={handlePaste}
+              placeholder="Ask a doubt... (Paste image)"
               disabled={isLoading}
               style={{ flex: 1, margin: 0 }}
             />
