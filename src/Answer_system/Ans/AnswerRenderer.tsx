@@ -8,6 +8,7 @@ import TableBlock from "./TableBlock";
 import StepsBlock from "./StepsBlock";
 import CodeBlock from "./CodeBlock";
 import MermaidBlock from "./MermaidBlock";
+import MathText from "@/components/MathText";
 
 import { useState } from "react";
 
@@ -22,7 +23,7 @@ export default function AnswerRenderer({ data, author, answeredAt }: { data: any
     <div className="answer-container">
       <div className="question-header">
         <div className="question-label">Question</div>
-        <h1>{question}</h1>
+        <h1><MathText text={question} /></h1>
       </div>
 
       {author && (

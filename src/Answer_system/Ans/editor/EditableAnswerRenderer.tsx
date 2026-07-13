@@ -15,6 +15,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import CommunityAnswersPopup from "./CommunityAnswersPopup";
 import InsightsPopup from "./InsightsPopup";
+import MathText from "@/components/MathText";
 
 type Feedback = "like" | "dislike" | null;
 type AnswerTheme = "light" | "dark";
@@ -795,7 +796,7 @@ export default function EditableAnswerRenderer({
         <div className="answer-container">
           <div className="question-header">
             <div className="question-label">Question</div>
-            <h1>{normalized.question}</h1>
+            <h1><MathText text={normalized.question} /></h1>
           </div>
 
           {author && (

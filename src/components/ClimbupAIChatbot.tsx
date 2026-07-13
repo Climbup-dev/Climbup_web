@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, memo } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import MathText from "@/components/MathText";
 import { createClient } from "@/lib/supabase/client";
 import "../styles/Chatbot.css";
 
@@ -47,7 +48,7 @@ const TypewriterMessage = memo(({ content, animate, onUpdate }: { content: strin
 
   return (
     <div className={`typewriter-content ${isTyping ? "is-typing" : ""}`}>
-      <ReactMarkdown remarkPlugins={[remarkGfm]}>{displayedContent}</ReactMarkdown>
+      <MathText text={displayedContent} />
     </div>
   );
 });
@@ -315,7 +316,7 @@ export default function ClimbupAIChatbot({
                           />
                         )
                       )}
-                      <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
+                      <MathText text={msg.content} />
                     </div>
                   )}
                 </div>
