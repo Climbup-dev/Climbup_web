@@ -230,11 +230,24 @@ export default function ClimbupAIChatbot({
         throw new Error("You must be logged in to use Climbup AI.");
       }
 
-      // Limit messages to last 10 for payload size optimization
-      const payloadMessages = updatedMessages.slice(-10);
+      // Limit messages to last 10 for payload size optimization and strict formatting
+      const payloadMessages = updatedMessages.slice(-10).map((msg) => ({
+        role: msg.role,
+        content: msg.content,
+      }));
 
       // The backend URL from .env (fallback to hardcoded if env var fails)
       const backendUrl = process.env.NEXT_PUBLIC_PYTHON_BACKEND_URL || "https://bacend-climbup.onrender.com";
+
+      const payload: Record<string, any> = {
+        subject: subject,
+        context: contextQuestion,
+        messages: payloadMessages,
+      };
+
+      if (imagePayload) {
+        payload.image_url = imagePayload;
+      }
 
       const response = await fetch(`${backendUrl}/api/chat`, {
         method: "POST",
@@ -242,12 +255,7 @@ export default function ClimbupAIChatbot({
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          subject: subject,
-          context: contextQuestion,
-          messages: payloadMessages,
-          image_url: imagePayload,
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
