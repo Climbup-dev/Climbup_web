@@ -206,7 +206,7 @@ export default function ClassroomClient({ id }: { id: string }) {
     const fetchTour = async () => {
       setIsTourLoading(true);
       try {
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://yjqxsfoynpihyawewdrf.supabase.co";
+        const supabaseUrl = "https://yjqxsfoynpihyawewdrf.supabase.co";
         const directUrl = `${supabaseUrl}/storage/v1/object/public/class_tours/${id}_tour.json`;
         const res = await fetch(directUrl);
         if (res.ok) setTourData(await res.json());
