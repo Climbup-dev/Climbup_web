@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useClassroomChat, ChatMessage } from "@/hooks/useClassroomChat";
 import ClassSelector, { ClassSelection } from "@/components/ClassSelector";
 import { createClient } from "@/lib/supabase/client";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import "@/styles/StudyHub.css";
@@ -106,7 +107,8 @@ export default function StudyHubContent() {
     setTopicsList([]);
 
     try {
-      const { data, error } = await supabase
+      const supabaseNew = createSupabaseClient('https://yjqxsfoynpihyawewdrf.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlqcXhzZm95bnBpaHlhd2V3ZHJmIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NDEwNzI5MSwiZXhwIjoyMDk5NjgzMjkxfQ.caYe7pK8WvoTiYBGdkg9h8xyaw2RCDZ04p3Lk1avAOA');
+      const { data, error } = await supabaseNew
         .from('classrooms')
         .select('*')
         .eq('subject_id', subjectId)
