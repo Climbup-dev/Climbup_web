@@ -237,7 +237,7 @@ export default function ClimbupAIChatbot({
       }));
 
       // The backend URL from .env (fallback to hardcoded if env var fails)
-      const backendUrl = process.env.NEXT_PUBLIC_PYTHON_BACKEND_URL || "https://bacend-climbup.onrender.com";
+      const backendUrl = process.env.NEXT_PUBLIC_PYTHON_BACKEND_URL || "http://127.0.0.1:8000";
 
       const payload: Record<string, any> = {
         subject: subject,

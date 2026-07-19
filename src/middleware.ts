@@ -19,8 +19,8 @@ export async function middleware(request: NextRequest) {
   // We update the session cookies first
   const response = await updateSession(request);
 
-  // If Supabase isn't configured, we just let it pass so the app doesn't hard crash locally during setup
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+  // If Supabase isn't configured, OR if we are in local development (to avoid Windows SSL bugs), bypass auth checks
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NODE_ENV === 'development') {
     return response;
   }
 

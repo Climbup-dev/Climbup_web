@@ -5,7 +5,7 @@ import { isSupabaseConfigured } from "@/lib/supabase/config";
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
-  if (!isSupabaseConfigured()) {
+  if (!isSupabaseConfigured() || process.env.NODE_ENV === 'development') {
     return supabaseResponse;
   }
 

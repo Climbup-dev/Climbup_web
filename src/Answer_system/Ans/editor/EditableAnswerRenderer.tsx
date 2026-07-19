@@ -776,7 +776,7 @@ export default function EditableAnswerRenderer({
             </div>
           </div>
         ) : (
-          <AnswerRenderer data={rendererData} author={author} answeredAt={answeredAt} />
+          <AnswerRenderer data={rendererData} author={author} answeredAt={answeredAt} questionImage={questionImage} />
         )}
 
         <AnswerFeedbackActions
@@ -797,6 +797,9 @@ export default function EditableAnswerRenderer({
           <div className="question-header">
             <div className="question-label">Question</div>
             <h1><MathText text={normalized.question} /></h1>
+            {questionImage && (
+              <img src={questionImage} alt="Question Diagram" className="question-diagram" style={{ maxWidth: '100%', marginTop: '16px', borderRadius: '8px' }} />
+            )}
           </div>
 
           {author && (

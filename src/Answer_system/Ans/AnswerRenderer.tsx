@@ -12,7 +12,7 @@ import MathText from "@/components/MathText";
 
 import { useState } from "react";
 
-export default function AnswerRenderer({ data, author, answeredAt }: { data: any, author?: { name: string; avatarUrl: string | null }, answeredAt?: string }) {
+export default function AnswerRenderer({ data, author, answeredAt, questionImage }: { data: any, author?: { name: string; avatarUrl: string | null }, answeredAt?: string, questionImage?: string }) {
   if (!data) return null;
 
   const normalized = normalizeAnswerData(data);
@@ -24,6 +24,9 @@ export default function AnswerRenderer({ data, author, answeredAt }: { data: any
       <div className="question-header">
         <div className="question-label">Question</div>
         <h1><MathText text={question} /></h1>
+        {questionImage && (
+          <img src={questionImage} alt="Question Diagram" className="question-diagram" style={{ maxWidth: '100%', marginTop: '16px', borderRadius: '8px' }} />
+        )}
       </div>
 
       {author && (

@@ -117,6 +117,7 @@ export default function Navbar({ onLogin, onSignUp }: NavbarProps) {
 
       <div className="navLinks" aria-label="Main sections">
         <Link className={pathname === "/" ? "active" : undefined} href="/">Home</Link>
+        <Link className={pathname === "/study-hub" ? "active" : undefined} href="/study-hub" onClick={handleProtectedNavigation}>Study Hub</Link>
         <Link className={pathname === "/pyqs" ? "active" : undefined} href="/pyqs" onClick={handleProtectedNavigation}>PYQs</Link>
         <Link className={pathname === "/discoveries" ? "active" : undefined} href="/discoveries" onClick={handleProtectedNavigation}>Discoveries</Link>
         <Link className={pathname === "/jobs" ? "active" : undefined} href="/jobs" onClick={handleProtectedNavigation}>Job Preparation</Link>
@@ -205,6 +206,7 @@ export default function Navbar({ onLogin, onSignUp }: NavbarProps) {
           
           <div className="mobileNavLinks">
             <Link className={pathname === "/" ? "active" : undefined} href="/" onClick={closeMenu}>Home</Link>
+            <Link className={pathname === "/study-hub" ? "active" : undefined} href="/study-hub" onClick={(e) => { handleProtectedNavigation(e); if(currentUser) closeMenu(); }}>Study Hub</Link>
             <Link className={pathname === "/pyqs" ? "active" : undefined} href="/pyqs" onClick={(e) => { handleProtectedNavigation(e); if(currentUser) closeMenu(); }}>PYQs</Link>
             <Link className={pathname === "/discoveries" ? "active" : undefined} href="/discoveries" onClick={(e) => { handleProtectedNavigation(e); if(currentUser) closeMenu(); }}>Discoveries</Link>
             <Link className={pathname === "/jobs" ? "active" : undefined} href="/jobs" onClick={(e) => { handleProtectedNavigation(e); if(currentUser) closeMenu(); }}>Job Preparation</Link>
