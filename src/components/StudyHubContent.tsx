@@ -392,8 +392,8 @@ export default function StudyHubContent() {
 
         // Deduplicate: If a "My Note" exists in BOTH classrooms (Render) AND student_resources (Supabase),
         // we keep the classrooms version (so AI chat works) and remove the student_resources duplicate.
-        const classroomUrls = new Set(formattedNotes.map(n => n.pdf_url));
-        const filteredAssignments = formattedAssignments.filter(a => {
+        const classroomUrls = new Set(formattedNotes.map((n: any) => n.pdf_url));
+        const filteredAssignments = formattedAssignments.filter((a: any) => {
           if (a.category === 'personal_document' && classroomUrls.has(a.pdf_url)) {
             return false; // Skip duplicate
           }
