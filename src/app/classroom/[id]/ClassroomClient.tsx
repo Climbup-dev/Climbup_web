@@ -1,12 +1,9 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import {
-  Send, Users, ArrowLeft, BookOpen, ChevronRight, ChevronLeft,
-  Quote, Lightbulb, MessageSquare, CheckCircle2,
-} from "lucide-react";
+import { Send, Users, ArrowLeft, MessageSquare } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { DynamicBackground, detectTheme } from "@/components/DynamicBackground";
+import { DynamicBackground } from "@/components/DynamicBackground";
 import { useAuth } from "@/hooks/useAuth";
 import { useClassroomChat, ChatMessage } from "@/hooks/useClassroomChat";
 import ReactMarkdown from "react-markdown";
@@ -17,19 +14,6 @@ import "@/styles/StudyHub.css";
 import "@/styles/Classroom.css";
 import "katex/dist/katex.min.css";
 
-/* ─────────────────────── Types ─────────────────────── */
-interface Lesson {
-  topic: string;
-  exact_quote: string;
-  explanation: string;
-}
-
-interface TourData {
-  syllabus: string[];
-  lessons: Lesson[];
-}
-
-/* ─────────────────────── Premium Image Renderer ─────────────────────── */
 const PremiumImage = ({ src, alt }: { src?: string; alt?: string }) => {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
@@ -56,7 +40,6 @@ const PremiumImage = ({ src, alt }: { src?: string; alt?: string }) => {
 
   return (
     <span className="md-image-wrapper">
-      {/* Skeleton shown until image loads */}
       {!loaded && <span className="md-image-skeleton" />}
       <img
         src={src}
@@ -71,41 +54,6 @@ const PremiumImage = ({ src, alt }: { src?: string; alt?: string }) => {
   );
 };
 
-/* ─────────────────────── Rich Markdown Renderer ─────────────────────── */
-const RichMarkdown = ({ content, className }: { content: string; className?: string }) => (
-  <div className={className}>
-    <ReactMarkdown
-      remarkPlugins={[remarkGfm, remarkMath]}
-      rehypePlugins={[rehypeKatex]}
-      components={{
-        img: ({ src, alt }) => <PremiumImage src={src} alt={alt} />,
-      }}
-    >
-      {content}
-    </ReactMarkdown>
-  </div>
-);
-
-/* ─────────────────────── Skeleton Loader ─────────────────────── */
-const TourSkeleton = () => (
-  <div className="tour-skeleton">
-    <div className="skeleton-line" style={{ height: 18, width: "35%", borderRadius: 100 }} />
-    <div className="skeleton-line" style={{ height: 40, width: "72%" }} />
-    <div style={{ height: 130, borderRadius: 14, background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.05)", padding: 22, display: "flex", flexDirection: "column", gap: 10 }}>
-      <div className="skeleton-line" style={{ height: 13, width: "92%" }} />
-      <div className="skeleton-line" style={{ height: 13, width: "86%" }} />
-      <div className="skeleton-line" style={{ height: 13, width: "74%" }} />
-    </div>
-    <div style={{ height: 180, borderRadius: 20, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)", padding: 26, display: "flex", flexDirection: "column", gap: 12 }}>
-      <div className="skeleton-line" style={{ height: 13, width: "97%" }} />
-      <div className="skeleton-line" style={{ height: 13, width: "88%" }} />
-      <div className="skeleton-line" style={{ height: 13, width: "93%" }} />
-      <div className="skeleton-line" style={{ height: 13, width: "65%" }} />
-    </div>
-  </div>
-);
-
-/* ─────────────────────── Countdown Timer ─────────────────────── */
 const CountdownTimer = () => {
   const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
   const [isReady, setIsReady] = useState(false);
@@ -152,81 +100,35 @@ const CountdownTimer = () => {
   );
 };
 
-/* ─────────────────────── Framer Motion Variants ─────────────────────── */
-const lessonVariants = {
-  enter: (direction: number) => ({
-    x: direction > 0 ? 80 : -80,
-    opacity: 0,
-  }),
-  center: {
-    x: 0,
-    opacity: 1,
-    transition: { duration: 0.42, ease: [0.16, 1, 0.3, 1] },
-  },
-  exit: (direction: number) => ({
-    x: direction > 0 ? -80 : 80,
-    opacity: 0,
-    transition: { duration: 0.28, ease: [0.4, 0, 1, 1] },
-  }),
-};
-
 const chatBubbleVariants = {
   hidden: { opacity: 0, y: 22, scale: 0.97 },
   visible: {
     opacity: 1, y: 0, scale: 1,
-    transition: { type: "spring", stiffness: 420, damping: 32 },
+    transition: { type: "spring" as const, stiffness: 420, damping: 32 },
   },
 };
 
-/* ─────────────────────── Main Component ─────────────────────── */
 export default function ClassroomClient({ id }: { id: string }) {
   const { currentUser, loading } = useAuth();
 
-  /* Chat */
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [wsBoard, setWsBoard] = useState("");
   const [newMessage, setNewMessage] = useState("");
   const chatScrollRef = useRef<HTMLDivElement>(null);
 
-  /* Tour */
-  const [tourData, setTourData] = useState<TourData | null>(null);
-  const [currentLessonIndex, setCurrentLessonIndex] = useState(0);
-  const [isTourLoading, setIsTourLoading] = useState(true);
-  const [direction, setDirection] = useState(1); // +1 = forward, -1 = backward
-
-  /* Time gate */
   const [isTimeClosed, setIsTimeClosed] = useState(false);
 
-  /* Auth */
   const studentId = currentUser?.id || "";
   const studentName = currentUser?.user_metadata?.full_name || currentUser?.email?.split("@")[0] || "Student";
 
-  /* ── Fetch Tour ── */
-  useEffect(() => {
-    const fetchTour = async () => {
-      setIsTourLoading(true);
-      try {
-        const supabaseUrl = "https://yjqxsfoynpihyawewdrf.supabase.co";
-        const directUrl = `${supabaseUrl}/storage/v1/object/public/class_tours/${id}_tour.json`;
-        const res = await fetch(directUrl);
-        if (res.ok) setTourData(await res.json());
-      } catch (e) {
-        console.error("Tour fetch failed:", e);
-      } finally {
-        setIsTourLoading(false);
-      }
-    };
-    fetchTour();
-  }, [id]);
+  const pdfUrl = `https://yjqxsfoynpihyawewdrf.supabase.co/storage/v1/object/public/class_materials/${id}.pdf`;
 
-  /* ── Time gate ── */
   useEffect(() => {
-    setIsTimeClosed(false); // currently always open
-    const id = setInterval(() => setIsTimeClosed(false), 60000);
-    return () => clearInterval(id);
+    setIsTimeClosed(false);
+    const intervalId = setInterval(() => setIsTimeClosed(false), 60000);
+    return () => clearInterval(intervalId);
   }, []);
 
-  /* ── WebSocket Chat ── */
   const handleMessageReceived = useCallback((msg: ChatMessage) => {
     setMessages((prev) => [...prev, msg]);
   }, []);
@@ -242,31 +144,12 @@ export default function ClassroomClient({ id }: { id: string }) {
 
   const effectivelyClosed = closedInfo?.isClosed || isTimeClosed;
 
-  /* Auto-scroll chat */
   useEffect(() => {
     if (chatScrollRef.current) {
       chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight;
     }
   }, [messages]);
 
-  /* ── Navigation ── */
-  const goToLesson = (idx: number) => {
-    setDirection(idx > currentLessonIndex ? 1 : -1);
-    setCurrentLessonIndex(idx);
-    setWsBoard(""); // Clear AI answer when navigating
-  };
-
-  const handleNext = () => {
-    if (!tourData || currentLessonIndex >= tourData.lessons.length - 1) return;
-    goToLesson(currentLessonIndex + 1);
-  };
-
-  const handlePrev = () => {
-    if (currentLessonIndex <= 0) return;
-    goToLesson(currentLessonIndex - 1);
-  };
-
-  /* ── Send message ── */
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim()) return;
@@ -286,22 +169,12 @@ export default function ClassroomClient({ id }: { id: string }) {
     setNewMessage("");
   };
 
-
   if (loading)
     return (
       <div style={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#020c1b", color: "#fff", fontFamily: "Inter,sans-serif" }}>
         Loading…
       </div>
     );
-
-  const currentLesson = tourData?.lessons[currentLessonIndex];
-  const totalLessons = tourData?.lessons.length ?? 0;
-  const progressPct = totalLessons > 0 ? ((currentLessonIndex + 1) / totalLessons) * 100 : 0;
-  const isFirst = currentLessonIndex === 0;
-  const isLast = currentLessonIndex >= totalLessons - 1;
-
-  /* ── Derive subject name for DynamicBackground ── */
-  const subjectName = currentLesson?.topic || tourData?.syllabus[0] || "";
 
   const badge = (() => {
     if (effectivelyClosed) return { bg: "rgba(239,68,68,.15)", color: "#ef4444", border: "rgba(239,68,68,.3)", label: "CLOSED" };
@@ -311,11 +184,8 @@ export default function ClassroomClient({ id }: { id: string }) {
 
   return (
     <div className="classroom-container" style={{ height: "100vh", width: "100vw", display: "flex", flexDirection: "column", color: "#fff", overflow: "hidden", background: "transparent" }}>
+      <DynamicBackground subjectName="Classroom" />
 
-      {/* ─── Dynamic Animated Background ─── */}
-      <DynamicBackground subjectName={subjectName} />
-
-      {/* ─── HEADER ─── */}
       <div style={{
         padding: "14px 32px",
         background: "rgba(2,12,22,0.92)",
@@ -356,7 +226,6 @@ export default function ClassroomClient({ id }: { id: string }) {
         </div>
       </div>
 
-      {/* ─── CLOSED STATE ─── */}
       {effectivelyClosed ? (
         <motion.div
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
@@ -374,173 +243,19 @@ export default function ClassroomClient({ id }: { id: string }) {
           </div>
         </motion.div>
       ) : (
-
-        /* ─── MAIN LAYOUT ─── */
-        <div className="classroom-split-layout">
-
-          {/* ═══ SYLLABUS SIDEBAR ═══ */}
-          <div className="syllabus-area">
-            <div className="syllabus-header">
-              <BookOpen size={15} color="#38d399" />
-              <h3>Course Outline</h3>
-            </div>
-
-            {tourData && (
-              <div className="syllabus-progress-bar">
-                <div className="syllabus-progress-fill" style={{ width: `${progressPct}%` }} />
-              </div>
-            )}
-
-            {/* Skeleton for sidebar */}
-            {isTourLoading && Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="skeleton-line" style={{ height: 38, borderRadius: 10 }} />
-            ))}
-
-            {/* Topics */}
-            {tourData?.syllabus.map((topic, idx) => {
-              const isDone = idx < currentLessonIndex;
-              const isActive = idx === currentLessonIndex;
-              return (
-                <motion.div
-                  key={idx}
-                  className={`syllabus-item ${isActive ? "active" : ""} ${isDone ? "completed" : ""}`}
-                  onClick={() => goToLesson(idx)}
-                  whileTap={{ scale: 0.97 }}
-                >
-                  <div className="syllabus-num">
-                    {isDone ? <CheckCircle2 size={12} /> : idx + 1}
-                  </div>
-                  <span style={{ flex: 1 }}>{topic}</span>
-                  {isActive && <div className="syllabus-active-indicator" />}
-                </motion.div>
-              );
-            })}
-
-            {!isTourLoading && !tourData && (
-              <p style={{ color: "#334155", fontSize: "0.78rem", textAlign: "center", padding: "12px 8px" }}>
-                No tour loaded.<br />Ensure your backend is running.
-              </p>
-            )}
+        <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
+          
+          <div style={{ flex: 1, padding: 16, display: "flex", flexDirection: "column" }}>
+             <div style={{ flex: 1, background: "rgba(15,23,42,0.7)", borderRadius: 16, overflow: "hidden", border: "1px solid rgba(255,255,255,0.1)", boxShadow: "0 10px 40px rgba(0,0,0,0.3)" }}>
+                <iframe 
+                  src={`${pdfUrl}#toolbar=0&navpanes=0&scrollbar=1`}
+                  style={{ width: "100%", height: "100%", border: "none" }}
+                  title="Class Material PDF"
+                />
+             </div>
           </div>
 
-          {/* ═══ READING BOARD ═══ */}
-          <div className="blackboard-area">
-            {isTourLoading && <TourSkeleton />}
-
-            {!isTourLoading && wsBoard ? (
-              <div className="lesson-board" style={{ overflowY: "auto" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 26px", borderBottom: "1px solid rgba(255,255,255,0.05)", background: "rgba(15,23,42,0.4)" }}>
-                  <span style={{ fontSize: "0.85rem", color: "#60a5fa", fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>
-                    <Lightbulb size={15} /> AI Teacher's Answer
-                  </span>
-                  <button 
-                    onClick={() => setWsBoard("")}
-                    style={{ background: "rgba(56,211,153,0.1)", border: "1px solid rgba(56,211,153,0.3)", color: "#38d399", padding: "8px 14px", borderRadius: 100, cursor: "pointer", fontSize: "0.75rem", fontWeight: 600, display: "flex", alignItems: "center", gap: 6, transition: "all 0.2s" }}
-                    onMouseOver={(e) => e.currentTarget.style.background = "rgba(56,211,153,0.2)"}
-                    onMouseOut={(e) => e.currentTarget.style.background = "rgba(56,211,153,0.1)"}
-                  >
-                    <ArrowLeft size={14} /> Back to Course
-                  </button>
-                </div>
-                <div style={{ padding: "26px" }}>
-                  <RichMarkdown content={wsBoard} className="explanation-markdown" />
-                </div>
-              </div>
-            ) : !isTourLoading && currentLesson ? (
-              <>
-                {/* Animated lesson content */}
-                <div className="lesson-board">
-                  <AnimatePresence mode="wait" custom={direction}>
-                    <motion.div
-                      key={currentLessonIndex}
-                      className="lesson-content-wrapper"
-                      custom={direction}
-                      variants={lessonVariants}
-                      initial="enter"
-                      animate="center"
-                      exit="exit"
-                    >
-                      {/* Badge */}
-                      <div className="lesson-topic-badge">
-                        <BookOpen size={11} />
-                        Lesson {currentLessonIndex + 1} of {totalLessons}
-                      </div>
-
-                      {/* Heading */}
-                      <h2 className="lesson-heading">{currentLesson.topic}</h2>
-
-                      {/* Verbatim Quote */}
-                      <div className="quote-block">
-                        <div className="quote-label">
-                          <Quote size={11} />
-                          Verbatim from the Source
-                        </div>
-                        <RichMarkdown 
-                          content={currentLesson.exact_quote} 
-                          className="quote-text" 
-                        />
-                      </div>
-
-                      {/* Teacher's Explanation — rich markdown with math & images */}
-                      <div className="explanation-block">
-                        <div className="explanation-label">
-                          <Lightbulb size={11} />
-                          Teacher's Explanation
-                        </div>
-                        <RichMarkdown
-                          content={currentLesson.explanation}
-                          className="explanation-markdown"
-                        />
-                      </div>
-
-                      <p style={{ fontSize: "0.74rem", color: "#1e2d40", textAlign: "center", marginTop: 8 }}>
-                        💬 Have a doubt? Ask in the Live Q&amp;A panel →
-                      </p>
-                    </motion.div>
-                  </AnimatePresence>
-                </div>
-
-                {/* Navigation */}
-                <div className="lesson-nav">
-                  <motion.button
-                    className="nav-btn nav-btn-prev"
-                    onClick={handlePrev}
-                    disabled={isFirst}
-                    whileHover={!isFirst ? { scale: 1.04 } : {}}
-                    whileTap={!isFirst ? { scale: 0.97 } : {}}
-                  >
-                    <ChevronLeft size={17} /> Previous
-                  </motion.button>
-
-                  <span className="lesson-nav-center">{currentLessonIndex + 1} / {totalLessons}</span>
-
-                  {isLast ? (
-                    <motion.div
-                      className="nav-btn nav-btn-completed"
-                      initial={{ scale: 0.9, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                    >
-                      Course Completed 🎉
-                    </motion.div>
-                  ) : (
-                    <motion.button
-                      className="nav-btn nav-btn-next"
-                      onClick={handleNext}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.97 }}
-                    >
-                      Next Lesson <ChevronRight size={17} />
-                    </motion.button>
-                  )}
-                </div>
-              </>
-            ) : null}
-
-          </div>
-
-          {/* ═══ LIVE Q&A CHAT ═══ */}
-          <div className="live-chat-area">
+          <div className="live-chat-area" style={{ width: 380, borderLeft: "1px solid rgba(255,255,255,0.05)", background: "rgba(2,12,22,0.85)", backdropFilter: "blur(20px)", display: "flex", flexDirection: "column" }}>
             <div className="chat-header">
               <MessageSquare size={14} color="#60a5fa" />
               <span className="chat-header-title">Live Q&amp;A</span>
@@ -557,7 +272,6 @@ export default function ClassroomClient({ id }: { id: string }) {
 
               <AnimatePresence initial={false}>
                 {messages.map((msg) => {
-                  /* System message */
                   if (msg.type === "system" || msg.sender === "System") {
                     return (
                       <motion.div
@@ -589,7 +303,6 @@ export default function ClassroomClient({ id }: { id: string }) {
                         width: "100%",
                       }}
                     >
-                      {/* Avatar */}
                       <div style={{
                         width: 28, height: 28, borderRadius: 8,
                         display: "flex", alignItems: "center", justifyContent: "center",
@@ -602,7 +315,6 @@ export default function ClassroomClient({ id }: { id: string }) {
                         {msg.isOwn ? "Me" : msg.isAi ? "AI" : msg.sender?.charAt(0).toUpperCase()}
                       </div>
 
-                      {/* Bubble */}
                       <div style={{ display: "flex", flexDirection: "column", alignItems: msg.isOwn ? "flex-end" : "flex-start", maxWidth: "82%" }}>
                         <div style={{ fontSize: "0.67rem", fontWeight: 600, color: msg.isOwn ? "#38d399" : msg.isAi ? "#60a5fa" : "#64748b", marginBottom: 4, opacity: 0.9 }}>
                           {msg.isOwn ? "You" : msg.sender}
@@ -611,7 +323,7 @@ export default function ClassroomClient({ id }: { id: string }) {
                           <ReactMarkdown
                             remarkPlugins={[remarkGfm, remarkMath]}
                             rehypePlugins={[rehypeKatex]}
-                            components={{ img: ({ src, alt }) => <PremiumImage src={src} alt={alt} /> }}
+                            components={{ img: ({ src, alt }) => <PremiumImage src={src as string} alt={alt} /> }}
                           >
                             {msg.content}
                           </ReactMarkdown>
@@ -623,7 +335,6 @@ export default function ClassroomClient({ id }: { id: string }) {
               </AnimatePresence>
             </div>
 
-            {/* Input */}
             <div className="chat-input-area">
               <form onSubmit={handleSendMessage} style={{ display: "flex", gap: 8 }}>
                 <div style={{

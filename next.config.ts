@@ -1,3 +1,6 @@
+if (process.env.NODE_ENV === "development") {
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+}
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
@@ -42,8 +45,20 @@ const nextConfig: NextConfig = {
       ),
     ];
   },
+  async rewrites() {
+    return [
+      {
+        source: '/api/v1/upload-smart',
+        destination: 'https://climbup-class-agent.onrender.com/api/v1/upload-smart'
+      },
+      {
+        source: '/ws/chat/:path*',
+        destination: 'https://class-agent-1043127428629.asia-south1.run.app/ws/classroom/:path*'
+      }
+    ]
+  },
   images: {
-    qualities: [75, 78],
+    qualities: [75, 78, 85],
     remotePatterns: [
       {
         protocol: "https",

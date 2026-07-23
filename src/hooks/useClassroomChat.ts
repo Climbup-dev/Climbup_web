@@ -43,9 +43,9 @@ export function useClassroomChat({ classroomId, mode, studentId, studentName, on
     setStatus('CONNECTING');
     
     // Construct WebSocket URL dynamically based on mode
-    const baseUrl = process.env.NEXT_PUBLIC_CLASS_AGENT_WS_URL || "wss://climbup-class-agent.onrender.com";
+    const baseUrl = process.env.NEXT_PUBLIC_CLASS_AGENT_WS_URL || "wss://class-agent-1043127428629.asia-south1.run.app";
     const endpoint = mode === 'group' ? '/ws/classroom/' : '/ws/personal/';
-    const wsUrl = `${baseUrl}${endpoint}${classroomId}?student_id=${encodeURIComponent(studentId)}&student_name=${encodeURIComponent(studentName)}`;
+    const wsUrl = `${baseUrl}${endpoint}${classroomId}?user_id=${encodeURIComponent(studentId)}&student_name=${encodeURIComponent(studentName)}`;
 
     try {
       const websocket = new WebSocket(wsUrl);

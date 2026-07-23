@@ -43,10 +43,17 @@ interface AuthContextValue {
   clearPasswordRecovery: () => void;
   refreshProfile: () => Promise<void>;
   logout: () => Promise<void>;
+  /* ── Academic Setup ── */
+  needsAcademicSetup: boolean;
+  userAcademicProfile: { university_id: string; branch_id: string; semester: number } | null;
+  completeAcademicSetup: (data: { university_id: string; branch_id: string; semester: number }) => void;
 }
 
 interface UserProfileRow {
   profile_image: string | null;
+  university_id: string | null;
+  branch_id: string | null;
+  semester: number | null;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -111,6 +118,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [passwordRecovery, setPasswordRecovery] = useState(false);
+  /* ── Academic Setup state ── */
+  const [needsAcademicSetup, setNeedsAcademicSetup] = useState(false);
+  const [userAcademicProfile, setUserAcademicProfile] = useState<{ university_id: string; branch_id: string; semester: number } | null>(null);
 
   const mountedRef = useRef(true);
   const completingOtpSignupRef = useRef(false);
@@ -121,7 +131,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loadUserProfile = useCallback(
     async (user: SupabaseUser | null) => {
       if (!user) {
-        if (mountedRef.current) setProfileImage(null);
+        if (mountedRef.current) {
+          setProfileImage(null);
+          setNeedsAcademicSetup(false);
+          setUserAcademicProfile(null);
+        }
         return;
       }
 
@@ -130,7 +144,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const { data, error } = await supabase
           .from("users")
-          .select("profile_image")
+          .select("profile_image, university_id, branch_id, semester")
           .eq("user_id", user.id)
           .maybeSingle();
 
@@ -138,6 +152,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (error) {
           setProfileImage(fallbackImage);
+          setNeedsAcademicSetup(false);
           return;
         }
 
@@ -146,11 +161,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           typeof profile?.profile_image === "string"
             ? profile.profile_image.trim()
             : "";
-
         setProfileImage(databaseImage || fallbackImage);
+
+        /* ── Check academic completeness ── */
+        const hasAcademic =
+          !!profile?.university_id &&
+          !!profile?.branch_id &&
+          profile?.semester != null;
+
+        setNeedsAcademicSetup(!hasAcademic);
+        if (hasAcademic && profile) {
+          setUserAcademicProfile({
+            university_id: profile.university_id!,
+            branch_id: profile.branch_id!,
+            semester: profile.semester!,
+          });
+        } else {
+          setUserAcademicProfile(null);
+        }
       } catch {
         if (mountedRef.current) {
           setProfileImage(fallbackImage);
+          setNeedsAcademicSetup(false);
         }
       }
     },
@@ -731,7 +763,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setCurrentUser(null);
     setProfileImage(null);
     setPasswordRecovery(false);
+    setNeedsAcademicSetup(false);
+    setUserAcademicProfile(null);
   }, [supabase]);
+
+  /* ── Called after AcademicSetupModal saves successfully ── */
+  const completeAcademicSetup = useCallback(
+    (data: { university_id: string; branch_id: string; semester: number }) => {
+      setUserAcademicProfile(data);
+      setNeedsAcademicSetup(false);
+    },
+    []
+  );
 
   const value = useMemo<AuthContextValue>(
     () => ({
@@ -748,6 +791,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       clearPasswordRecovery,
       refreshProfile,
       logout,
+      /* ── Academic Setup ── */
+      needsAcademicSetup,
+      userAcademicProfile,
+      completeAcademicSetup,
     }),
     [
       currentUser,
@@ -763,6 +810,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       clearPasswordRecovery,
       refreshProfile,
       logout,
+      needsAcademicSetup,
+      userAcademicProfile,
+      completeAcademicSetup,
     ]
   );
 
