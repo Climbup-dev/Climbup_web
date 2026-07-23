@@ -50,6 +50,11 @@ export function AddResourceModal({
       setError("Please provide a title and select a PDF file.");
       return;
     }
+
+    if (file.size > 100 * 1024 * 1024) {
+      setError("File size cannot exceed 100 MB. Please upload a smaller file.");
+      return;
+    }
     setError("");
     setUploading(true);
 

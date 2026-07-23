@@ -843,7 +843,7 @@ export default function StudyHubContent() {
                         >
                           {isFetchingTopics ? (
                             <TopicSkeletons />
-                          ) : topicsList.length > 0 ? (
+                          ) : (
                             <div style={{ display: "flex", flexDirection: "column", gap: "32px", paddingBottom: "40px" }}>
                               
                               {/* TEACHER NOTES SECTION */}
@@ -1136,12 +1136,6 @@ export default function StudyHubContent() {
                                 </div>
                               </div>
 
-                            </div>
-                          ) : (
-                            <div className="empty-state">
-                              <div className="empty-state-icon"><Book size={32} /></div>
-                              <h3>No Topics Yet</h3>
-                              <p>Topics for this subject haven't been added yet. Check back later!</p>
                             </div>
                           )}
                         </motion.div>
