@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 import {
   Book, Atom, Search, X, ChevronRight,
   ArrowLeft, FileText, Zap, Clock, CheckCircle,
-  MessageSquare, Send, Maximize, Minimize, Menu, PlusCircle, Share2
+  MessageSquare, Send, Maximize, Minimize, Menu, PlusCircle, Share2, Trash2
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "@/components/Navbar";
@@ -429,6 +429,41 @@ export default function StudyHubContent() {
     setIsTransitioning(false);
   };
 
+  const handleDeleteResource = async (topic: Topic, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!confirm(`Are you sure you want to delete "${topic.topic_name}"?`)) return;
+
+    try {
+      // 1. Delete from Storage if it's a student_files upload
+      if (topic.pdf_url && topic.pdf_url.includes('/student_files/')) {
+        const filePath = topic.pdf_url.split('/student_files/')[1];
+        if (filePath) {
+          await supabaseClient.storage.from('student_files').remove([filePath]);
+        }
+      }
+
+      // 2. Delete from database
+      if (topic.category === 'personal_document') {
+        // Delete from classrooms (AI notes) and student_resources (fallback)
+        await supabaseClient.from('classrooms').delete().eq('id', topic.classroom_id);
+        await supabaseClient.from('student_resources').delete().eq('file_url', topic.pdf_url);
+      } else if (topic.category === 'assignment' || topic.category === 'practical') {
+        await supabaseClient.from('student_resources').delete().eq('id', topic.classroom_id);
+      }
+
+      // 3. Update state to remove it instantly
+      setTopicsList(prev => prev.filter(t => t.classroom_id !== topic.classroom_id));
+      if (activeClassroomId === topic.classroom_id) {
+        setActiveClassroomId("");
+        setActivePdfUrl("");
+      }
+      alert('Resource deleted successfully!');
+    } catch (error) {
+      console.error(error);
+      alert('Failed to delete resource');
+    }
+  };
+
   const handleFocusToggle = () => {
     setIsFocusMode((prev) => !prev);
     setIsTransitioning(true);
@@ -840,7 +875,18 @@ export default function StudyHubContent() {
                                           </p>
                                           <div className="note-footer">
                                             <div className="note-meta"><FileText size={12} /><span>PDF Available</span></div>
-                                            <button className="read-btn">Open <ChevronRight size={13} /></button>
+                                            <div style={{ display: "flex", gap: "8px" }}>
+                                              {topic.is_personal && (
+                                                <button 
+                                                  className="read-btn" 
+                                                  style={{ background: "rgba(239,68,68,0.15)", color: "#ef4444", padding: "6px 10px" }}
+                                                  onClick={(e) => handleDeleteResource(topic, e)}
+                                                >
+                                                  <Trash2 size={14} />
+                                                </button>
+                                              )}
+                                              <button className="read-btn">Open <ChevronRight size={13} /></button>
+                                            </div>
                                           </div>
                                         </motion.div>
                                       );
@@ -889,13 +935,22 @@ export default function StudyHubContent() {
                                             <div className="note-meta"><FileText size={12} /><span>PDF Available</span></div>
                                             <div style={{ display: "flex", gap: "8px" }}>
                                               {topic.is_personal && (
-                                                <button 
-                                                  className="read-btn" 
-                                                  style={{ background: "rgba(45,212,191,0.15)", color: "#2dd4bf" }}
-                                                  onClick={(e) => { e.stopPropagation(); setShareResourceId(topic.classroom_id); setShareTheme("#2dd4bf"); }}
-                                                >
-                                                  <Share2 size={13} /> Share
-                                                </button>
+                                                <>
+                                                  <button 
+                                                    className="read-btn" 
+                                                    style={{ background: "rgba(239,68,68,0.15)", color: "#ef4444", padding: "6px 10px" }}
+                                                    onClick={(e) => handleDeleteResource(topic, e)}
+                                                  >
+                                                    <Trash2 size={14} />
+                                                  </button>
+                                                  <button 
+                                                    className="read-btn" 
+                                                    style={{ background: "rgba(45,212,191,0.15)", color: "#2dd4bf" }}
+                                                    onClick={(e) => { e.stopPropagation(); setShareResourceId(topic.classroom_id); setShareTheme("#2dd4bf"); }}
+                                                  >
+                                                    <Share2 size={13} /> Share
+                                                  </button>
+                                                </>
                                               )}
                                               <button className="read-btn">Open <ChevronRight size={13} /></button>
                                             </div>
@@ -961,13 +1016,22 @@ export default function StudyHubContent() {
                                             <div className="note-meta"><FileText size={12} /><span>PDF Available</span></div>
                                             <div style={{ display: "flex", gap: "8px" }}>
                                               {topic.is_personal && (
-                                                <button 
-                                                  className="read-btn" 
-                                                  style={{ background: "rgba(251,146,60,0.15)", color: "#fb923c" }}
-                                                  onClick={(e) => { e.stopPropagation(); setShareResourceId(topic.classroom_id); setShareTheme("#fb923c"); }}
-                                                >
-                                                  <Share2 size={13} /> Share
-                                                </button>
+                                                <>
+                                                  <button 
+                                                    className="read-btn" 
+                                                    style={{ background: "rgba(239,68,68,0.15)", color: "#ef4444", padding: "6px 10px" }}
+                                                    onClick={(e) => handleDeleteResource(topic, e)}
+                                                  >
+                                                    <Trash2 size={14} />
+                                                  </button>
+                                                  <button 
+                                                    className="read-btn" 
+                                                    style={{ background: "rgba(251,146,60,0.15)", color: "#fb923c" }}
+                                                    onClick={(e) => { e.stopPropagation(); setShareResourceId(topic.classroom_id); setShareTheme("#fb923c"); }}
+                                                  >
+                                                    <Share2 size={13} /> Share
+                                                  </button>
+                                                </>
                                               )}
                                               <button className="read-btn">Open <ChevronRight size={13} /></button>
                                             </div>
@@ -1029,13 +1093,22 @@ export default function StudyHubContent() {
                                             <div className="note-meta"><FileText size={12} /><span>PDF Available</span></div>
                                             <div style={{ display: "flex", gap: "8px" }}>
                                               {topic.is_personal && (
-                                                <button 
-                                                  className="read-btn" 
-                                                  style={{ background: "rgba(129,140,248,0.15)", color: "#818cf8" }}
-                                                  onClick={(e) => { e.stopPropagation(); setShareResourceId(topic.classroom_id); setShareTheme("#818cf8"); }}
-                                                >
-                                                  <Share2 size={13} /> Share
-                                                </button>
+                                                <>
+                                                  <button 
+                                                    className="read-btn" 
+                                                    style={{ background: "rgba(239,68,68,0.15)", color: "#ef4444", padding: "6px 10px" }}
+                                                    onClick={(e) => handleDeleteResource(topic, e)}
+                                                  >
+                                                    <Trash2 size={14} />
+                                                  </button>
+                                                  <button 
+                                                    className="read-btn" 
+                                                    style={{ background: "rgba(129,140,248,0.15)", color: "#818cf8" }}
+                                                    onClick={(e) => { e.stopPropagation(); setShareResourceId(topic.classroom_id); setShareTheme("#818cf8"); }}
+                                                  >
+                                                    <Share2 size={13} /> Share
+                                                  </button>
+                                                </>
                                               )}
                                               <button className="read-btn">Open <ChevronRight size={13} /></button>
                                             </div>
