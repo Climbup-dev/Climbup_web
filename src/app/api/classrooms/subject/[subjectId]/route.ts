@@ -1,17 +1,21 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-// Initialize Supabase client for DB2 (Class Agent DB)
-const supabaseUrl = process.env.CLASS_AGENT_SUPABASE_URL || '';
-const supabaseServiceKey = process.env.CLASS_AGENT_SUPABASE_SERVICE_KEY || '';
-
-const supabaseDB2 = createClient(supabaseUrl, supabaseServiceKey);
-
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ subjectId: string }> }
 ) {
   try {
+    // Initialize Supabase client inside the handler
+    const supabaseUrl = process.env.CLASS_AGENT_SUPABASE_URL || '';
+    const supabaseServiceKey = process.env.CLASS_AGENT_SUPABASE_SERVICE_KEY || '';
+    
+    if (!supabaseUrl || !supabaseServiceKey) {
+      return NextResponse.json({ status: 'error', detail: 'Missing Supabase credentials' }, { status: 500 });
+    }
+
+    const supabaseDB2 = createClient(supabaseUrl, supabaseServiceKey);
+
     const { subjectId } = await params;
 
     if (!subjectId) {
