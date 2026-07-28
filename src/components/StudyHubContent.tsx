@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import dynamic from "next/dynamic";
 import {
-  Book, Atom, Search, X, ChevronRight,
+  Book, BookOpen, Atom, Search, X, ChevronRight,
   ArrowLeft, FileText, Zap, Clock, CheckCircle,
   MessageSquare, Send, Maximize, Minimize, Menu, PlusCircle, Share2, Trash2
 } from "lucide-react";
@@ -11,6 +11,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import { AddResourceModal, ShareResourceModal } from "@/components/StudentResourceModals";
 import { useAuth } from "@/hooks/useAuth";
+import { getOrCreateClimbUPFolder } from "@/lib/googleDriveHelper";
 export interface ChatMessage {
   id: number;
   type: "system" | "chat";
@@ -151,23 +152,34 @@ const StudyHubHero = ({ isMobile, onOpenSidebar }: { isMobile?: boolean, onOpenS
           <button 
             onClick={onOpenSidebar}
             style={{
-              marginBottom: "24px",
-              padding: "12px 24px",
-              background: "rgba(56, 211, 153, 0.15)",
+              margin: "0 0 24px 0",
+              padding: "14px 18px",
+              width: "100%",
+              background: "linear-gradient(135deg, rgba(56,211,153,0.2), rgba(16,185,129,0.1))",
               color: "#38d399",
-              border: "1px solid rgba(56, 211, 153, 0.3)",
-              borderRadius: "8px",
-              fontSize: "16px",
-              fontWeight: 600,
+              border: "1.5px solid rgba(56, 211, 153, 0.4)",
+              borderRadius: "14px",
+              fontSize: "15px",
+              fontWeight: 700,
               cursor: "pointer",
               display: "flex",
               alignItems: "center",
-              gap: "8px",
-              width: "fit-content"
+              justifyContent: "space-between",
+              boxShadow: "0 8px 24px rgba(56,211,153,0.15)",
+              fontFamily: "Inter, sans-serif",
+              outline: "none",
             }}
           >
-            <Menu size={18} />
-            Open Subjects Menu
+            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+              <div style={{ width: 38, height: 38, borderRadius: "10px", background: "rgba(56,211,153,0.2)", display: "flex", alignItems: "center", justifyContent: "center", color: "#38d399" }}>
+                <BookOpen size={20} />
+              </div>
+              <div style={{ textAlign: "left" }}>
+                <div style={{ fontSize: "0.95rem", fontWeight: 800, color: "#fff" }}>📚 Select Your Subject</div>
+                <div style={{ fontSize: "0.76rem", color: "#38d399", fontWeight: 500, marginTop: 2 }}>Tap to view assignments & notes</div>
+              </div>
+            </div>
+            <ChevronRight size={18} color="#38d399" />
           </button>
         )}
         <p style={{ color: "rgba(238, 252, 248, 0.75)", fontSize: "16px", lineHeight: 1.6, maxWidth: "600px", margin: "0 0 24px" }}>
@@ -576,7 +588,10 @@ export default function StudyHubContent() {
             const blob = await pdfRes.blob();
             const file = new File([blob], `${topic.topic_name}.pdf`, { type: "application/pdf" });
 
-            const metadata = { name: file.name, mimeType: "application/pdf" };
+            const folderId = await getOrCreateClimbUPFolder(token);
+            const metadata: any = { name: file.name, mimeType: "application/pdf" };
+            if (folderId) metadata.parents = [folderId];
+
             const form = new FormData();
             form.append("metadata", new Blob([JSON.stringify(metadata)], { type: "application/json" }));
             form.append("file", file);
@@ -589,11 +604,6 @@ export default function StudyHubContent() {
 
             if (driveRes.ok) {
               const driveData = await driveRes.json();
-              await fetch(`https://www.googleapis.com/drive/v3/files/${driveData.id}/permissions`, {
-                method: "POST",
-                headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-                body: JSON.stringify({ type: "anyone", role: "reader" })
-              });
               finalFileUrl = `https://drive.google.com/file/d/${driveData.id}/view`;
             }
           }

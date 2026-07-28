@@ -8,6 +8,7 @@ import { Menu, X } from "lucide-react";
 
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/useToast";
+import MobileNavTabs from "@/components/MobileNavTabs";
 import "@/styles/Navbar.css";
 
 interface NavbarProps {
@@ -117,10 +118,10 @@ export default function Navbar({ onLogin, onSignUp }: NavbarProps) {
 
       <div className="navLinks" aria-label="Main sections">
         <Link className={pathname === "/" ? "active" : undefined} href="/">Home</Link>
-        <Link className={pathname === "/study-hub" ? "active" : undefined} href="/study-hub" onClick={handleProtectedNavigation}>Academic</Link>
-        <Link className={pathname === "/pyqs" ? "active" : undefined} href="/pyqs" onClick={handleProtectedNavigation}>PYQs</Link>
-        <Link className={pathname === "/discoveries" ? "active" : undefined} href="/discoveries" onClick={handleProtectedNavigation}>Discoveries</Link>
-        <Link className={pathname === "/jobs" ? "active" : undefined} href="/jobs" onClick={handleProtectedNavigation}>Job Preparation</Link>
+        <Link className={pathname.startsWith("/academic") || pathname.startsWith("/study-hub") ? "active" : undefined} href="/academic" onClick={handleProtectedNavigation}>Academic</Link>
+        <Link className={pathname.startsWith("/pyqs") ? "active" : undefined} href="/pyqs" onClick={handleProtectedNavigation}>PYQs</Link>
+        <Link className={pathname.startsWith("/discoveries") ? "active" : undefined} href="/discoveries" onClick={handleProtectedNavigation}>Discoveries</Link>
+        <Link className={pathname.startsWith("/jobs") ? "active" : undefined} href="/jobs" onClick={handleProtectedNavigation}>Job Preparation</Link>
       </div>
 
       <div className="navActions">
@@ -199,17 +200,17 @@ export default function Navbar({ onLogin, onSignUp }: NavbarProps) {
               <Image src="/logo.png" alt="ClimbUP logo" width={42} height={42} />
               <span>ClimbUP</span>
             </Link>
-            <button className="mobileMenuClose" aria-label="Close Menu" onClick={closeMenu}>
-              <X size={32} />
+            <button className="mobileMenuCloseBtn" onClick={closeMenu}>
+              <X size={26} />
             </button>
           </div>
           
           <div className="mobileNavLinks">
             <Link className={pathname === "/" ? "active" : undefined} href="/" onClick={closeMenu}>Home</Link>
-            <Link className={pathname === "/study-hub" ? "active" : undefined} href="/study-hub" onClick={(e) => { handleProtectedNavigation(e); if(currentUser) closeMenu(); }}>Academic</Link>
-            <Link className={pathname === "/pyqs" ? "active" : undefined} href="/pyqs" onClick={(e) => { handleProtectedNavigation(e); if(currentUser) closeMenu(); }}>PYQs</Link>
-            <Link className={pathname === "/discoveries" ? "active" : undefined} href="/discoveries" onClick={(e) => { handleProtectedNavigation(e); if(currentUser) closeMenu(); }}>Discoveries</Link>
-            <Link className={pathname === "/jobs" ? "active" : undefined} href="/jobs" onClick={(e) => { handleProtectedNavigation(e); if(currentUser) closeMenu(); }}>Job Preparation</Link>
+            <Link className={pathname.startsWith("/academic") ? "active" : undefined} href="/academic" onClick={(e) => { closeMenu(); handleProtectedNavigation(e); }}>Academic</Link>
+            <Link className={pathname.startsWith("/pyqs") ? "active" : undefined} href="/pyqs" onClick={(e) => { closeMenu(); handleProtectedNavigation(e); }}>PYQs</Link>
+            <Link className={pathname.startsWith("/discoveries") ? "active" : undefined} href="/discoveries" onClick={(e) => { closeMenu(); handleProtectedNavigation(e); }}>Discoveries</Link>
+            <Link className={pathname.startsWith("/jobs") ? "active" : undefined} href="/jobs" onClick={(e) => { closeMenu(); handleProtectedNavigation(e); }}>Job Preparation</Link>
           </div>
 
           {!currentUser && (

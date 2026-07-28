@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { X, UploadCloud, Share2, CheckCircle, User, LogIn } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { getOrCreateClimbUPFolder } from "@/lib/googleDriveHelper";
 
 // --- Types ---
 interface UserProfile {
@@ -130,11 +131,18 @@ export function AddResourceModal({
         return;
       }
 
-      // 2. Upload file directly to Student's Personal Google Drive
-      const metadata = {
+      // 2. Find or create dedicated "ClimbUP" folder in Student's Drive
+      const folderId = await getOrCreateClimbUPFolder(token);
+
+      // 3. Upload file directly to Student's Personal Google Drive inside "ClimbUP" folder
+      const metadata: any = {
         name: file.name,
         mimeType: file.type || "application/pdf",
       };
+
+      if (folderId) {
+        metadata.parents = [folderId];
+      }
 
       const form = new FormData();
       form.append("metadata", new Blob([JSON.stringify(metadata)], { type: "application/json" }));
@@ -159,20 +167,7 @@ export function AddResourceModal({
       const driveData = await driveUploadRes.json();
       const fileId = driveData.id;
 
-      // 3. Set sharing permission to 'anyone with link can view'
-      await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}/permissions`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          type: "anyone",
-          role: "reader"
-        })
-      });
-
-      // 4. Construct direct view URL
+      // 3. Construct direct view URL (File remains 100% PRIVATE to owner's Google account)
       const fileUrl = `https://drive.google.com/file/d/${fileId}/view`;
 
       // 5. Save metadata to database
@@ -195,6 +190,52 @@ export function AddResourceModal({
     } catch (err: any) {
       console.error("Upload Error:", err);
       setError(err.message || "Failed to upload file to Google Drive.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleSupabaseFallbackUpload = async () => {
+    if (!title.trim() || !file) {
+      setError("Please provide a title and select a PDF file.");
+      return;
+    }
+    setError("");
+    setUploading(true);
+
+    try {
+      const fileName = `${userId}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
+      const { data, error: storageErr } = await supabase.storage
+        .from("student_files")
+        .upload(fileName, file, { cacheControl: "3600", upsert: true });
+
+      if (storageErr) throw storageErr;
+
+      const { data: publicUrlData } = supabase.storage
+        .from("student_files")
+        .getPublicUrl(fileName);
+
+      const fileUrl = publicUrlData.publicUrl;
+
+      const { error: dbError } = await supabase
+        .from("student_resources")
+        .insert({
+          user_id: userId,
+          subject_id: subjectId,
+          type: category,
+          title: title.trim(),
+          file_url: fileUrl
+        });
+
+      if (dbError) throw dbError;
+
+      onSuccess();
+      onClose();
+      setTitle("");
+      setFile(null);
+    } catch (err: any) {
+      console.error("Direct Upload Error:", err);
+      setError(err.message || "Failed to upload file to Cloud storage.");
     } finally {
       setUploading(false);
     }
@@ -244,13 +285,28 @@ export function AddResourceModal({
                 background: "linear-gradient(135deg, #4285F4, #34A853)",
                 color: "#fff", fontWeight: 700, border: "none", cursor: "pointer",
                 display: "flex", justifyContent: "center", alignItems: "center", gap: "10px",
-                fontSize: "0.95rem", boxShadow: "0 4px 14px rgba(66,133,244,0.3)"
+                fontSize: "0.95rem", boxShadow: "0 4px 14px rgba(66,133,244,0.3)",
+                marginBottom: "12px",
               }}
             >
               <LogIn size={18} /> Connect Google Drive Access
             </button>
-            <p style={{ fontSize: "0.78rem", color: "#64748b", marginTop: "10px" }}>
-              One-click connection to allow ClimbUP to save files to your Google Drive.
+
+            <button
+              onClick={handleSupabaseFallbackUpload}
+              disabled={uploading}
+              style={{
+                width: "100%", padding: "12px", borderRadius: "10px",
+                background: "rgba(255,255,255,0.06)", color: "#cbd5e1",
+                fontWeight: 600, border: "1px solid rgba(255,255,255,0.15)",
+                cursor: uploading ? "not-allowed" : "pointer", fontSize: "0.88rem",
+              }}
+            >
+              {uploading ? "Uploading to Cloud..." : "⚡ Or Upload via Direct Cloud Storage"}
+            </button>
+
+            <p style={{ fontSize: "0.78rem", color: "#64748b", marginTop: "12px" }}>
+              Connect Google Drive to save to your personal <strong>ClimbUP</strong> folder, or use Direct Cloud Storage.
             </p>
           </div>
         ) : (

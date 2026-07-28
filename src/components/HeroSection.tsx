@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import Image from "next/image";
+import Link from "next/link";
 import { useState, useEffect, MouseEvent } from "react";
 import { Brain, Laptop, Settings, Lightbulb, PenTool, CheckCircle2 } from "lucide-react";
 
@@ -116,14 +117,10 @@ export default function HeroSection() {
           {currentUser ? (
             <div className="heroActionsContainer">
               <div className="heroActions">
-                <button
-                  type="button"
-                  className="joinClimbBtn"
-                  onClick={() => window.location.href = '#features'}
-                >
+                <Link href="/academic" className="joinClimbBtn">
                   Start Learning
                   <strong aria-hidden="true">→</strong>
-                </button>
+                </Link>
 
                 <a className="heroSecondaryLink" href="#about">
                   How it works
