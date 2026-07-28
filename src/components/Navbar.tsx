@@ -98,13 +98,9 @@ export default function Navbar({ onLogin, onSignUp }: NavbarProps) {
   const closeMenu = () => setMobileMenuOpen(false);
 
   const handleProtectedNavigation = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    if (loading) {
+    if (mobileMenuOpen) closeMenu();
+    if (!loading && !currentUser) {
       e.preventDefault();
-      return;
-    }
-    if (!currentUser) {
-      e.preventDefault();
-      if (mobileMenuOpen) closeMenu();
       if (onLogin) onLogin();
     }
   };

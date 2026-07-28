@@ -357,18 +357,44 @@ export function ShareResourceModal({
 
   const fetchClassmates = async () => {
     setLoading(true);
+    setError("");
     try {
-      const { data, error } = await supabase.rpc('get_classmates', {
-        p_university_id: universityId,
-        p_branch_id: branchId,
-        p_semester: semester
-      });
+      let resultData: UserProfile[] = [];
 
-      if (error) throw error;
-      setClassmates(data || []);
+      // 1. Try RPC first if parameters are valid
+      if (universityId && branchId && semester) {
+        const { data, error } = await supabase.rpc('get_classmates', {
+          p_university_id: universityId,
+          p_branch_id: branchId,
+          p_semester: semester
+        });
+        if (!error && data) resultData = data;
+      }
+
+      // 2. If RPC returned empty or errored/missing params, fallback to direct users query
+      if (!resultData || resultData.length === 0) {
+        const { data: dbUsers } = await supabase
+          .from('users')
+          .select('user_id, full_name, profile_image, updated_at')
+          .neq('user_id', currentUserId)
+          .limit(20);
+        if (dbUsers) resultData = dbUsers as UserProfile[];
+      }
+
+      setClassmates(resultData || []);
     } catch (err: any) {
-      console.error(err);
-      setError("Failed to load classmates");
+      console.warn("Classmates RPC warning, running fallback query:", err);
+      try {
+        const { data: dbUsers } = await supabase
+          .from('users')
+          .select('user_id, full_name, profile_image, updated_at')
+          .neq('user_id', currentUserId)
+          .limit(20);
+        setClassmates((dbUsers as UserProfile[]) || []);
+      } catch (fallbackErr) {
+        console.error("Fallback error:", fallbackErr);
+        setError("Failed to load classmates");
+      }
     } finally {
       setLoading(false);
     }
@@ -466,7 +492,7 @@ export function ShareResourceModal({
             <span style={{ fontSize: "0.85rem" }}>The resource is now available in their account.</span>
           </div>
         ) : (
-          <div style={{ maxHeight: "300px", overflowY: "auto", paddingRight: "5px", WebkitOverflowScrolling: "touch" }}>
+          <div style={{ height: "280px", overflowY: "auto", paddingRight: "5px", WebkitOverflowScrolling: "touch" }}>
             {loading ? (
               <p style={{ color: "#94a3b8", textAlign: "center", padding: "20px 0" }}>Loading classmates...</p>
             ) : classmates.length === 0 ? (
@@ -485,9 +511,26 @@ export function ShareResourceModal({
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                 {filteredClassmates.map(user => {
-                  const isRecentlyActive = user.updated_at
-                    ? (Date.now() - new Date(user.updated_at).getTime()) < 14 * 24 * 60 * 60 * 1000
-                    : true; // Default to active if missing timestamp
+                  const diffMs = user.updated_at ? Date.now() - new Date(user.updated_at).getTime() : 0;
+                  const diffMins = Math.floor(diffMs / (1000 * 60));
+                  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+                  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+                  let activeLabel = "Active";
+                  let isHot = true;
+
+                  if (user.updated_at) {
+                    if (diffMins < 60) {
+                      activeLabel = `Active ${Math.max(1, diffMins)}m ago`;
+                      isHot = true;
+                    } else if (diffHours < 24) {
+                      activeLabel = `Active ${diffHours}h ago`;
+                      isHot = true;
+                    } else {
+                      activeLabel = `Active ${diffDays}d ago`;
+                      isHot = diffDays <= 3;
+                    }
+                  }
 
                   return (
                     <div
@@ -521,7 +564,7 @@ export function ShareResourceModal({
                               width: "10px",
                               height: "10px",
                               borderRadius: "50%",
-                              background: isRecentlyActive ? "#10b981" : "#64748b",
+                              background: isHot ? "#10b981" : "#64748b",
                               border: "2px solid #0f172a"
                             }}
                           />
@@ -530,17 +573,20 @@ export function ShareResourceModal({
                         <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
                           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                             <span style={{ color: "#f1f5f9", fontWeight: 600, fontSize: "0.92rem" }}>{user.full_name}</span>
-                            {isRecentlyActive && (
-                              <span style={{ fontSize: "0.62rem", background: "rgba(16,185,129,0.15)", color: "#10b981", border: "1px solid rgba(16,185,129,0.3)", padding: "1px 6px", borderRadius: "100px", fontWeight: 700 }}>
-                                Active
-                              </span>
-                            )}
-                          </div>
-                          {user.email && (
-                            <span style={{ color: "#94a3b8", fontSize: "0.78rem", fontFamily: "monospace" }}>
-                              {user.email}
+                            <span
+                              style={{
+                                fontSize: "0.62rem",
+                                background: isHot ? "rgba(16,185,129,0.15)" : "rgba(255,255,255,0.06)",
+                                color: isHot ? "#10b981" : "#94a3b8",
+                                border: `1px solid ${isHot ? "rgba(16,185,129,0.3)" : "rgba(255,255,255,0.1)"}`,
+                                padding: "1px 6px",
+                                borderRadius: "100px",
+                                fontWeight: 700
+                              }}
+                            >
+                              {activeLabel}
                             </span>
-                          )}
+                          </div>
                         </div>
                       </div>
 
