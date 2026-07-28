@@ -1,5 +1,5 @@
 -- ================================================================
--- CLIMBUP - SEPARATE SHARED REQUESTS & ACCEPT TO GOOGLE DRIVE FIX
+-- CLIMBUP - REALTIME LIVE SHARED REQUESTS FIX
 -- Supabase Dashboard → SQL Editor → Paste → Run
 -- ================================================================
 
@@ -14,11 +14,13 @@ UPDATE public.student_resources
 SET status = 'accepted' 
 WHERE status IS NULL;
 
--- 2. Drop old function
+-- 2. Enable Supabase Realtime for instant 0-second live updates
+ALTER PUBLICATION supabase_realtime ADD TABLE public.student_resources;
+
+-- 3. Drop old function
 DROP FUNCTION IF EXISTS public.share_student_resource(UUID, UUID, TEXT);
 
--- 3. Recreate share_student_resource function
--- Sets status = 'pending' and saves sender_name + original_resource_id
+-- 4. Recreate share_student_resource function
 CREATE FUNCTION public.share_student_resource(
   p_resource_id UUID,
   p_target_user_id UUID,
@@ -85,5 +87,5 @@ $$;
 GRANT EXECUTE ON FUNCTION public.share_student_resource(UUID, UUID, TEXT) TO authenticated;
 
 -- ================================================================
--- SUCCESS!
+-- SUCCESS! Real-time live updates enabled!
 -- ================================================================

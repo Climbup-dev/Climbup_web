@@ -284,6 +284,93 @@ export default function StudyHubContent() {
   /* Reset chat when topic changes */
   useEffect(() => { setMessages([]); }, [activeClassroomId]);
 
+  /* ── REAL-TIME LIVE SYNC FOR INCOMING SHARED RESOURCES (NO REFRESH NEEDED) ── */
+  useEffect(() => {
+    if (!studentId) return;
+
+    // 1. Instant WebSocket Realtime Listener
+    const channel = supabase
+      .channel(`live_shares_${studentId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "student_resources",
+          filter: `user_id=eq.${studentId}`,
+        },
+        (payload: any) => {
+          const nr = payload.new;
+          if (nr) {
+            const newTopic: Topic = {
+              classroom_id: nr.id,
+              topic_name: nr.title,
+              category: nr.type || "assignment",
+              pdf_url: nr.file_url,
+              status: nr.status || "pending",
+              sender_name: nr.sender_name,
+              original_resource_id: nr.original_resource_id,
+              created_at: nr.created_at,
+              is_personal: true,
+            };
+            setTopicsList((prev) => {
+              if (prev.some((t) => t.classroom_id === newTopic.classroom_id)) return prev;
+              return [newTopic, ...prev];
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    // 2. Silent background poll every 6s + Window Focus listener
+    const syncFreshResources = async () => {
+      if (!activeSubject || !studentId) return;
+      try {
+        const { data: freshData } = await supabase
+          .from("student_resources")
+          .select("id, title, type, file_url, status, sender_name, original_resource_id, created_at")
+          .eq("subject_id", activeSubject)
+          .eq("user_id", studentId)
+          .order("created_at", { ascending: false });
+
+        if (freshData) {
+          const freshTopics: Topic[] = freshData.map((r: any) => ({
+            classroom_id: r.id,
+            topic_name: r.title,
+            category: r.type || "assignment",
+            pdf_url: r.file_url,
+            status: r.status || "accepted",
+            sender_name: r.sender_name,
+            original_resource_id: r.original_resource_id,
+            created_at: r.created_at,
+            is_personal: true,
+          }));
+
+          setTopicsList((prev) => {
+            if (
+              prev.length === freshTopics.length &&
+              prev.every((t, i) => t.classroom_id === freshTopics[i]?.classroom_id && t.status === freshTopics[i]?.status)
+            ) {
+              return prev;
+            }
+            return freshTopics;
+          });
+        }
+      } catch (e) {
+        // Silent catch
+      }
+    };
+
+    const intervalId = setInterval(syncFreshResources, 6000);
+    window.addEventListener("focus", syncFreshResources);
+
+    return () => {
+      supabase.removeChannel(channel);
+      clearInterval(intervalId);
+      window.removeEventListener("focus", syncFreshResources);
+    };
+  }, [studentId, activeSubject, supabase]);
+
   /* ── Auto-fetch subjects from academic profile ── */
   useEffect(() => {
     if (!userAcademicProfile) return;
