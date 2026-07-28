@@ -608,16 +608,50 @@ export default function StudyHubContent() {
       // 2. Delete from database
       await supabaseClient.from('student_resources').delete().eq('id', topic.classroom_id);
 
-      // 3. Update state to remove it instantly
-      setTopicsList(prev => prev.filter(t => t.classroom_id !== topic.classroom_id));
-      if (activeClassroomId === topic.classroom_id) {
-        setActiveClassroomId("");
-        setActivePdfUrl("");
-      }
-      alert('Resource deleted successfully!');
+      // 3. Purge from ALL caches (UI state, in-memory topicsCache, localStorage, RAM PDF cache)
+      purgeTopicFromAllCaches(topic.classroom_id, topic.pdf_url);
     } catch (error) {
       console.error(error);
       alert('Failed to delete resource');
+    }
+  };
+
+  const purgeTopicFromAllCaches = (topicId: string, pdfUrl?: string) => {
+    // 1. Remove from active topicsList state
+    setTopicsList(prev => prev.filter(t => t.classroom_id !== topicId));
+
+    // 2. Remove from topicsCache memory state
+    setTopicsCache(prev => {
+      const updated: Record<string, Topic[]> = {};
+      Object.keys(prev).forEach(subId => {
+        updated[subId] = prev[subId].filter(t => t.classroom_id !== topicId);
+      });
+      return updated;
+    });
+
+    // 3. Remove from localStorage cache
+    if (activeSubject) {
+      const cacheKey = `topics_${activeSubject}_${studentId || 'guest'}`;
+      const existingCached = getCache(cacheKey);
+      if (existingCached && Array.isArray(existingCached)) {
+        const updated = existingCached.filter((t: any) => t.classroom_id !== topicId);
+        setCache(cacheKey, updated);
+      }
+    }
+
+    // 4. Purge RAM PDF pre-loader & 0ms open cache
+    if (pdfUrl) {
+      loadedPdfCacheRef.current.delete(pdfUrl);
+      preloadedUrls.current.delete(pdfUrl);
+    }
+
+    // 5. Reset active PDF viewer state if deleted PDF was open
+    if (activeClassroomId === topicId) {
+      setActiveClassroomId("");
+      setActivePdfUrl("");
+      setActiveTopicName("");
+      setActiveCategory("");
+      setWarmupUrl("");
     }
   };
 
@@ -701,8 +735,8 @@ export default function StudyHubContent() {
 
       if (error) throw error;
 
-      // Update local state
-      setTopicsList(prev => prev.filter(t => t.classroom_id !== topic.classroom_id));
+      // Purge from ALL caches instantly
+      purgeTopicFromAllCaches(topic.classroom_id, topic.pdf_url);
     } catch (err) {
       console.error("Decline Error:", err);
       alert("Failed to ignore request. Please try again.");
