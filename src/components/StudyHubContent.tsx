@@ -11,7 +11,15 @@ import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import { AddResourceModal, ShareResourceModal } from "@/components/StudentResourceModals";
 import { useAuth } from "@/hooks/useAuth";
-import { useClassroomChat, ChatMessage } from "@/hooks/useClassroomChat";
+export interface ChatMessage {
+  id: number;
+  type: "system" | "chat";
+  sender: string;
+  content: string;
+  timestamp: string;
+  isOwn: boolean;
+  isAi: boolean;
+}
 import { createClient } from "@/lib/supabase/client";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -120,7 +128,7 @@ const statusBadge = (status?: string) => {
 };
 
 /* ─── Study Hub Hero (Empty State) ─── */
-const StudyHubHero = () => {
+const StudyHubHero = ({ isMobile, onOpenSidebar }: { isMobile?: boolean, onOpenSidebar?: () => void }) => {
   return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 60px", height: "100%", width: "100%", gap: "80px" }}>
       <div style={{ display: "flex", flexDirection: "column", maxWidth: "520px", position: "relative", zIndex: 10 }}>
@@ -137,6 +145,29 @@ const StudyHubHero = () => {
           Supercharge Your<br/>
           Study Sessions
         </h2>
+        {isMobile && (
+          <button 
+            onClick={onOpenSidebar}
+            style={{
+              marginBottom: "24px",
+              padding: "12px 24px",
+              background: "rgba(56, 211, 153, 0.15)",
+              color: "#38d399",
+              border: "1px solid rgba(56, 211, 153, 0.3)",
+              borderRadius: "8px",
+              fontSize: "16px",
+              fontWeight: 600,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              width: "fit-content"
+            }}
+          >
+            <Menu size={18} />
+            Open Subjects Menu
+          </button>
+        )}
         <p style={{ color: "rgba(238, 252, 248, 0.75)", fontSize: "16px", lineHeight: 1.6, maxWidth: "600px", margin: "0 0 24px" }}>
           Select a subject from the left to get started. Ask the AI Study Assistant for instant, accurate answers based on your study materials, and learn faster and smarter.
         </p>
@@ -228,6 +259,7 @@ export default function StudyHubContent() {
   /* ── Chat state ── */
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
+  const [attachedImage, setAttachedImage] = useState<string | null>(null);
   const chatScrollRef = useRef<HTMLDivElement>(null);
 
   const supabase = supabaseClient;
@@ -238,21 +270,7 @@ export default function StudyHubContent() {
 
   const showChatbot = !activeCategory || activeCategory === "notes" || activeCategory === "teacher_notes" || activeCategory === "personal_document";
 
-  /* ── WebSocket — exact same as ClassroomClient (mode: "group") ── */
-  const handleMessageReceived = useCallback((msg: ChatMessage) => {
-    setMessages((prev) => [...prev, msg]);
-    if (!msg.isOwn && msg.type !== "system") {
-      setIsAiTyping(false);
-    }
-  }, []);
-
-  const { sendMessage: sendWsMessage, status: connectionStatus } = useClassroomChat({
-    classroomId: activeClassroomId,
-    mode: "group",
-    studentId,
-    studentName,
-    onMessageReceived: handleMessageReceived,
-  });
+  const connectionStatus = "CONNECTED";
 
   /* Auto-scroll chat */
   useEffect(() => {
@@ -348,40 +366,17 @@ export default function StudyHubContent() {
     setTopicsList([]);
 
     try {
-      const response = await fetch(`/api/classrooms/subject/${subjectId}`);
-      if (!response.ok) throw new Error("Failed to fetch topics");
-      let data = await response.json();
-      if (!Array.isArray(data.topics)) data.topics = [];
-      
       // Fetch user's personal resources for this subject
-      let personalData: Topic[] = [];
+      let allTopics: Topic[] = [];
       if (studentId) {
-        // 1. Fetch "My Notes" from classrooms table (Microservices)
-        const { data: notes } = await supabase
-          .from('classrooms')
-          .select('id, topic_name, pdf_url, created_at')
-          .eq('subject_id', subjectId)
-          .eq('student_id', studentId)
-          .order('created_at', { ascending: false });
-        
-        // 2. Fetch "Assignments" and "Practicals" from student_resources table
-        const { data: assignments } = await supabase
+        const { data: resources } = await supabase
           .from('student_resources')
           .select('id, title, type, file_url, created_at')
           .eq('subject_id', subjectId)
           .eq('user_id', studentId)
           .order('created_at', { ascending: false });
         
-        const formattedNotes = (notes || []).map((r: any) => ({
-          classroom_id: r.id, 
-          topic_name: r.topic_name,
-          category: 'personal_document',
-          pdf_url: r.pdf_url,
-          created_at: r.created_at,
-          is_personal: true
-        }));
-
-        const formattedAssignments = (assignments || []).map((r: any) => ({
+        allTopics = (resources || []).map((r: any) => ({
           classroom_id: r.id, 
           topic_name: r.title,
           category: r.type,
@@ -389,21 +384,8 @@ export default function StudyHubContent() {
           created_at: r.created_at,
           is_personal: true
         }));
-
-        // Deduplicate: If a "My Note" exists in BOTH classrooms (Render) AND student_resources (Supabase),
-        // we keep the classrooms version (so AI chat works) and remove the student_resources duplicate.
-        const classroomUrls = new Set(formattedNotes.map((n: any) => n.pdf_url));
-        const filteredAssignments = formattedAssignments.filter((a: any) => {
-          if (a.category === 'personal_document' && classroomUrls.has(a.pdf_url)) {
-            return false; // Skip duplicate
-          }
-          return true;
-        });
-
-        personalData = [...formattedNotes, ...filteredAssignments];
       }
 
-      const allTopics = [...data.topics, ...personalData];
       setTopicsList(allTopics);
       
       // Save to cache
@@ -442,14 +424,30 @@ export default function StudyHubContent() {
         }
       }
 
-      // 2. Delete from database
-      if (topic.category === 'personal_document') {
-        // Delete from classrooms (AI notes) and student_resources (fallback)
-        await supabaseClient.from('classrooms').delete().eq('id', topic.classroom_id);
-        await supabaseClient.from('student_resources').delete().eq('file_url', topic.pdf_url);
-      } else if (topic.category === 'assignment' || topic.category === 'practical') {
-        await supabaseClient.from('student_resources').delete().eq('id', topic.classroom_id);
+      // 1.5 Delete from Google Drive if it's a Drive link
+      if (topic.pdf_url && topic.pdf_url.includes('drive.google.com/file/d/')) {
+        const driveMatch = topic.pdf_url.match(/\/d\/([a-zA-Z0-9_-]+)\//);
+        if (driveMatch && driveMatch[1]) {
+          const fileId = driveMatch[1];
+          const { data: { session } } = await supabaseClient.auth.getSession();
+          const providerToken = session?.provider_token;
+          
+          if (providerToken) {
+            try {
+              const res = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${providerToken}` }
+              });
+              if (!res.ok) console.warn("Could not delete from Google Drive", await res.text());
+            } catch (err) {
+              console.warn("Google Drive delete error:", err);
+            }
+          }
+        }
       }
+
+      // 2. Delete from database
+      await supabaseClient.from('student_resources').delete().eq('id', topic.classroom_id);
 
       // 3. Update state to remove it instantly
       setTopicsList(prev => prev.filter(t => t.classroom_id !== topic.classroom_id));
@@ -484,30 +482,78 @@ export default function StudyHubContent() {
   // Clean up timer on unmount
   useEffect(() => () => { if (hideTimerRef.current) clearTimeout(hideTimerRef.current); }, []);
 
-  /* ── Send message (exact same as ClassroomClient) ── */
-  const handleSendMessage = (e: React.FormEvent) => {
+  /* ── Send message using Serverless Gemini API ── */
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim() || chatCooldown) return;
+    if ((!newMessage.trim() && !attachedImage) || chatCooldown) return;
     
-    // Spam protection: 3-second cooldown
+    const userMessage = newMessage || "Attached Image";
+    const currentAttachedImage = attachedImage;
+    
+    setNewMessage("");
+    setAttachedImage(null);
+    setIsAiTyping(true);
     setChatCooldown(true);
-    setTimeout(() => setChatCooldown(false), 3000);
     
-    sendWsMessage(newMessage);
+    // Add user message to UI
     setMessages((prev) => [
       ...prev,
       {
         id: Date.now(),
         type: "chat",
         sender: studentName,
-        content: newMessage,
+        content: userMessage,
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         isOwn: true,
         isAi: false,
       },
     ]);
-    setNewMessage("");
-    setIsAiTyping(true);
+
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          pdfUrl: activePdfUrl,
+          message: userMessage,
+          attachedImage: currentAttachedImage,
+          history: messages.map(m => ({ role: m.isAi ? 'ai' : 'user', text: m.content }))
+        })
+      });
+
+      if (!response.ok) throw new Error("Failed to get response from AI");
+      const data = await response.json();
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now(),
+          type: "chat",
+          sender: "ClimbUP AI",
+          content: data.reply || "I am unable to answer right now.",
+          timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          isOwn: false,
+          isAi: true,
+        },
+      ]);
+    } catch (err) {
+      console.error("AI Chat Error:", err);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now(),
+          type: "chat",
+          sender: "System",
+          content: "Failed to connect to the AI. Please ensure you provided a valid Google Drive document.",
+          timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          isOwn: false,
+          isAi: true,
+        },
+      ]);
+    } finally {
+      setIsAiTyping(false);
+      setTimeout(() => setChatCooldown(false), 2000);
+    }
   };
 
   /* ── Derived ── */
@@ -784,7 +830,7 @@ export default function StudyHubContent() {
                       {/* ─ Actual iframe ─ */}
                       <iframe
                         key={activePdfUrl}
-                        src={`${activePdfUrl}#toolbar=0&navpanes=0&scrollbar=1`}
+                        src={activePdfUrl.includes('drive.google.com') ? activePdfUrl.replace('/view', '/preview') : `${activePdfUrl}#toolbar=0&navpanes=0&scrollbar=1`}
                         width="100%"
                         height="100%"
                         style={{
@@ -829,7 +875,7 @@ export default function StudyHubContent() {
                               </div>
                             </div>
                           ) : (
-                            <StudyHubHero />
+                            <StudyHubHero isMobile={isMobile} onOpenSidebar={() => setIsMobileSidebarOpen(true)} />
                           )}
                         </motion.div>
                       ) : (
@@ -845,58 +891,7 @@ export default function StudyHubContent() {
                             <TopicSkeletons />
                           ) : (
                             <div style={{ display: "flex", flexDirection: "column", gap: "32px", paddingBottom: "40px" }}>
-                              
-                              {/* TEACHER NOTES SECTION */}
-                              <div>
-                                <p className="section-label">Class Notes</p>
-                                <div className="notes-grid">
-                                  {topicsList.filter(t => !t.category || t.category === "notes" || t.category === "teacher_notes").length > 0 ? (
-                                    topicsList.filter(t => !t.category || t.category === "notes" || t.category === "teacher_notes").map((topic, index) => {
-                                      const b = statusBadge(topic.status);
-                                      const isActive = activeClassroomId === topic.classroom_id;
-                                      return (
-                                        <motion.div
-                                          key={topic.classroom_id}
-                                          initial={{ opacity: 0, y: 20 }}
-                                          animate={{ opacity: 1, y: 0 }}
-                                          transition={{ duration: 0.4, delay: index * 0.05 }}
-                                          className={`note-card ${isActive ? "active-topic" : ""}`}
-                                          onClick={() => handleTopicClick(topic)}
-                                        >
-                                          <div className="note-header">
-                                            <div className="note-icon"><Book size={18} /></div>
-                                            <h3 className="note-title">{topic.topic_name}</h3>
-                                            <span className={`note-badge ${b.cls}`}>{b.icon}&nbsp;{b.label}</span>
-                                          </div>
-                                          <p className="note-desc">
-                                            {topic.created_at
-                                              ? `📅 ${new Date(topic.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}`
-                                              : "Click to view study material for this topic."}
-                                          </p>
-                                          <div className="note-footer">
-                                            <div className="note-meta"><FileText size={12} /><span>PDF Available</span></div>
-                                            <div style={{ display: "flex", gap: "8px" }}>
-                                              {topic.is_personal && (
-                                                <button 
-                                                  className="read-btn" 
-                                                  style={{ background: "rgba(239,68,68,0.15)", color: "#ef4444", padding: "6px 10px" }}
-                                                  onClick={(e) => handleDeleteResource(topic, e)}
-                                                >
-                                                  <Trash2 size={14} />
-                                                </button>
-                                              )}
-                                              <button className="read-btn">Open <ChevronRight size={13} /></button>
-                                            </div>
-                                          </div>
-                                        </motion.div>
-                                      );
-                                    })
-                                  ) : (
-                                    <p style={{ color: "#64748b", fontSize: "0.9rem" }}>No class notes available yet.</p>
-                                  )}
-                                </div>
-                              </div>
-
+                              {/* CLASS NOTES SECTION REMOVED */}
                               {/* PERSONAL DOCUMENTS SECTION */}
                               <div style={{ marginTop: "24px" }}>
                                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
@@ -1300,16 +1295,53 @@ export default function StudyHubContent() {
 
                 {/* Input */}
                 <div className="chat-input-area">
-                  <form onSubmit={handleSendMessage} style={{ display: "flex", gap: 8 }}>
-                    <div style={{
-                      flex: 1, background: "rgba(30,41,59,.55)", borderRadius: 100,
-                      border: "1px solid rgba(255,255,255,.1)", padding: "6px 8px 6px 16px",
-                      display: "flex", alignItems: "center", backdropFilter: "blur(12px)",
-                    }}>
-                      <input
-                        type="text"
-                        value={newMessage}
-                        onChange={(e) => setNewMessage(e.target.value)}
+                  <form onSubmit={handleSendMessage} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    {/* Image Preview Thumbnail */}
+                    {attachedImage && (
+                      <div style={{ position: "relative", alignSelf: "flex-start", marginBottom: "4px" }}>
+                        <img 
+                          src={attachedImage} 
+                          alt="Attached preview" 
+                          style={{ height: "60px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.2)" }} 
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setAttachedImage(null)}
+                          style={{
+                            position: "absolute", top: -6, right: -6, background: "#ef4444", color: "#fff",
+                            border: "none", borderRadius: "50%", width: 20, height: 20, cursor: "pointer",
+                            display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px",
+                            boxShadow: "0 2px 4px rgba(0,0,0,0.5)"
+                          }}
+                        >
+                          &times;
+                        </button>
+                      </div>
+                    )}
+                    
+                    <div style={{ display: "flex", gap: 8, width: "100%" }}>
+                      <div style={{
+                        flex: 1, background: "rgba(30,41,59,.55)", borderRadius: 100,
+                        border: "1px solid rgba(255,255,255,.1)", padding: "6px 8px 6px 16px",
+                        display: "flex", alignItems: "center", backdropFilter: "blur(12px)",
+                      }}>
+                        <input
+                          type="text"
+                          value={newMessage}
+                          onChange={(e) => setNewMessage(e.target.value)}
+                          onPaste={(e) => {
+                            const items = e.clipboardData?.items;
+                            if (!items) return;
+                            for (let i = 0; i < items.length; i++) {
+                              if (items[i].type.indexOf("image") !== -1) {
+                                const blob = items[i].getAsFile();
+                                const reader = new FileReader();
+                                reader.onload = (event) => setAttachedImage(event.target?.result as string);
+                                reader.readAsDataURL(blob!);
+                                e.preventDefault();
+                              }
+                            }
+                          }}
                         placeholder={connectionStatus === "CONNECTED" ? (chatCooldown ? "Please wait..." : "Ask a doubt…") : "AI is reading your notes..."}
                         maxLength={500}
                         style={{ flex: 1, background: "transparent", border: "none", color: "#f8fafc", fontSize: "0.875rem", outline: "none", padding: "7px 0" }}
@@ -1320,22 +1352,23 @@ export default function StudyHubContent() {
                       </span>
                       <motion.button
                         type="submit"
-                        disabled={!newMessage.trim() || connectionStatus !== "CONNECTED" || chatCooldown}
-                        whileHover={newMessage.trim() ? { scale: 1.12 } : {}}
-                        whileTap={newMessage.trim() ? { scale: 0.92 } : {}}
+                        disabled={(!newMessage.trim() && !attachedImage) || connectionStatus !== "CONNECTED" || chatCooldown}
+                        whileHover={(newMessage.trim() || attachedImage) ? { scale: 1.12 } : {}}
+                        whileTap={(newMessage.trim() || attachedImage) ? { scale: 0.92 } : {}}
                         style={{
                           width: 34, height: 34, borderRadius: "50%",
-                          background: newMessage.trim() ? "linear-gradient(135deg,#10b981,#059669)" : "rgba(255,255,255,.06)",
-                          border: "none", color: newMessage.trim() ? "#fff" : "#475569",
+                          background: (newMessage.trim() || attachedImage) ? "linear-gradient(135deg,#10b981,#059669)" : "rgba(255,255,255,.06)",
+                          border: "none", color: (newMessage.trim() || attachedImage) ? "#fff" : "#475569",
                           display: "flex", alignItems: "center", justifyContent: "center",
-                          cursor: !newMessage.trim() || connectionStatus !== "CONNECTED" || chatCooldown ? "not-allowed" : "pointer",
+                          cursor: (!newMessage.trim() && !attachedImage) || connectionStatus !== "CONNECTED" || chatCooldown ? "not-allowed" : "pointer",
                           marginLeft: 6, flexShrink: 0,
-                          boxShadow: newMessage.trim() ? "0 4px 12px rgba(16,185,129,.3)" : "none",
+                          boxShadow: (newMessage.trim() || attachedImage) ? "0 4px 12px rgba(16,185,129,.3)" : "none",
                           transition: "background 0.2s, box-shadow 0.2s",
                         }}
                       >
                         <Send size={14} />
                       </motion.button>
+                    </div>
                     </div>
                   </form>
                 </div>

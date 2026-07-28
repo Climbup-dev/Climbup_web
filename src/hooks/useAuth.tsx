@@ -443,11 +443,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
+          scopes: "https://www.googleapis.com/auth/drive.file",
           redirectTo: callbackUrl,
           skipBrowserRedirect: true,
           queryParams: {
-            access_type: "online",
-            prompt: "select_account",
+            access_type: "offline",
+            prompt: "consent",
           },
         },
       });

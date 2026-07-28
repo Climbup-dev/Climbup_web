@@ -181,7 +181,7 @@ export default function AcademicProfileEditor({ userId, onProfileUpdated }: Acad
   };
 
   return (
-    <div className="profileSelectorBox" style={{ margin: '0 0 30px 0', border: '1px solid rgba(56, 211, 153, 0.2)', background: 'rgba(2, 21, 38, 0.6)' }}>
+    <div className="profileSelectorBox" style={{ margin: '0 0 30px 0', width: '100%', boxSizing: 'border-box', border: '1px solid rgba(56, 211, 153, 0.2)', background: 'rgba(2, 21, 38, 0.6)' }}>
       <div className="profileSelectorHeader">
         <div>
           <span>Personalized learning</span>

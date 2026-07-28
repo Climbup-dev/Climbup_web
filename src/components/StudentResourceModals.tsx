@@ -58,62 +58,63 @@ export function AddResourceModal({
     setError("");
     setUploading(true);
 
-    let skipAiProcessing = false;
-
     try {
-      if (category === "personal_document") {
-        // 1. Validate File Size (> 20MB)
-        if (file.size > 20 * 1024 * 1024) {
-          const proceed = window.confirm("This PDF exceeds the 20MB limit. Our AI agent currently does not support very large files (we are improving this). Do you want to upload and store it anyway without AI features?");
-          if (!proceed) {
-            setUploading(false);
-            return;
-          }
-          skipAiProcessing = true;
-        }
-
-        // 2. Validate PDF Pages (> 80 pages)
-        if (!skipAiProcessing) {
-          try {
-            const pdfjsLib = await import("pdfjs-dist");
-            pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
-            const arrayBuffer = await file.arrayBuffer();
-            const loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) });
-            const pdfDocument = await loadingTask.promise;
-            if (pdfDocument.numPages > 80) {
-              const proceed = window.confirm("This PDF has more than 80 pages. Our AI agent currently does not support very long files (we are improving this). Do you want to upload and store it anyway without AI features?");
-              if (!proceed) {
-                setUploading(false);
-                return;
-              }
-              skipAiProcessing = true;
-            }
-          } catch (pdfErr) {
-            console.error("PDF Parsing Error:", pdfErr);
-            setError("Failed to read PDF file. Please ensure it is a valid PDF.");
-            setUploading(false);
-            return;
-          }
-        }
+      // 1. Get Google OAuth provider_token
+      const { data: { session } } = await supabase.auth.getSession();
+      const providerToken = session?.provider_token;
+      
+      if (!providerToken) {
+        setError("Google Drive access token missing. Please sign out and sign in again with Google to grant Drive access.");
+        setUploading(false);
+        return;
       }
 
-      // 1. ALWAYS Upload file to Supabase storage bucket first (for all types)
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
-      const filePath = `${userId}/${subjectId}/${category}s/${fileName}`;
+      // 2. Upload file directly to Google Drive
+      const metadata = {
+        name: file.name,
+        mimeType: file.type || 'application/pdf',
+      };
+      
+      const form = new FormData();
+      form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+      form.append('file', file);
+      
+      const driveUploadRes = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${providerToken}`
+        },
+        body: form
+      });
+      
+      if (!driveUploadRes.ok) {
+        throw new Error(`Failed to upload to Google Drive: ${driveUploadRes.statusText}`);
+      }
+      
+      const driveData = await driveUploadRes.json();
+      const fileId = driveData.id;
 
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('student_files')
-        .upload(filePath, file);
+      // 3. Make the file public (Anyone with the link can view)
+      const permRes = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}/permissions`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${providerToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          type: 'anyone',
+          role: 'reader'
+        })
+      });
+      
+      if (!permRes.ok) {
+        throw new Error("Failed to set public sharing permissions on Google Drive.");
+      }
 
-      if (uploadError) throw uploadError;
+      // 4. Construct the Google Drive View Link
+      const fileUrl = `https://drive.google.com/file/d/${fileId}/view`;
 
-      // 2. Get Public URL
-      const { data: urlData } = supabase.storage
-        .from('student_files')
-        .getPublicUrl(filePath);
-
-      // 3. ALWAYS Insert into student_resources database (so it's safely stored as a fallback)
+      // 5. Insert into student_resources database
       const { error: dbError } = await supabase
         .from('student_resources')
         .insert({
@@ -121,55 +122,10 @@ export function AddResourceModal({
           subject_id: subjectId,
           type: category,
           title: title,
-          file_url: urlData.publicUrl
+          file_url: fileUrl
         });
 
       if (dbError) throw dbError;
-
-      // 4. IF it's a 'personal_document', ALSO send it to the Render Microservice for AI vectorization
-      if (category === "personal_document" && !skipAiProcessing) {
-        // Construct FormData for Render
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("subject_id", subjectId);
-        formData.append("topic_title", title);
-        if (universityId) formData.append("university_id", universityId);
-        if (branchId) formData.append("branch_id", branchId);
-        if (semester) formData.append("semester_id", semester.toString());
-        // Pass the Supabase URL just in case Render backend wants to use it
-        formData.append("pdf_url", urlData.publicUrl);
-
-        // Get JWT Token and make API Request
-        const { data: { session } } = await supabase.auth.getSession();
-        const jwtToken = session?.access_token;
-        
-        if (!jwtToken) {
-          setError("File saved to Supabase, but AI Processing failed: Session expired.");
-          setUploading(false);
-          return;
-        }
-        
-        const res = await fetch("https://climbup-class-agent.onrender.com/api/v1/upload-smart", {
-          method: "POST",
-          headers: {
-            'Authorization': `Bearer ${jwtToken}`
-          },
-          body: formData,
-        });
-
-        if (res.status === 429) {
-          setError("File saved, but AI daily limit reached (429).");
-          setUploading(false);
-          return;
-        }
-
-        if (!res.ok) {
-          const errorData = await res.json().catch(() => ({}));
-          setError(`File saved successfully, but AI Processing failed (${res.status}).`);
-          setUploading(false);
-          return;
-        }
-      }
 
       onSuccess();
       onClose();
