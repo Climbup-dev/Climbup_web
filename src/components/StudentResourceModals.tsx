@@ -2,9 +2,9 @@
 
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { X, UploadCloud, Share2, CheckCircle, User } from "lucide-react";
+import { X, UploadCloud, Share2, CheckCircle, User, LogIn } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-// Dynamically import pdfjs inside the handler to prevent SSR errors (DOMMatrix is not defined)
+
 // --- Types ---
 interface UserProfile {
   user_id: string;
@@ -13,7 +13,7 @@ interface UserProfile {
 }
 
 // ============================================================================
-// ADD RESOURCE MODAL
+// ADD RESOURCE MODAL — Direct to Student's Personal Google Drive
 // ============================================================================
 export function AddResourceModal({
   isOpen,
@@ -40,10 +40,69 @@ export function AddResourceModal({
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
+  const [needsGoogleConnect, setNeedsGoogleConnect] = useState(false);
 
   const supabase = createClient();
 
   if (!isOpen) return null;
+
+  // Helper to get active Google access token (with silent refresh fallback)
+  const getGoogleToken = async (): Promise<string | null> => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return null;
+
+    let accessToken = session.provider_token;
+    const refreshToken = session.provider_refresh_token;
+
+    // Test existing access token
+    if (accessToken) {
+      try {
+        const testRes = await fetch("https://www.googleapis.com/drive/v3/about?fields=user", {
+          headers: { Authorization: `Bearer ${accessToken}` }
+        });
+        if (testRes.ok) return accessToken;
+      } catch {
+        // Token test failed, try refresh below
+      }
+    }
+
+    // Try silent refresh if refresh token exists
+    if (refreshToken) {
+      try {
+        const refreshRes = await fetch("/api/auth/refresh-google-token", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ refreshToken })
+        });
+        if (refreshRes.ok) {
+          const data = await refreshRes.json();
+          if (data.accessToken) return data.accessToken;
+        }
+      } catch {
+        // Silent refresh failed
+      }
+    }
+
+    return null;
+  };
+
+  const handleConnectGoogle = async () => {
+    try {
+      await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          scopes: "https://www.googleapis.com/auth/drive.file",
+          redirectTo: window.location.href,
+          queryParams: {
+            access_type: "offline",
+            prompt: "consent",
+          },
+        },
+      });
+    } catch (err: any) {
+      setError("Failed to launch Google sign-in. Please try again.");
+    }
+  };
 
   const handleUpload = async () => {
     if (!title.trim() || !file) {
@@ -52,76 +111,78 @@ export function AddResourceModal({
     }
 
     if (file.size > 100 * 1024 * 1024) {
-      setError("File size cannot exceed 100 MB. Please upload a smaller file.");
+      setError("File size cannot exceed 100 MB.");
       return;
     }
+
     setError("");
+    setNeedsGoogleConnect(false);
     setUploading(true);
 
     try {
-      // 1. Get Google OAuth provider_token
-      const { data: { session } } = await supabase.auth.getSession();
-      const providerToken = session?.provider_token;
-      
-      if (!providerToken) {
-        setError("Google Drive access token missing. Please sign out and sign in again with Google to grant Drive access.");
+      // 1. Get Google Drive Access Token for this student
+      const token = await getGoogleToken();
+
+      if (!token) {
+        setNeedsGoogleConnect(true);
+        setError("Google Drive connection expired or missing. Please click the button below to connect your Google Drive.");
         setUploading(false);
         return;
       }
 
-      // 2. Upload file directly to Google Drive
+      // 2. Upload file directly to Student's Personal Google Drive
       const metadata = {
         name: file.name,
-        mimeType: file.type || 'application/pdf',
+        mimeType: file.type || "application/pdf",
       };
-      
+
       const form = new FormData();
-      form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
-      form.append('file', file);
-      
-      const driveUploadRes = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
-        method: 'POST',
+      form.append("metadata", new Blob([JSON.stringify(metadata)], { type: "application/json" }));
+      form.append("file", file);
+
+      const driveUploadRes = await fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart", {
+        method: "POST",
         headers: {
-          'Authorization': `Bearer ${providerToken}`
+          Authorization: `Bearer ${token}`
         },
         body: form
       });
-      
+
       if (!driveUploadRes.ok) {
-        throw new Error(`Failed to upload to Google Drive: ${driveUploadRes.statusText}`);
+        if (driveUploadRes.status === 401) {
+          setNeedsGoogleConnect(true);
+          throw new Error("Google Drive access expired. Please connect your Google account below.");
+        }
+        throw new Error(`Google Drive upload failed (${driveUploadRes.statusText})`);
       }
-      
+
       const driveData = await driveUploadRes.json();
       const fileId = driveData.id;
 
-      // 3. Make the file public (Anyone with the link can view)
-      const permRes = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}/permissions`, {
-        method: 'POST',
+      // 3. Set sharing permission to 'anyone with link can view'
+      await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}/permissions`, {
+        method: "POST",
         headers: {
-          'Authorization': `Bearer ${providerToken}`,
-          'Content-Type': 'application/json'
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          type: 'anyone',
-          role: 'reader'
+          type: "anyone",
+          role: "reader"
         })
       });
-      
-      if (!permRes.ok) {
-        throw new Error("Failed to set public sharing permissions on Google Drive.");
-      }
 
-      // 4. Construct the Google Drive View Link
+      // 4. Construct direct view URL
       const fileUrl = `https://drive.google.com/file/d/${fileId}/view`;
 
-      // 5. Insert into student_resources database
+      // 5. Save metadata to database
       const { error: dbError } = await supabase
-        .from('student_resources')
+        .from("student_resources")
         .insert({
           user_id: userId,
           subject_id: subjectId,
           type: category,
-          title: title,
+          title: title.trim(),
           file_url: fileUrl
         });
 
@@ -132,8 +193,8 @@ export function AddResourceModal({
       setTitle("");
       setFile(null);
     } catch (err: any) {
-      console.error(err);
-      setError(err.message || "Failed to upload resource");
+      console.error("Upload Error:", err);
+      setError(err.message || "Failed to upload file to Google Drive.");
     } finally {
       setUploading(false);
     }
@@ -163,46 +224,71 @@ export function AddResourceModal({
               Add {category === "assignment" ? "Assignment" : category === "personal_document" ? "My Note" : "Practical"}
             </h3>
             <p style={{ margin: 0, fontSize: "0.85rem", color: "#94a3b8", marginTop: 4 }}>
-              Upload a PDF file to share or store.
+              Upload PDF directly to your personal Google Drive.
             </p>
           </div>
         </div>
 
-        {error && <div style={{ background: "rgba(239,68,68,0.1)", color: "#ef4444", padding: "10px", borderRadius: "8px", fontSize: "0.85rem", marginBottom: "16px" }}>{error}</div>}
+        {error && (
+          <div style={{ background: "rgba(239,68,68,0.1)", color: "#ef4444", padding: "12px", borderRadius: "10px", fontSize: "0.85rem", marginBottom: "16px", lineHeight: "1.4" }}>
+            {error}
+          </div>
+        )}
 
-        <div style={{ marginBottom: "16px" }}>
-          <label style={{ display: "block", color: "#cbd5e1", fontSize: "0.9rem", marginBottom: "8px" }}>Title</label>
-          <input
-            type="text"
-            value={title}
-            onChange={e => setTitle(e.target.value)}
-            placeholder={`e.g. ${category === "assignment" ? "Assignment 1" : category === "personal_document" ? "My Physics Notes" : "Practical 1"}`}
-            style={{ width: "100%", padding: "12px", borderRadius: "8px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", outline: "none" }}
-          />
-        </div>
+        {needsGoogleConnect ? (
+          <div style={{ textAlign: "center", padding: "12px 0 8px" }}>
+            <button
+              onClick={handleConnectGoogle}
+              style={{
+                width: "100%", padding: "14px", borderRadius: "10px",
+                background: "linear-gradient(135deg, #4285F4, #34A853)",
+                color: "#fff", fontWeight: 700, border: "none", cursor: "pointer",
+                display: "flex", justifyContent: "center", alignItems: "center", gap: "10px",
+                fontSize: "0.95rem", boxShadow: "0 4px 14px rgba(66,133,244,0.3)"
+              }}
+            >
+              <LogIn size={18} /> Connect Google Drive Access
+            </button>
+            <p style={{ fontSize: "0.78rem", color: "#64748b", marginTop: "10px" }}>
+              One-click connection to allow ClimbUP to save files to your Google Drive.
+            </p>
+          </div>
+        ) : (
+          <>
+            <div style={{ marginBottom: "16px" }}>
+              <label style={{ display: "block", color: "#cbd5e1", fontSize: "0.9rem", marginBottom: "8px" }}>Title</label>
+              <input
+                type="text"
+                value={title}
+                onChange={e => setTitle(e.target.value)}
+                placeholder={`e.g. ${category === "assignment" ? "Assignment 1" : category === "personal_document" ? "My Physics Notes" : "Practical 1"}`}
+                style={{ width: "100%", padding: "12px", borderRadius: "8px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", outline: "none" }}
+              />
+            </div>
 
-        <div style={{ marginBottom: "24px" }}>
-          <label style={{ display: "block", color: "#cbd5e1", fontSize: "0.9rem", marginBottom: "8px" }}>PDF File</label>
-          <input
-            type="file"
-            accept="application/pdf"
-            onChange={e => setFile(e.target.files?.[0] || null)}
-            style={{ width: "100%", padding: "10px", borderRadius: "8px", background: "rgba(255,255,255,0.02)", border: "1px dashed rgba(255,255,255,0.2)", color: "#fff" }}
-          />
-        </div>
+            <div style={{ marginBottom: "24px" }}>
+              <label style={{ display: "block", color: "#cbd5e1", fontSize: "0.9rem", marginBottom: "8px" }}>PDF File</label>
+              <input
+                type="file"
+                accept="application/pdf"
+                onChange={e => setFile(e.target.files?.[0] || null)}
+                style={{ width: "100%", padding: "10px", borderRadius: "8px", background: "rgba(255,255,255,0.02)", border: "1px dashed rgba(255,255,255,0.2)", color: "#fff" }}
+              />
+            </div>
 
-        <button
-          onClick={handleUpload}
-          disabled={uploading}
-          style={{ width: "100%", padding: "12px", borderRadius: "8px", background: themeColor, color: "#000", fontWeight: 700, border: "none", cursor: uploading ? "not-allowed" : "pointer", opacity: uploading ? 0.7 : 1, display: "flex", justifyContent: "center", alignItems: "center", gap: "8px" }}
-        >
-          {uploading ? "Uploading..." : "Upload Resource"}
-        </button>
+            <button
+              onClick={handleUpload}
+              disabled={uploading}
+              style={{ width: "100%", padding: "12px", borderRadius: "8px", background: themeColor, color: "#000", fontWeight: 700, border: "none", cursor: uploading ? "not-allowed" : "pointer", opacity: uploading ? 0.7 : 1, display: "flex", justifyContent: "center", alignItems: "center", gap: "8px" }}
+            >
+              {uploading ? "Uploading to Google Drive..." : "Upload Resource"}
+            </button>
+          </>
+        )}
       </motion.div>
     </div>
   );
 }
-
 
 // ============================================================================
 // SHARE RESOURCE MODAL
@@ -248,7 +334,6 @@ export function ShareResourceModal({
   const fetchClassmates = async () => {
     setLoading(true);
     try {
-      // Fetch classmates using our secure RPC function to bypass any RLS/View issues
       const { data, error } = await supabase.rpc('get_classmates', {
         p_university_id: universityId,
         p_branch_id: branchId,
@@ -269,7 +354,6 @@ export function ShareResourceModal({
     setSharingTo(targetUserId);
     setError("");
     try {
-      // Call our secure RPC function with sender's name
       const { data, error } = await supabase.rpc('share_student_resource', {
         p_resource_id: resourceId,
         p_target_user_id: targetUserId,

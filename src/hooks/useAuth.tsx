@@ -121,6 +121,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   /* ── Academic Setup state ── */
   const [needsAcademicSetup, setNeedsAcademicSetup] = useState(false);
   const [userAcademicProfile, setUserAcademicProfile] = useState<{ university_id: string; branch_id: string; semester: number } | null>(null);
+  // Track if we already confirmed setup is complete (avoids flash on refresh)
+  const academicSetupDoneRef = useRef(
+    typeof window !== "undefined" && localStorage.getItem("climbup_academic_done") === "1"
+  );
 
   const mountedRef = useRef(true);
   const completingOtpSignupRef = useRef(false);
@@ -169,7 +173,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           !!profile?.branch_id &&
           profile?.semester != null;
 
-        setNeedsAcademicSetup(!hasAcademic);
+        if (hasAcademic) {
+          // Mark as done in localStorage so refresh doesn't flash the modal
+          localStorage.setItem("climbup_academic_done", "1");
+          academicSetupDoneRef.current = true;
+        }
+
+        // Only show setup modal if profile is ACTUALLY incomplete (not just loading)
+        // AND we haven't confirmed completion before (prevents flash on refresh)
+        setNeedsAcademicSetup(!hasAcademic && !academicSetupDoneRef.current);
+
         if (hasAcademic && profile) {
           setUserAcademicProfile({
             university_id: profile.university_id!,
@@ -766,6 +779,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setPasswordRecovery(false);
     setNeedsAcademicSetup(false);
     setUserAcademicProfile(null);
+    // Clear academic setup flag on logout so new user sees setup
+    localStorage.removeItem("climbup_academic_done");
+    academicSetupDoneRef.current = false;
   }, [supabase]);
 
   /* ── Called after AcademicSetupModal saves successfully ── */
@@ -773,6 +789,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     (data: { university_id: string; branch_id: string; semester: number }) => {
       setUserAcademicProfile(data);
       setNeedsAcademicSetup(false);
+      // Persist completion so page refresh doesn't reopen modal
+      localStorage.setItem("climbup_academic_done", "1");
+      academicSetupDoneRef.current = true;
     },
     []
   );

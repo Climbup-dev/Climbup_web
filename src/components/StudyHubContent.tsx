@@ -521,7 +521,10 @@ export default function StudyHubContent() {
         })
       });
 
-      if (!response.ok) throw new Error("Failed to get response from AI");
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || `Request failed (${response.status})`);
+      }
       const data = await response.json();
 
       setMessages((prev) => [
@@ -544,7 +547,7 @@ export default function StudyHubContent() {
           id: Date.now(),
           type: "chat",
           sender: "System",
-          content: "Failed to connect to the AI. Please ensure you provided a valid Google Drive document.",
+          content: err instanceof Error ? err.message : "AI could not respond. Please try again.",
           timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
           isOwn: false,
           isAi: true,
