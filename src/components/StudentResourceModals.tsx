@@ -208,51 +208,7 @@ export function AddResourceModal({
     }
   };
 
-  const handleSupabaseFallbackUpload = async () => {
-    if (!title.trim() || !file) {
-      setError("Please provide a title and select a PDF file.");
-      return;
-    }
-    setError("");
-    setUploading(true);
 
-    try {
-      const fileName = `${userId}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
-      const { data, error: storageErr } = await supabase.storage
-        .from("student_files")
-        .upload(fileName, file, { cacheControl: "3600", upsert: true });
-
-      if (storageErr) throw storageErr;
-
-      const { data: publicUrlData } = supabase.storage
-        .from("student_files")
-        .getPublicUrl(fileName);
-
-      const fileUrl = publicUrlData.publicUrl;
-
-      const { error: dbError } = await supabase
-        .from("student_resources")
-        .insert({
-          user_id: userId,
-          subject_id: subjectId,
-          type: category,
-          title: title.trim(),
-          file_url: fileUrl
-        });
-
-      if (dbError) throw dbError;
-
-      onSuccess();
-      onClose();
-      setTitle("");
-      setFile(null);
-    } catch (err: any) {
-      console.error("Direct Upload Error:", err);
-      setError(err.message || "Failed to upload file to Cloud storage.");
-    } finally {
-      setUploading(false);
-    }
-  };
 
   const themeColor = category === "assignment" ? "#fb923c" : category === "personal_document" ? "#2dd4bf" : "#818cf8";
   const bgGlow = category === "assignment" ? "rgba(251,146,60,0.15)" : category === "personal_document" ? "rgba(45,212,191,0.15)" : "rgba(129,140,248,0.15)";
@@ -298,28 +254,13 @@ export function AddResourceModal({
                 background: "linear-gradient(135deg, #4285F4, #34A853)",
                 color: "#fff", fontWeight: 700, border: "none", cursor: "pointer",
                 display: "flex", justifyContent: "center", alignItems: "center", gap: "10px",
-                fontSize: "0.95rem", boxShadow: "0 4px 14px rgba(66,133,244,0.3)",
-                marginBottom: "12px",
+                fontSize: "0.95rem", boxShadow: "0 4px 14px rgba(66,133,244,0.3)"
               }}
             >
               <LogIn size={18} /> Connect Google Drive Access
             </button>
-
-            <button
-              onClick={handleSupabaseFallbackUpload}
-              disabled={uploading}
-              style={{
-                width: "100%", padding: "12px", borderRadius: "10px",
-                background: "rgba(255,255,255,0.06)", color: "#cbd5e1",
-                fontWeight: 600, border: "1px solid rgba(255,255,255,0.15)",
-                cursor: uploading ? "not-allowed" : "pointer", fontSize: "0.88rem",
-              }}
-            >
-              {uploading ? "Uploading to Cloud..." : "⚡ Or Upload via Direct Cloud Storage"}
-            </button>
-
-            <p style={{ fontSize: "0.78rem", color: "#64748b", marginTop: "12px" }}>
-              Connect Google Drive to save to your personal <strong>ClimbUP</strong> folder, or use Direct Cloud Storage.
+            <p style={{ fontSize: "0.8rem", color: "#94a3b8", marginTop: "12px" }}>
+              One-click connection to allow ClimbUP to save PDFs directly to your personal <strong>ClimbUP</strong> Google Drive folder.
             </p>
           </div>
         ) : (

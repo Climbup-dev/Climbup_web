@@ -869,6 +869,153 @@ export default function StudyHubContent() {
         {/* ─── MAIN HUB ─── */}
         {hubState === "hub" && (() => {
           const showChatbot = false; // Temporarily disabled AI Chatbot in Academic section as requested
+
+          const renderPdfNoteCard = (topic: Topic, index: number, themeColor: string, categoryLabel: string) => {
+            const b = statusBadge(topic.status);
+            const isActive = activeClassroomId === topic.classroom_id;
+            const cleanTitle = topic.topic_name.replace(/\s*\(Shared by .*\)$/, '');
+            const sharedByMatch = topic.topic_name.match(/\(Shared by (.*?)\)$/);
+
+            return (
+              <motion.div
+                key={topic.classroom_id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: index * 0.05 }}
+                className={`note-card ${isActive ? "active-topic" : ""}`}
+                onMouseEnter={() => handlePreloadPdf(topic.pdf_url)}
+                onTouchStart={() => handlePreloadPdf(topic.pdf_url)}
+                onClick={() => handleTopicClick(topic)}
+                style={{
+                  padding: 0,
+                  overflow: "hidden",
+                  borderRadius: "18px",
+                  border: `1.5px solid ${isActive ? themeColor : "rgba(255,255,255,0.08)"}`,
+                  background: "linear-gradient(160deg, rgba(15, 23, 42, 0.9) 0%, rgba(7, 15, 30, 0.95) 100%)",
+                  boxShadow: isActive ? `0 0 24px ${themeColor}30` : "0 8px 32px rgba(0,0,0,0.3)",
+                  display: "flex",
+                  flexDirection: "column",
+                }}
+              >
+                {/* ── TOP HALF: Actual PDF First Page Live Mini Preview ── */}
+                <div style={{
+                  height: "135px",
+                  width: "100%",
+                  background: "#070f1e",
+                  borderBottom: "1px solid rgba(255,255,255,0.08)",
+                  position: "relative",
+                  overflow: "hidden",
+                }}>
+                  {/* Miniature Live 1st Page Preview of the Actual PDF */}
+                  {topic.pdf_url ? (
+                    <iframe
+                      src={topic.pdf_url.includes("supabase.co")
+                        ? `${topic.pdf_url}#page=1&toolbar=0&navpanes=0&scrollbar=0`
+                        : topic.pdf_url.includes("drive.google.com")
+                        ? `https://drive.google.com/file/d/${(topic.pdf_url.match(/\/d\/([^\/]+)/) || topic.pdf_url.match(/id=([^&]+)/))?.[1] || ""}/preview`
+                        : topic.pdf_url}
+                      title={cleanTitle}
+                      style={{
+                        width: "200%",
+                        height: "200%",
+                        border: "none",
+                        transform: "scale(0.5)",
+                        transformOrigin: "top left",
+                        pointerEvents: "none",
+                        opacity: 0.85,
+                      }}
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "#64748b" }}>
+                      <FileText size={28} />
+                    </div>
+                  )}
+
+                  {/* Gradient Overlay for crisp readability */}
+                  <div style={{
+                    position: "absolute",
+                    inset: 0,
+                    background: "linear-gradient(180deg, rgba(15,23,42,0.1) 0%, rgba(15,23,42,0.85) 100%)",
+                    pointerEvents: "none",
+                  }} />
+
+                  {/* Top Right Category Badge */}
+                  <div style={{ position: "absolute", top: 10, right: 12, zIndex: 2 }}>
+                    <span className={`note-badge ${b.cls}`}>{b.icon}&nbsp;{b.label}</span>
+                  </div>
+
+                  {/* PDF Page 1 Tag */}
+                  <div style={{
+                    position: "absolute",
+                    bottom: 8,
+                    left: 12,
+                    zIndex: 2,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 5,
+                    background: "rgba(15, 23, 42, 0.85)",
+                    backdropFilter: "blur(6px)",
+                    padding: "3px 8px",
+                    borderRadius: "6px",
+                    border: `1px solid ${themeColor}40`,
+                  }}>
+                    <FileText size={11} color={themeColor} />
+                    <span style={{ fontSize: "0.62rem", fontWeight: 700, color: themeColor, letterSpacing: "0.04em" }}>PAGE 1 PREVIEW</span>
+                  </div>
+                </div>
+
+                {/* ── BOTTOM HALF: Information & Action Buttons ── */}
+                <div style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "10px" }}>
+                  <div>
+                    <h3 className="note-title" style={{ fontSize: "0.98rem", fontWeight: 700, color: "#f8fafc", margin: "0 0 4px", lineHeight: "1.35" }}>
+                      {cleanTitle}
+                    </h3>
+                    <p className="note-desc" style={{ margin: 0, fontSize: "0.8rem", color: "#94a3b8" }}>
+                      {sharedByMatch ? (
+                        <span style={{ color: themeColor, fontWeight: 600 }}>✨ Shared by {sharedByMatch[1]}</span>
+                      ) : topic.created_at ? (
+                        `📅 ${new Date(topic.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}`
+                      ) : (
+                        `Click to open ${categoryLabel.toLowerCase()}.`
+                      )}
+                    </p>
+                  </div>
+
+                  <div className="note-footer" style={{ marginTop: "4px", paddingTop: "10px", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+                    <div className="note-meta" style={{ color: themeColor }}>
+                      <FileText size={12} />
+                      <span>PDF Ready</span>
+                    </div>
+                    <div style={{ display: "flex", gap: "8px" }}>
+                      {topic.is_personal && (
+                        <>
+                          <button
+                            className="read-btn"
+                            style={{ background: "rgba(239,68,68,0.15)", color: "#ef4444", padding: "6px 10px" }}
+                            onClick={(e) => handleDeleteResource(topic, e)}
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                          <button
+                            className="read-btn"
+                            style={{ background: `${themeColor}20`, color: themeColor }}
+                            onClick={(e) => { e.stopPropagation(); setShareResourceId(topic.classroom_id); setShareTheme(themeColor); }}
+                          >
+                            <Share2 size={13} /> Share
+                          </button>
+                        </>
+                      )}
+                      <button className="read-btn" style={{ background: themeColor, color: "#020c1b", fontWeight: 700 }}>
+                        Open <ChevronRight size={13} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            );
+          };
+
           return (
             <div className="study-hub-main-fade-in" style={{ display: "flex", width: "100%", height: "100%" }}>
 
@@ -1279,62 +1426,9 @@ export default function StudyHubContent() {
                                   <p className="section-label" style={{ color: "#2dd4bf", marginBottom: 0 }}>My Notes</p>
                                 </div>
                                 <div className="notes-grid">
-                                  {topicsList.filter(t => t.category === "personal_document" && t.status !== "pending").map((topic, index) => {
-                                      const b = statusBadge(topic.status);
-                                      const isActive = activeClassroomId === topic.classroom_id;
-                                      return (
-                                        <motion.div
-                                          key={topic.classroom_id}
-                                          initial={{ opacity: 0, y: 20 }}
-                                          animate={{ opacity: 1, y: 0 }}
-                                          transition={{ duration: 0.4, delay: index * 0.05 }}
-                                          className={`note-card ${isActive ? "active-topic" : ""}`}
-                                          onClick={() => handleTopicClick(topic)}
-                                        >
-                                          <div className="note-header">
-                                            <div className="note-icon" style={{ background: "rgba(45,212,191,0.15)", color: "#2dd4bf", borderColor: "rgba(45,212,191,0.25)", boxShadow: "0 4px 12px rgba(45,212,191,0.15)" }}><FileText size={18} /></div>
-                                            <div style={{ flex: 1 }}>
-                                              <h3 className="note-title" style={{ marginBottom: "0px" }}>
-                                                {topic.topic_name.replace(/\s*\(Shared by .*\)$/, '')}
-                                              </h3>
-                                            </div>
-                                            <span className={`note-badge ${b.cls}`}>{b.icon}&nbsp;{b.label}</span>
-                                          </div>
-                                          <p className="note-desc">
-                                            {topic.topic_name.match(/\(Shared by (.*?)\)$/) 
-                                              ? <span style={{ color: "#2dd4bf", fontWeight: 500 }}>✨ Shared by {topic.topic_name.match(/\(Shared by (.*?)\)$/)?.[1]}</span>
-                                              : topic.created_at
-                                                ? `📅 ${new Date(topic.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}`
-                                                : "Click to view document details."}
-                                          </p>
-                                          <div className="note-footer">
-                                            <div className="note-meta"><FileText size={12} /><span>PDF Available</span></div>
-                                            <div style={{ display: "flex", gap: "8px" }}>
-                                              {topic.is_personal && (
-                                                <>
-                                                  <button 
-                                                    className="read-btn" 
-                                                    style={{ background: "rgba(239,68,68,0.15)", color: "#ef4444", padding: "6px 10px" }}
-                                                    onClick={(e) => handleDeleteResource(topic, e)}
-                                                  >
-                                                    <Trash2 size={14} />
-                                                  </button>
-                                                  <button 
-                                                    className="read-btn" 
-                                                    style={{ background: "rgba(45,212,191,0.15)", color: "#2dd4bf" }}
-                                                    onClick={(e) => { e.stopPropagation(); setShareResourceId(topic.classroom_id); setShareTheme("#2dd4bf"); }}
-                                                  >
-                                                    <Share2 size={13} /> Share
-                                                  </button>
-                                                </>
-                                              )}
-                                              <button className="read-btn">Open <ChevronRight size={13} /></button>
-                                            </div>
-                                          </div>
-                                        </motion.div>
-                                      );
-                                    })
-                                  }
+                                  {topicsList.filter(t => t.category === "personal_document" && t.status !== "pending").map((topic, index) => 
+                                    renderPdfNoteCard(topic, index, "#2dd4bf", "Note")
+                                  )}
                                   <motion.div
                                     initial={{ opacity: 0, scale: 0.95 }}
                                     animate={{ opacity: 1, scale: 1 }}
@@ -1360,62 +1454,9 @@ export default function StudyHubContent() {
                                   <p className="section-label" style={{ color: "#fb923c", marginBottom: 0 }}>Assignments</p>
                                 </div>
                                 <div className="notes-grid">
-                                  {topicsList.filter(t => t.category === "assignment" && t.status !== "pending").map((topic, index) => {
-                                      const b = statusBadge(topic.status);
-                                      const isActive = activeClassroomId === topic.classroom_id;
-                                      return (
-                                        <motion.div
-                                          key={topic.classroom_id}
-                                          initial={{ opacity: 0, y: 20 }}
-                                          animate={{ opacity: 1, y: 0 }}
-                                          transition={{ duration: 0.4, delay: index * 0.05 }}
-                                          className={`note-card ${isActive ? "active-topic" : ""}`}
-                                          onClick={() => handleTopicClick(topic)}
-                                        >
-                                          <div className="note-header">
-                                            <div className="note-icon" style={{ background: "rgba(251,146,60,0.15)", color: "#fb923c", borderColor: "rgba(251,146,60,0.25)", boxShadow: "0 4px 12px rgba(251,146,60,0.15)" }}><FileText size={18} /></div>
-                                            <div style={{ flex: 1 }}>
-                                              <h3 className="note-title" style={{ marginBottom: "0px" }}>
-                                                {topic.topic_name.replace(/\s*\(Shared by .*\)$/, '')}
-                                              </h3>
-                                            </div>
-                                            <span className={`note-badge ${b.cls}`}>{b.icon}&nbsp;{b.label}</span>
-                                          </div>
-                                          <p className="note-desc">
-                                            {topic.topic_name.match(/\(Shared by (.*?)\)$/) 
-                                              ? <span style={{ color: "#fb923c", fontWeight: 500 }}>✨ Shared by {topic.topic_name.match(/\(Shared by (.*?)\)$/)?.[1]}</span>
-                                              : topic.created_at
-                                                ? `📅 ${new Date(topic.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}`
-                                                : "Click to view assignment details."}
-                                          </p>
-                                          <div className="note-footer">
-                                            <div className="note-meta"><FileText size={12} /><span>PDF Available</span></div>
-                                            <div style={{ display: "flex", gap: "8px" }}>
-                                              {topic.is_personal && (
-                                                <>
-                                                  <button 
-                                                    className="read-btn" 
-                                                    style={{ background: "rgba(239,68,68,0.15)", color: "#ef4444", padding: "6px 10px" }}
-                                                    onClick={(e) => handleDeleteResource(topic, e)}
-                                                  >
-                                                    <Trash2 size={14} />
-                                                  </button>
-                                                  <button 
-                                                    className="read-btn" 
-                                                    style={{ background: "rgba(251,146,60,0.15)", color: "#fb923c" }}
-                                                    onClick={(e) => { e.stopPropagation(); setShareResourceId(topic.classroom_id); setShareTheme("#fb923c"); }}
-                                                  >
-                                                    <Share2 size={13} /> Share
-                                                  </button>
-                                                </>
-                                              )}
-                                              <button className="read-btn">Open <ChevronRight size={13} /></button>
-                                            </div>
-                                          </div>
-                                        </motion.div>
-                                      );
-                                    })
-                                  }
+                                  {topicsList.filter(t => t.category === "assignment" && t.status !== "pending").map((topic, index) => 
+                                    renderPdfNoteCard(topic, index, "#fb923c", "Assignment")
+                                  )}
                                   <motion.div
                                     initial={{ opacity: 0, scale: 0.95 }}
                                     animate={{ opacity: 1, scale: 1 }}
@@ -1441,58 +1482,9 @@ export default function StudyHubContent() {
                                   <p className="section-label" style={{ color: "#818cf8", marginBottom: 0 }}>Practicals</p>
                                 </div>
                                 <div className="notes-grid">
-                                  {topicsList.filter(t => t.category === "practical" && t.status !== "pending").map((topic, index) => {
-                                      const b = statusBadge(topic.status);
-                                      const isActive = activeClassroomId === topic.classroom_id;
-                                      return (
-                                        <motion.div
-                                          key={topic.classroom_id}
-                                          initial={{ opacity: 0, y: 20 }}
-                                          animate={{ opacity: 1, y: 0 }}
-                                          transition={{ duration: 0.4, delay: index * 0.05 }}
-                                          className={`note-card ${isActive ? "active-topic" : ""}`}
-                                          onClick={() => handleTopicClick(topic)}
-                                        >
-                                          <div className="note-header">
-                                            <div className="note-icon" style={{ background: "rgba(129,140,248,0.15)", color: "#818cf8", borderColor: "rgba(129,140,248,0.25)", boxShadow: "0 4px 12px rgba(129,140,248,0.15)" }}><FileText size={18} /></div>
-                                            <h3 className="note-title">{topic.topic_name.replace(/\s*\(Shared by .*\)$/, '')}</h3>
-                                            <span className={`note-badge ${b.cls}`}>{b.icon}&nbsp;{b.label}</span>
-                                          </div>
-                                          <p className="note-desc">
-                                            {topic.topic_name.match(/\(Shared by (.*?)\)$/) 
-                                              ? <span style={{ color: "#818cf8", fontWeight: 500 }}>✨ Shared by {topic.topic_name.match(/\(Shared by (.*?)\)$/)?.[1]}</span>
-                                              : topic.created_at
-                                                ? `📅 ${new Date(topic.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}`
-                                                : "Click to view practical instructions."}
-                                          </p>
-                                          <div className="note-footer">
-                                            <div className="note-meta"><FileText size={12} /><span>PDF Available</span></div>
-                                            <div style={{ display: "flex", gap: "8px" }}>
-                                              {topic.is_personal && (
-                                                <>
-                                                  <button 
-                                                    className="read-btn" 
-                                                    style={{ background: "rgba(239,68,68,0.15)", color: "#ef4444", padding: "6px 10px" }}
-                                                    onClick={(e) => handleDeleteResource(topic, e)}
-                                                  >
-                                                    <Trash2 size={14} />
-                                                  </button>
-                                                  <button 
-                                                    className="read-btn" 
-                                                    style={{ background: "rgba(129,140,248,0.15)", color: "#818cf8" }}
-                                                    onClick={(e) => { e.stopPropagation(); setShareResourceId(topic.classroom_id); setShareTheme("#818cf8"); }}
-                                                  >
-                                                    <Share2 size={13} /> Share
-                                                  </button>
-                                                </>
-                                              )}
-                                              <button className="read-btn">Open <ChevronRight size={13} /></button>
-                                            </div>
-                                          </div>
-                                        </motion.div>
-                                      );
-                                    })
-                                  }
+                                  {topicsList.filter(t => t.category === "practical" && t.status !== "pending").map((topic, index) => 
+                                    renderPdfNoteCard(topic, index, "#818cf8", "Practical")
+                                  )}
                                   <motion.div
                                     initial={{ opacity: 0, scale: 0.95 }}
                                     animate={{ opacity: 1, scale: 1 }}
