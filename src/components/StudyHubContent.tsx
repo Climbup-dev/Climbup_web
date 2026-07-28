@@ -274,28 +274,39 @@ export default function StudyHubContent() {
   const [topicsList, setTopicsList] = useState<Topic[]>([]);
   const [topicsCache, setTopicsCache] = useState<Record<string, Topic[]>>({});
   const preloadedUrls = useRef<Set<string>>(new Set());
+  const loadedPdfCacheRef = useRef<Set<string>>(new Set());
 
   const pdfFastStreamUrl = useMemo(() => {
     if (!activePdfUrl) return "";
     if (activePdfUrl.includes("supabase.co")) {
       return `${activePdfUrl}#toolbar=0&navpanes=0&scrollbar=1`;
     }
-    return `/api/pdf-proxy?url=${encodeURIComponent(activePdfUrl)}`;
+    if (activePdfUrl.includes("drive.google.com")) {
+      return activePdfUrl.replace("/view", "/preview");
+    }
+    return activePdfUrl;
   }, [activePdfUrl]);
 
-  const handlePreloadPdf = useCallback((pdfUrl?: string) => {
-    if (!pdfUrl || preloadedUrls.current.has(pdfUrl)) return;
-    preloadedUrls.current.add(pdfUrl);
+  const [warmupUrl, setWarmupUrl] = useState<string>("");
 
+  const handlePreloadPdf = useCallback((pdfUrl?: string) => {
+    if (!pdfUrl) return;
     const targetUrl = pdfUrl.includes("supabase.co")
       ? `${pdfUrl}#toolbar=0&navpanes=0&scrollbar=1`
-      : `/api/pdf-proxy?url=${encodeURIComponent(pdfUrl)}`;
+      : pdfUrl.includes("drive.google.com")
+      ? pdfUrl.replace("/view", "/preview")
+      : pdfUrl;
 
-    const link = document.createElement("link");
-    link.rel = "prefetch";
-    link.href = targetUrl;
-    link.as = "document";
-    document.head.appendChild(link);
+    if (!preloadedUrls.current.has(targetUrl)) {
+      preloadedUrls.current.add(targetUrl);
+      setWarmupUrl(targetUrl);
+
+      const link = document.createElement("link");
+      link.rel = "prefetch";
+      link.href = targetUrl;
+      link.as = "document";
+      document.head.appendChild(link);
+    }
   }, []);
   const [isFetchingTopics, setIsFetchingTopics] = useState(false);
   const [subjectSearch, setSubjectSearch] = useState("");
@@ -541,11 +552,14 @@ export default function StudyHubContent() {
 
   /* ── Topic click → open PDF + chat ── */
   const handleTopicClick = (topic: Topic) => {
+    const targetUrl = topic.pdf_url || "";
+    const isAlreadyLoaded = loadedPdfCacheRef.current.has(targetUrl);
+
     setActiveClassroomId(topic.classroom_id);
     setActiveTopicName(topic.topic_name || "");
-    setActivePdfUrl(topic.pdf_url || "");
+    setActivePdfUrl(targetUrl);
     setActiveCategory(topic.category || "");
-    setPdfLoading(true);
+    setPdfLoading(!isAlreadyLoaded);
     setPdfError(false);
     setPdfHeaderVisible(true);
     setIsFocusMode(false);
@@ -1072,9 +1086,33 @@ export default function StudyHubContent() {
                           transition: "opacity 0.15s ease",
                         }}
                         title="Classroom Material"
-                        onLoad={() => setPdfLoading(false)}
+                        onLoad={() => {
+                          if (activePdfUrl) {
+                            loadedPdfCacheRef.current.add(activePdfUrl);
+                          }
+                          setPdfLoading(false);
+                        }}
                         onError={() => { setPdfLoading(false); setPdfError(true); }}
                       />
+
+                      {/* ─ Background Memory Pre-render Engine (0ms perceived load time) ─ */}
+                      {warmupUrl && warmupUrl !== pdfFastStreamUrl && (
+                        <iframe
+                          src={warmupUrl}
+                          style={{
+                            position: "fixed",
+                            top: -9999,
+                            left: -9999,
+                            width: "1px",
+                            height: "1px",
+                            opacity: 0,
+                            pointerEvents: "none",
+                            visibility: "hidden",
+                          }}
+                          aria-hidden="true"
+                          tabIndex={-1}
+                        />
+                      )}
                     </div>
                   </div>
                 ) : (
