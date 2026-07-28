@@ -244,15 +244,16 @@ export default function AcademicSetupModal({ userId, onComplete }: Props) {
       padding: "16px",
     }}>
       <style>{`
-        @keyframes acadFadeIn { from { opacity:0; } to { opacity:1; } }
-        @keyframes acadSlideUp { from { opacity:0; transform:translateY(20px) scale(0.97); } to { opacity:1; transform:translateY(0) scale(1); } }
-        @keyframes acadStepIn { from { opacity:0; transform:translateX(16px); } to { opacity:1; transform:translateX(0); } }
         .acad-select-list::-webkit-scrollbar { width: 4px; }
         .acad-select-list::-webkit-scrollbar-thumb { background: rgba(56,211,153,0.3); border-radius: 99px; }
+        @media (max-width: 480px) {
+          .acad-modal-card { padding: 22px 16px !important; border-radius: 18px !important; max-height: 94vh !important; }
+          .acad-sem-grid { grid-template-columns: repeat(4, 1fr) !important; gap: 6px !important; }
+          .acad-sem-btn { padding: 11px 4px !important; font-size: 0.78rem !important; border-radius: 10px !important; }
+        }
       `}</style>
 
-      {/* Modal Card */}
-      <div style={{
+      <div className="acad-modal-card" style={{
         width: "100%", maxWidth: 460,
         background: "linear-gradient(160deg, #051628 0%, #020c18 100%)",
         border: "1px solid rgba(56,211,153,0.2)",
@@ -338,10 +339,11 @@ export default function AcademicSetupModal({ userId, onComplete }: Props) {
                     </div>
                   ))}
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8 }}>
+                <div className="acad-sem-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8 }}>
                   {[1,2,3,4,5,6,7,8].map(sem => (
                     <button
                       key={sem}
+                      className="acad-sem-btn"
                       onClick={() => { setSelectedSemester(sem); setError(""); }}
                       style={{
                         padding: "14px 8px", borderRadius: 12,

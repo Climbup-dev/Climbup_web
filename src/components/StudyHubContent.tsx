@@ -214,7 +214,7 @@ const StudyHubHero = ({ isMobile, onOpenSidebar }: { isMobile?: boolean, onOpenS
    MAIN COMPONENT
 ═══════════════════════════════════════════════════════ */
 export default function StudyHubContent() {
-  const { currentUser, userAcademicProfile } = useAuth();
+  const { currentUser, userAcademicProfile, refreshProfile } = useAuth();
   const [authOpen, setAuthOpen] = useState(false);
   const [entryMode, setEntryMode] = useState<"login" | "register">("login");
 
@@ -437,6 +437,7 @@ export default function StudyHubContent() {
     setActiveTopicName("");
     setActivePdfUrl("");
     setActiveCategory("");
+    if (isMobile) setIsMobileSidebarOpen(false);
 
     const cacheKey = `topics_${subjectId}_${currentUser?.id || 'guest'}`;
     const cached = getCache(cacheKey);
@@ -1042,17 +1043,19 @@ export default function StudyHubContent() {
                           style={{ width: "100%", height: "100%" }}
                         >
                           {currentUser && (!userAcademicProfile || !userAcademicProfile.semester) ? (
-                            <div style={{ padding: "40px 20px", maxWidth: "800px", margin: "0 auto", height: "100%", overflowY: "auto", display: "flex", flexDirection: "column", alignItems: "center" }}>
-                              <div style={{ textAlign: "center", marginBottom: "32px", marginTop: "20px" }}>
-                                <h2 style={{ fontSize: "2rem", fontWeight: 800, color: "#fff", marginBottom: "16px", letterSpacing: "-0.02em" }}>Set up your Academic Profile</h2>
-                                <p style={{ color: "#94a3b8", fontSize: "1.05rem", lineHeight: 1.6, maxWidth: "600px", margin: "0 auto" }}>
+                            <div style={{ padding: isMobile ? "20px 12px" : "40px 20px", maxWidth: "800px", margin: "0 auto", height: "100%", overflowY: "auto", display: "flex", flexDirection: "column", alignItems: "center", boxSizing: "border-box", width: "100%" }}>
+                              <div style={{ textAlign: "center", marginBottom: isMobile ? "20px" : "32px", marginTop: isMobile ? "10px" : "20px" }}>
+                                <h2 style={{ fontSize: isMobile ? "1.5rem" : "2rem", fontWeight: 800, color: "#fff", marginBottom: "12px", letterSpacing: "-0.02em" }}>Set up your Academic Profile</h2>
+                                <p style={{ color: "#94a3b8", fontSize: isMobile ? "0.9rem" : "1.05rem", lineHeight: 1.5, maxWidth: "600px", margin: "0 auto" }}>
                                   Please complete your profile to unlock personalized subjects, assignments, and AI study materials tailored specifically to your branch and semester.
                                 </p>
                               </div>
-                              <div style={{ width: "100%", maxWidth: "600px", background: "rgba(255,255,255,0.02)", padding: "30px", borderRadius: "16px", border: "1px solid rgba(255,255,255,0.05)" }}>
+                              <div style={{ width: "100%", maxWidth: "600px", background: "rgba(255,255,255,0.02)", padding: isMobile ? "16px 12px" : "30px", borderRadius: "16px", border: "1px solid rgba(255,255,255,0.05)", boxSizing: "border-box" }}>
                                 <AcademicProfileEditor 
                                   userId={currentUser.id} 
-                                  onProfileUpdated={() => window.location.reload()} 
+                                  onProfileUpdated={() => {
+                                    refreshProfile();
+                                  }} 
                                 />
                               </div>
                             </div>
