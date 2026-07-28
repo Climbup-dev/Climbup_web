@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
-import { X, UploadCloud, Share2, CheckCircle, User, LogIn } from "lucide-react";
+import { X, UploadCloud, Share2, CheckCircle, User, LogIn, Search } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { getOrCreateClimbUPFolder } from "@/lib/googleDriveHelper";
 
@@ -371,6 +371,7 @@ export function ShareResourceModal({
   themeColor?: string;
 }) {
   const [classmates, setClassmates] = useState<UserProfile[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [sharingTo, setSharingTo] = useState<string | null>(null);
   const [error, setError] = useState("");
@@ -382,10 +383,20 @@ export function ShareResourceModal({
     if (isOpen) {
       setSuccess(false);
       setError("");
+      setSearchQuery("");
       fetchClassmates();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
+
+  // Sub-string match filtering (matches any text anywhere in classmate name)
+  const filteredClassmates = useMemo(() => {
+    if (!searchQuery.trim()) return classmates;
+    const q = searchQuery.toLowerCase().trim();
+    return classmates.filter(user =>
+      user.full_name?.toLowerCase().includes(q)
+    );
+  }, [classmates, searchQuery]);
 
   const fetchClassmates = async () => {
     setLoading(true);
@@ -452,6 +463,45 @@ export function ShareResourceModal({
 
         {error && <div style={{ background: "rgba(239,68,68,0.1)", color: "#ef4444", padding: "10px", borderRadius: "8px", fontSize: "0.85rem", marginBottom: "16px" }}>{error}</div>}
         
+        {/* Search Bar for Classmates */}
+        {!success && classmates.length > 0 && (
+          <div style={{ position: "relative", marginBottom: "16px" }}>
+            <div style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "#64748b", display: "flex", pointerEvents: "none" }}>
+              <Search size={16} />
+            </div>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder="Search classmate by name..."
+              style={{
+                width: "100%",
+                padding: "10px 36px 10px 38px",
+                background: "rgba(255,255,255,0.05)",
+                border: "1px solid rgba(255,255,255,0.12)",
+                borderRadius: "10px",
+                color: "#fff",
+                fontSize: "0.88rem",
+                fontFamily: "Inter, system-ui, sans-serif",
+                outline: "none",
+                boxSizing: "border-box",
+                transition: "border-color 0.2s",
+              }}
+              onFocus={e => e.target.style.borderColor = themeColor}
+              onBlur={e => e.target.style.borderColor = "rgba(255,255,255,0.12)"}
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery("")}
+                style={{ position: "absolute", right: "10px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "#94a3b8", cursor: "pointer", display: "flex", padding: 2 }}
+              >
+                <X size={14} />
+              </button>
+            )}
+          </div>
+        )}
+
         {success ? (
           <div style={{ background: `${themeColor}20`, color: themeColor, padding: "20px", borderRadius: "8px", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: "10px" }}>
             <CheckCircle size={32} />
@@ -459,14 +509,25 @@ export function ShareResourceModal({
             <span style={{ fontSize: "0.85rem" }}>The resource is now available in their account.</span>
           </div>
         ) : (
-          <div style={{ maxHeight: "300px", overflowY: "auto", paddingRight: "5px" }}>
+          <div style={{ maxHeight: "300px", overflowY: "auto", paddingRight: "5px", WebkitOverflowScrolling: "touch" }}>
             {loading ? (
               <p style={{ color: "#94a3b8", textAlign: "center", padding: "20px 0" }}>Loading classmates...</p>
             ) : classmates.length === 0 ? (
               <p style={{ color: "#94a3b8", textAlign: "center", padding: "20px 0" }}>No classmates found in your current semester.</p>
+            ) : filteredClassmates.length === 0 ? (
+              <div style={{ textAlign: "center", padding: "20px 0", color: "#94a3b8" }}>
+                <p style={{ margin: "0 0 8px", fontSize: "0.9rem" }}>No classmate found matching &quot;{searchQuery}&quot;</p>
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery("")}
+                  style={{ background: "none", border: "none", color: themeColor, cursor: "pointer", fontSize: "0.82rem", textDecoration: "underline" }}
+                >
+                  Clear search
+                </button>
+              </div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                {classmates.map(user => (
+                {filteredClassmates.map(user => (
                   <div key={user.user_id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(255,255,255,0.03)", padding: "12px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.05)" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                       {user.profile_image ? (
