@@ -254,6 +254,18 @@ export default function StudyHubContent() {
     const handleResize = () => setIsMobile(window.innerWidth <= 850);
     handleResize(); // initial check
     window.addEventListener("resize", handleResize);
+
+    // Speed optimization: Pre-connect to PDF rendering domains
+    const domains = ["https://drive.google.com", "https://lh3.googleusercontent.com"];
+    domains.forEach((url) => {
+      if (!document.querySelector(`link[href="${url}"]`)) {
+        const link = document.createElement("link");
+        link.rel = "preconnect";
+        link.href = url;
+        document.head.appendChild(link);
+      }
+    });
+
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
@@ -261,6 +273,22 @@ export default function StudyHubContent() {
   const [subjectsList, setSubjectsList] = useState<Subject[]>([]);
   const [topicsList, setTopicsList] = useState<Topic[]>([]);
   const [topicsCache, setTopicsCache] = useState<Record<string, Topic[]>>({});
+  const preloadedUrls = useRef<Set<string>>(new Set());
+
+  const handlePreloadPdf = useCallback((pdfUrl?: string) => {
+    if (!pdfUrl || preloadedUrls.current.has(pdfUrl)) return;
+    preloadedUrls.current.add(pdfUrl);
+
+    const targetUrl = pdfUrl.includes('drive.google.com')
+      ? pdfUrl.replace('/view', '/preview')
+      : `${pdfUrl}#toolbar=0&navpanes=0&scrollbar=1`;
+
+    const link = document.createElement("link");
+    link.rel = "prefetch";
+    link.href = targetUrl;
+    link.as = "document";
+    document.head.appendChild(link);
+  }, []);
   const [isFetchingTopics, setIsFetchingTopics] = useState(false);
   const [subjectSearch, setSubjectSearch] = useState("");
   const [profileNames, setProfileNames] = useState({ university: "", branch: "" });
@@ -1026,11 +1054,12 @@ export default function StudyHubContent() {
                         src={activePdfUrl.includes('drive.google.com') ? activePdfUrl.replace('/view', '/preview') : `${activePdfUrl}#toolbar=0&navpanes=0&scrollbar=1`}
                         width="100%"
                         height="100%"
+                        loading="eager"
                         style={{
                           border: "none",
                           opacity: pdfLoading || pdfError || isTransitioning ? 0 : 1,
                           visibility: isTransitioning ? "hidden" : "visible",
-                          transition: "opacity 0.2s ease",
+                          transition: "opacity 0.15s ease",
                         }}
                         title="Classroom Material"
                         onLoad={() => setPdfLoading(false)}
