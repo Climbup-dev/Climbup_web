@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import dynamic from "next/dynamic";
 import {
   Book, BookOpen, Atom, Search, X, ChevronRight,
@@ -275,13 +275,21 @@ export default function StudyHubContent() {
   const [topicsCache, setTopicsCache] = useState<Record<string, Topic[]>>({});
   const preloadedUrls = useRef<Set<string>>(new Set());
 
+  const pdfFastStreamUrl = useMemo(() => {
+    if (!activePdfUrl) return "";
+    if (activePdfUrl.includes("supabase.co")) {
+      return `${activePdfUrl}#toolbar=0&navpanes=0&scrollbar=1`;
+    }
+    return `/api/pdf-proxy?url=${encodeURIComponent(activePdfUrl)}`;
+  }, [activePdfUrl]);
+
   const handlePreloadPdf = useCallback((pdfUrl?: string) => {
     if (!pdfUrl || preloadedUrls.current.has(pdfUrl)) return;
     preloadedUrls.current.add(pdfUrl);
 
-    const targetUrl = pdfUrl.includes('drive.google.com')
-      ? pdfUrl.replace('/view', '/preview')
-      : `${pdfUrl}#toolbar=0&navpanes=0&scrollbar=1`;
+    const targetUrl = pdfUrl.includes("supabase.co")
+      ? `${pdfUrl}#toolbar=0&navpanes=0&scrollbar=1`
+      : `/api/pdf-proxy?url=${encodeURIComponent(pdfUrl)}`;
 
     const link = document.createElement("link");
     link.rel = "prefetch";
@@ -802,8 +810,10 @@ export default function StudyHubContent() {
         )}
 
         {/* ─── MAIN HUB ─── */}
-        {hubState === "hub" && (
-          <div className="study-hub-main-fade-in" style={{ display: "flex", width: "100%", height: "100%" }}>
+        {hubState === "hub" && (() => {
+          const showChatbot = false; // Temporarily disabled AI Chatbot in Academic section as requested
+          return (
+            <div className="study-hub-main-fade-in" style={{ display: "flex", width: "100%", height: "100%" }}>
 
             {/* ══ LEFT SIDEBAR — Subjects ══ */}
             {isMobile && isMobileSidebarOpen && (
@@ -1050,8 +1060,8 @@ export default function StudyHubContent() {
 
                       {/* ─ Actual iframe ─ */}
                       <iframe
-                        key={activePdfUrl}
-                        src={activePdfUrl.includes('drive.google.com') ? activePdfUrl.replace('/view', '/preview') : `${activePdfUrl}#toolbar=0&navpanes=0&scrollbar=1`}
+                        key={pdfFastStreamUrl}
+                        src={pdfFastStreamUrl}
                         width="100%"
                         height="100%"
                         loading="eager"
@@ -1667,7 +1677,8 @@ export default function StudyHubContent() {
           </AnimatePresence>
 
           </div>
-        )}
+          );
+        })()}
       </div>
 
       {authOpen && (
