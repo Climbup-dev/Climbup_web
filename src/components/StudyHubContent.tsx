@@ -49,6 +49,8 @@ export interface Topic {
   pdf_url?: string;
   category?: string;
   is_personal?: boolean;
+  sender_name?: string;
+  original_resource_id?: string;
 }
 
 /* ─── Premium Image (exact copy from ClassroomClient) ─── */
@@ -371,7 +373,7 @@ export default function StudyHubContent() {
       if (studentId) {
         const { data: resources } = await supabase
           .from('student_resources')
-          .select('id, title, type, file_url, created_at')
+          .select('id, title, type, file_url, status, sender_name, original_resource_id, created_at')
           .eq('subject_id', subjectId)
           .eq('user_id', studentId)
           .order('created_at', { ascending: false });
@@ -379,8 +381,11 @@ export default function StudyHubContent() {
         allTopics = (resources || []).map((r: any) => ({
           classroom_id: r.id, 
           topic_name: r.title,
-          category: r.type || "assignment", // Ensure fallback category if type is missing so it's never hidden!
+          category: r.type || "assignment", // Ensure fallback category
           pdf_url: r.file_url,
+          status: r.status || "accepted",
+          sender_name: r.sender_name,
+          original_resource_id: r.original_resource_id,
           created_at: r.created_at,
           is_personal: true
         }));
@@ -424,9 +429,9 @@ export default function StudyHubContent() {
         }
       }
 
-      // 1.5 Delete from Google Drive if it's a Drive link
-      if (topic.pdf_url && topic.pdf_url.includes('drive.google.com/file/d/')) {
-        const driveMatch = topic.pdf_url.match(/\/d\/([a-zA-Z0-9_-]+)\//);
+      // 1.5 Delete from Google Drive only if it's user's OWN original upload (not a shared copy)
+      if (!topic.original_resource_id && topic.pdf_url && topic.pdf_url.includes('drive.google.com/file/d/')) {
+        const driveMatch = topic.pdf_url.match(/\/d\/([a-zA-Z0-9_-]+)/);
         if (driveMatch && driveMatch[1]) {
           const fileId = driveMatch[1];
           const { data: { session } } = await supabaseClient.auth.getSession();
@@ -459,6 +464,93 @@ export default function StudyHubContent() {
     } catch (error) {
       console.error(error);
       alert('Failed to delete resource');
+    }
+  };
+
+  /* ── Accept / Decline Shared Requests Handlers ── */
+  const [acceptingId, setAcceptingId] = useState<string | null>(null);
+  const [decliningId, setDecliningId] = useState<string | null>(null);
+
+  const handleAcceptSharedRequest = async (topic: Topic, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setAcceptingId(topic.classroom_id);
+    try {
+      let finalFileUrl = topic.pdf_url || "";
+
+      // Try copying file to student's personal Google Drive if session has Google token
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      const token = session?.provider_token;
+
+      if (token && topic.pdf_url) {
+        try {
+          const pdfRes = await fetch(topic.pdf_url);
+          if (pdfRes.ok) {
+            const blob = await pdfRes.blob();
+            const file = new File([blob], `${topic.topic_name}.pdf`, { type: "application/pdf" });
+
+            const metadata = { name: file.name, mimeType: "application/pdf" };
+            const form = new FormData();
+            form.append("metadata", new Blob([JSON.stringify(metadata)], { type: "application/json" }));
+            form.append("file", file);
+
+            const driveRes = await fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${token}` },
+              body: form
+            });
+
+            if (driveRes.ok) {
+              const driveData = await driveRes.json();
+              await fetch(`https://www.googleapis.com/drive/v3/files/${driveData.id}/permissions`, {
+                method: "POST",
+                headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+                body: JSON.stringify({ type: "anyone", role: "reader" })
+              });
+              finalFileUrl = `https://drive.google.com/file/d/${driveData.id}/view`;
+            }
+          }
+        } catch (driveErr) {
+          console.warn("Could not copy to Google Drive, proceeding with direct URL:", driveErr);
+        }
+      }
+
+      // Update DB status to 'accepted'
+      const { error } = await supabaseClient
+        .from("student_resources")
+        .update({ status: "accepted", file_url: finalFileUrl })
+        .eq("id", topic.classroom_id);
+
+      if (error) throw error;
+
+      // Update local state smoothly
+      setTopicsList(prev => prev.map(t => t.classroom_id === topic.classroom_id ? { ...t, status: "accepted", pdf_url: finalFileUrl } : t));
+    } catch (err) {
+      console.error("Accept Error:", err);
+      alert("Failed to accept request. Please try again.");
+    } finally {
+      setAcceptingId(null);
+    }
+  };
+
+  const handleDeclineSharedRequest = async (topic: Topic, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setDecliningId(topic.classroom_id);
+    try {
+      // Delete ONLY receiver's row from DB (sender's original file is untouched!)
+      const { error } = await supabaseClient
+        .from("student_resources")
+        .delete()
+        .eq("id", topic.classroom_id);
+
+      if (error) throw error;
+
+      // Update local state
+      setTopicsList(prev => prev.filter(t => t.classroom_id !== topic.classroom_id));
+    } catch (err) {
+      console.error("Decline Error:", err);
+      alert("Failed to ignore request. Please try again.");
+    } finally {
+      setDecliningId(null);
     }
   };
 
@@ -894,14 +986,80 @@ export default function StudyHubContent() {
                             <TopicSkeletons />
                           ) : (
                             <div style={{ display: "flex", flexDirection: "column", gap: "32px", paddingBottom: "40px" }}>
-                              {/* CLASS NOTES SECTION REMOVED */}
+                              {/* SHARED REQUESTS SECTION (PENDING INCOMING SHARES) */}
+                              {topicsList.filter(t => t.status === "pending").length > 0 && (
+                                <div style={{ marginTop: "24px" }}>
+                                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
+                                    <p className="section-label" style={{ color: "#38d399", marginBottom: 0, display: "flex", alignItems: "center", gap: 6 }}>
+                                      <span>📥 Shared Requests ({topicsList.filter(t => t.status === "pending").length})</span>
+                                    </p>
+                                  </div>
+                                  <div className="notes-grid">
+                                    {topicsList.filter(t => t.status === "pending").map((topic, index) => {
+                                      const isAccepting = acceptingId === topic.classroom_id;
+                                      const isDeclining = decliningId === topic.classroom_id;
+
+                                      return (
+                                        <motion.div
+                                          key={topic.classroom_id}
+                                          initial={{ opacity: 0, y: 20 }}
+                                          animate={{ opacity: 1, y: 0 }}
+                                          transition={{ duration: 0.4, delay: index * 0.05 }}
+                                          className="note-card"
+                                          style={{ border: "1.5px solid rgba(56,211,153,0.35)", background: "rgba(56,211,153,0.04)", boxShadow: "0 8px 24px rgba(56,211,153,0.1)" }}
+                                        >
+                                          <div className="note-header">
+                                            <div className="note-icon" style={{ background: "rgba(56,211,153,0.15)", color: "#38d399", borderColor: "rgba(56,211,153,0.25)", boxShadow: "0 4px 12px rgba(56,211,153,0.15)" }}>
+                                              <Share2 size={18} />
+                                            </div>
+                                            <div style={{ flex: 1 }}>
+                                              <h3 className="note-title" style={{ marginBottom: "0px" }}>
+                                                {topic.topic_name}
+                                              </h3>
+                                            </div>
+                                            <span className="note-badge" style={{ background: "rgba(56,211,153,0.15)", color: "#38d399", fontWeight: 700 }}>
+                                              Pending
+                                            </span>
+                                          </div>
+                                          <p className="note-desc">
+                                            <span style={{ color: "#38d399", fontWeight: 600 }}>
+                                              ✨ Shared by {topic.sender_name || "a classmate"}
+                                            </span>
+                                          </p>
+                                          <div className="note-footer" style={{ marginTop: "14px" }}>
+                                            <div style={{ display: "flex", gap: "8px", width: "100%" }}>
+                                              <button
+                                                className="read-btn"
+                                                style={{ flex: 1, background: "rgba(239,68,68,0.15)", color: "#ef4444", padding: "8px", justifyContent: "center", fontWeight: 600 }}
+                                                disabled={isAccepting || isDeclining}
+                                                onClick={(e) => handleDeclineSharedRequest(topic, e)}
+                                              >
+                                                {isDeclining ? "Ignoring..." : "Ignore"}
+                                              </button>
+                                              <button
+                                                className="read-btn"
+                                                style={{ flex: 2, background: "linear-gradient(135deg,#10b981,#059669)", color: "#fff", padding: "8px", justifyContent: "center", fontWeight: 700, boxShadow: "0 4px 14px rgba(16,185,129,0.3)" }}
+                                                disabled={isAccepting || isDeclining}
+                                                onClick={(e) => handleAcceptSharedRequest(topic, e)}
+                                              >
+                                                {isAccepting ? "Saving..." : "Accept & Save to My Drive"}
+                                              </button>
+                                            </div>
+                                          </div>
+                                        </motion.div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              )}
+
                               {/* PERSONAL DOCUMENTS SECTION */}
                               <div style={{ marginTop: "24px" }}>
                                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
                                   <p className="section-label" style={{ color: "#2dd4bf", marginBottom: 0 }}>My Notes</p>
                                 </div>
                                 <div className="notes-grid">
-                                  {topicsList.filter(t => t.category === "personal_document").map((topic, index) => {
+                                  {topicsList.filter(t => t.category === "personal_document" && t.status !== "pending").map((topic, index) => {
                                       const b = statusBadge(topic.status);
                                       const isActive = activeClassroomId === topic.classroom_id;
                                       return (
@@ -982,7 +1140,7 @@ export default function StudyHubContent() {
                                   <p className="section-label" style={{ color: "#fb923c", marginBottom: 0 }}>Assignments</p>
                                 </div>
                                 <div className="notes-grid">
-                                  {topicsList.filter(t => t.category === "assignment").map((topic, index) => {
+                                  {topicsList.filter(t => t.category === "assignment" && t.status !== "pending").map((topic, index) => {
                                       const b = statusBadge(topic.status);
                                       const isActive = activeClassroomId === topic.classroom_id;
                                       return (
@@ -1063,7 +1221,7 @@ export default function StudyHubContent() {
                                   <p className="section-label" style={{ color: "#818cf8", marginBottom: 0 }}>Practicals</p>
                                 </div>
                                 <div className="notes-grid">
-                                  {topicsList.filter(t => t.category === "practical").map((topic, index) => {
+                                  {topicsList.filter(t => t.category === "practical" && t.status !== "pending").map((topic, index) => {
                                       const b = statusBadge(topic.status);
                                       const isActive = activeClassroomId === topic.classroom_id;
                                       return (
