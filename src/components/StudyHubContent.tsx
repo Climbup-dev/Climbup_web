@@ -658,6 +658,11 @@ export default function StudyHubContent() {
 
             if (driveRes.ok) {
               const driveData = await driveRes.json();
+              await fetch(`https://www.googleapis.com/drive/v3/files/${driveData.id}/permissions`, {
+                method: "POST",
+                headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+                body: JSON.stringify({ type: "anyone", role: "reader" })
+              });
               finalFileUrl = `https://drive.google.com/file/d/${driveData.id}/view`;
             }
           }

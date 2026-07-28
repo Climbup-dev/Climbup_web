@@ -167,7 +167,20 @@ export function AddResourceModal({
       const driveData = await driveUploadRes.json();
       const fileId = driveData.id;
 
-      // 3. Construct direct view URL (File remains 100% PRIVATE to owner's Google account)
+      // 3. Set sharing permission to 'anyone with link can view' so PDFs load seamlessly for students
+      await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}/permissions`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          type: "anyone",
+          role: "reader"
+        })
+      });
+
+      // 4. Construct direct view URL
       const fileUrl = `https://drive.google.com/file/d/${fileId}/view`;
 
       // 5. Save metadata to database
