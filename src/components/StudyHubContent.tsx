@@ -1005,14 +1005,13 @@ export default function StudyHubContent() {
               />
             )}
             <motion.aside 
-              layout
               initial={false}
               animate={{ 
                 marginLeft: (isFocusMode && !isMobile) ? -240 : 0,
                 opacity: (isFocusMode && !isMobile) ? 0 : 1,
                 x: isMobile ? (isMobileSidebarOpen ? 0 : -280) : 0
               }}
-              transition={{ type: "spring", stiffness: 350, damping: 35 }}
+              transition={{ duration: 0.25, ease: "easeInOut" }}
               className="study-hub-sidebar"
               style={{
                 flex: isMobile ? "none" : "0 0 240px",
