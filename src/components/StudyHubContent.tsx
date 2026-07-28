@@ -282,7 +282,11 @@ export default function StudyHubContent() {
       return `${activePdfUrl}#toolbar=0&navpanes=0&scrollbar=1`;
     }
     if (activePdfUrl.includes("drive.google.com")) {
-      return activePdfUrl.replace("/view", "/preview");
+      const match = activePdfUrl.match(/\/file\/d\/([^\/]+)/) || activePdfUrl.match(/id=([^&]+)/);
+      if (match && match[1]) {
+        return `https://drive.google.com/file/d/${match[1]}/preview`;
+      }
+      return activePdfUrl.replace(/\/view.*$/, "/preview");
     }
     return activePdfUrl;
   }, [activePdfUrl]);
