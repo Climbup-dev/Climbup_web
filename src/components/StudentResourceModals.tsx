@@ -10,7 +10,9 @@ import { getOrCreateClimbUPFolder } from "@/lib/googleDriveHelper";
 interface UserProfile {
   user_id: string;
   full_name: string;
+  email?: string;
   profile_image: string | null;
+  updated_at?: string;
 }
 
 // ============================================================================
@@ -343,12 +345,13 @@ export function ShareResourceModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
-  // Sub-string match filtering (matches any text anywhere in classmate name)
+  // Sub-string match filtering (matches anywhere in name or email with zero DB requests)
   const filteredClassmates = useMemo(() => {
     if (!searchQuery.trim()) return classmates;
     const q = searchQuery.toLowerCase().trim();
     return classmates.filter(user =>
-      user.full_name?.toLowerCase().includes(q)
+      user.full_name?.toLowerCase().includes(q) ||
+      user.email?.toLowerCase().includes(q)
     );
   }, [classmates, searchQuery]);
 
@@ -481,27 +484,87 @@ export function ShareResourceModal({
               </div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                {filteredClassmates.map(user => (
-                  <div key={user.user_id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(255,255,255,0.03)", padding: "12px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.05)" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                      {user.profile_image ? (
-                        <img src={user.profile_image} alt={user.full_name} style={{ width: "32px", height: "32px", borderRadius: "50%", objectFit: "cover" }} />
-                      ) : (
-                        <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "rgba(255,255,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center", color: "#cbd5e1" }}>
-                          <User size={16} />
-                        </div>
-                      )}
-                      <span style={{ color: "#f1f5f9", fontWeight: 500, fontSize: "0.95rem" }}>{user.full_name}</span>
-                    </div>
-                    <button
-                      onClick={() => handleShare(user.user_id)}
-                      disabled={sharingTo === user.user_id}
-                      style={{ background: themeColor, color: "#000", border: "none", borderRadius: "6px", padding: "6px 12px", fontSize: "0.8rem", fontWeight: 600, cursor: "pointer", opacity: sharingTo === user.user_id ? 0.7 : 1 }}
+                {filteredClassmates.map(user => {
+                  const isRecentlyActive = user.updated_at
+                    ? (Date.now() - new Date(user.updated_at).getTime()) < 14 * 24 * 60 * 60 * 1000
+                    : true; // Default to active if missing timestamp
+
+                  return (
+                    <div
+                      key={user.user_id}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        background: "rgba(255,255,255,0.03)",
+                        padding: "10px 14px",
+                        borderRadius: "10px",
+                        border: "1px solid rgba(255,255,255,0.06)",
+                        transition: "all 0.2s ease"
+                      }}
                     >
-                      {sharingTo === user.user_id ? "Sending..." : "Share"}
-                    </button>
-                  </div>
-                ))}
+                      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                        <div style={{ position: "relative" }}>
+                          {user.profile_image ? (
+                            <img src={user.profile_image} alt={user.full_name} style={{ width: "36px", height: "36px", borderRadius: "50%", objectFit: "cover" }} />
+                          ) : (
+                            <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: `${themeColor}20`, border: `1px solid ${themeColor}40`, display: "flex", alignItems: "center", justifyContent: "center", color: themeColor, fontWeight: 700, fontSize: "0.9rem" }}>
+                              {user.full_name ? user.full_name.charAt(0).toUpperCase() : <User size={16} />}
+                            </div>
+                          )}
+                          {/* Active Indicator Dot */}
+                          <span
+                            style={{
+                              position: "absolute",
+                              bottom: 0,
+                              right: 0,
+                              width: "10px",
+                              height: "10px",
+                              borderRadius: "50%",
+                              background: isRecentlyActive ? "#10b981" : "#64748b",
+                              border: "2px solid #0f172a"
+                            }}
+                          />
+                        </div>
+
+                        <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                            <span style={{ color: "#f1f5f9", fontWeight: 600, fontSize: "0.92rem" }}>{user.full_name}</span>
+                            {isRecentlyActive && (
+                              <span style={{ fontSize: "0.62rem", background: "rgba(16,185,129,0.15)", color: "#10b981", border: "1px solid rgba(16,185,129,0.3)", padding: "1px 6px", borderRadius: "100px", fontWeight: 700 }}>
+                                Active
+                              </span>
+                            )}
+                          </div>
+                          {user.email && (
+                            <span style={{ color: "#94a3b8", fontSize: "0.78rem", fontFamily: "monospace" }}>
+                              {user.email}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => handleShare(user.user_id)}
+                        disabled={sharingTo === user.user_id}
+                        style={{
+                          background: themeColor,
+                          color: "#020c1b",
+                          border: "none",
+                          borderRadius: "8px",
+                          padding: "7px 14px",
+                          fontSize: "0.82rem",
+                          fontWeight: 700,
+                          cursor: sharingTo === user.user_id ? "not-allowed" : "pointer",
+                          opacity: sharingTo === user.user_id ? 0.7 : 1,
+                          boxShadow: `0 4px 12px ${themeColor}30`,
+                        }}
+                      >
+                        {sharingTo === user.user_id ? "Sending..." : "Share"}
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
