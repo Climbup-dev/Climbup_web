@@ -899,7 +899,7 @@ export default function StudyHubContent() {
               >
                 {/* ── TOP HALF: Actual PDF First Page Live Mini Preview ── */}
                 <div style={{
-                  height: "135px",
+                  height: "105px",
                   width: "100%",
                   background: "#070f1e",
                   borderBottom: "1px solid rgba(255,255,255,0.08)",
@@ -916,19 +916,21 @@ export default function StudyHubContent() {
                         : topic.pdf_url}
                       title={cleanTitle}
                       style={{
-                        width: "200%",
-                        height: "200%",
+                        width: "230%",
+                        height: "230%",
                         border: "none",
-                        transform: "scale(0.5)",
+                        transform: "scale(0.43)",
                         transformOrigin: "top left",
                         pointerEvents: "none",
-                        opacity: 0.85,
+                        opacity: 0.88,
+                        overflow: "hidden"
                       }}
+                      scrolling="no"
                       loading="lazy"
                     />
                   ) : (
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "#64748b" }}>
-                      <FileText size={28} />
+                      <FileText size={24} />
                     </div>
                   )}
 
@@ -936,42 +938,18 @@ export default function StudyHubContent() {
                   <div style={{
                     position: "absolute",
                     inset: 0,
-                    background: "linear-gradient(180deg, rgba(15,23,42,0.1) 0%, rgba(15,23,42,0.85) 100%)",
+                    background: "linear-gradient(180deg, rgba(15,23,42,0.05) 0%, rgba(15,23,42,0.6) 100%)",
                     pointerEvents: "none",
                   }} />
-
-                  {/* Top Right Category Badge */}
-                  <div style={{ position: "absolute", top: 10, right: 12, zIndex: 2 }}>
-                    <span className={`note-badge ${b.cls}`}>{b.icon}&nbsp;{b.label}</span>
-                  </div>
-
-                  {/* PDF Page 1 Tag */}
-                  <div style={{
-                    position: "absolute",
-                    bottom: 8,
-                    left: 12,
-                    zIndex: 2,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 5,
-                    background: "rgba(15, 23, 42, 0.85)",
-                    backdropFilter: "blur(6px)",
-                    padding: "3px 8px",
-                    borderRadius: "6px",
-                    border: `1px solid ${themeColor}40`,
-                  }}>
-                    <FileText size={11} color={themeColor} />
-                    <span style={{ fontSize: "0.62rem", fontWeight: 700, color: themeColor, letterSpacing: "0.04em" }}>PAGE 1 PREVIEW</span>
-                  </div>
                 </div>
 
                 {/* ── BOTTOM HALF: Information & Action Buttons ── */}
-                <div style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "10px" }}>
+                <div style={{ padding: "12px 14px", display: "flex", flexDirection: "column", gap: "8px" }}>
                   <div>
-                    <h3 className="note-title" style={{ fontSize: "0.98rem", fontWeight: 700, color: "#f8fafc", margin: "0 0 4px", lineHeight: "1.35" }}>
+                    <h3 className="note-title" style={{ fontSize: "0.92rem", fontWeight: 700, color: "#f8fafc", margin: "0 0 2px", lineHeight: "1.3" }}>
                       {cleanTitle}
                     </h3>
-                    <p className="note-desc" style={{ margin: 0, fontSize: "0.8rem", color: "#94a3b8" }}>
+                    <p className="note-desc" style={{ margin: 0, fontSize: "0.78rem", color: "#94a3b8" }}>
                       {sharedByMatch ? (
                         <span style={{ color: themeColor, fontWeight: 600 }}>✨ Shared by {sharedByMatch[1]}</span>
                       ) : topic.created_at ? (
@@ -982,8 +960,8 @@ export default function StudyHubContent() {
                     </p>
                   </div>
 
-                  <div className="note-footer" style={{ marginTop: "4px", paddingTop: "10px", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
-                    <div className="note-meta" style={{ color: themeColor }}>
+                  <div className="note-footer" style={{ marginTop: "2px", paddingTop: "8px", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+                    <div className="note-meta" style={{ color: themeColor, fontSize: "0.75rem" }}>
                       <FileText size={12} />
                       <span>PDF Ready</span>
                     </div>
@@ -1436,7 +1414,7 @@ export default function StudyHubContent() {
                                     style={{
                                       display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
                                       border: "2px dashed rgba(45,212,191,0.3)", background: "rgba(45,212,191,0.05)", cursor: "pointer",
-                                      minHeight: "160px", gap: "12px", transition: "all 0.2s", borderRadius: "16px"
+                                      minHeight: "180px", gap: "10px", transition: "all 0.2s", borderRadius: "18px"
                                     }}
                                     whileHover={{ scale: 1.02, background: "rgba(45,212,191,0.1)", border: "2px dashed rgba(45,212,191,0.5)" }}
                                   >
@@ -1464,7 +1442,7 @@ export default function StudyHubContent() {
                                     style={{
                                       display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
                                       border: "2px dashed rgba(251,146,60,0.3)", background: "rgba(251,146,60,0.05)", cursor: "pointer",
-                                      minHeight: "160px", gap: "12px", transition: "all 0.2s", borderRadius: "16px"
+                                      minHeight: "180px", gap: "10px", transition: "all 0.2s", borderRadius: "18px"
                                     }}
                                     whileHover={{ scale: 1.02, background: "rgba(251,146,60,0.1)", border: "2px dashed rgba(251,146,60,0.5)" }}
                                   >
@@ -1492,7 +1470,7 @@ export default function StudyHubContent() {
                                     style={{
                                       display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
                                       border: "2px dashed rgba(129,140,248,0.3)", background: "rgba(129,140,248,0.05)", cursor: "pointer",
-                                      minHeight: "160px", gap: "12px", transition: "all 0.2s", borderRadius: "16px"
+                                      minHeight: "180px", gap: "10px", transition: "all 0.2s", borderRadius: "18px"
                                     }}
                                     whileHover={{ scale: 1.02, background: "rgba(129,140,248,0.1)", border: "2px dashed rgba(129,140,248,0.5)" }}
                                   >
