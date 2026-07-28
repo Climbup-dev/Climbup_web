@@ -366,7 +366,7 @@ export default function StudyHubContent() {
     setTopicsList([]);
 
     try {
-      // Fetch user's personal resources for this subject
+      // Fetch user's personal resources for this subject (fresh fetch from DB)
       let allTopics: Topic[] = [];
       if (studentId) {
         const { data: resources } = await supabase
@@ -379,7 +379,7 @@ export default function StudyHubContent() {
         allTopics = (resources || []).map((r: any) => ({
           classroom_id: r.id, 
           topic_name: r.title,
-          category: r.type,
+          category: r.type || "assignment", // Ensure fallback category if type is missing so it's never hidden!
           pdf_url: r.file_url,
           created_at: r.created_at,
           is_personal: true
