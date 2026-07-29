@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 import {
   Book, BookOpen, Atom, Search, X, ChevronRight,
   ArrowLeft, FileText, Zap, Clock, CheckCircle,
-  MessageSquare, Send, Maximize, Minimize, Menu, PlusCircle, Share2, Trash2
+  MessageSquare, Send, Maximize, Minimize, Menu, PlusCircle, Share2, Trash2, ExternalLink
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "@/components/Navbar";
@@ -1121,6 +1121,16 @@ export default function StudyHubContent() {
                         {isFocusMode ? <Minimize size={13} /> : <Maximize size={13} />}
                         {isFocusMode ? "Exit Focus" : "Focus"}
                       </button>
+
+                      <a
+                        className="pdf-back-btn"
+                        href={activePdfUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: "6px" }}
+                      >
+                        <ExternalLink size={13} /> Open
+                      </a>
                     </div>
 
                     {/* Mobile Chat FAB */}
@@ -1350,7 +1360,8 @@ export default function StudyHubContent() {
                                           animate={{ opacity: 1, y: 0 }}
                                           transition={{ duration: 0.4, delay: index * 0.05 }}
                                           className="note-card"
-                                          style={{ border: "1.5px solid rgba(56,211,153,0.35)", background: "rgba(56,211,153,0.04)", boxShadow: "0 8px 24px rgba(56,211,153,0.1)" }}
+                                          onClick={() => handleTopicClick(topic)}
+                                          style={{ border: "1.5px solid rgba(56,211,153,0.35)", background: "rgba(56,211,153,0.04)", boxShadow: "0 8px 24px rgba(56,211,153,0.1)", cursor: "pointer" }}
                                         >
                                           <div className="note-header">
                                             <div className="note-icon" style={{ background: "rgba(56,211,153,0.15)", color: "#38d399", borderColor: "rgba(56,211,153,0.25)", boxShadow: "0 4px 12px rgba(56,211,153,0.15)" }}>
@@ -1368,6 +1379,9 @@ export default function StudyHubContent() {
                                           <p className="note-desc">
                                             <span style={{ color: "#38d399", fontWeight: 600 }}>
                                               ✨ Shared by {topic.sender_name || "a classmate"}
+                                            </span>
+                                            <span style={{ display: "block", marginTop: "4px", fontSize: "0.75rem", color: "#64748b", fontWeight: 500 }}>
+                                              👆 Click to preview before accepting
                                             </span>
                                           </p>
                                           <div className="note-footer" style={{ marginTop: "14px" }}>
