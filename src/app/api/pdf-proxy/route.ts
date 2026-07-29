@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
+export const runtime = 'edge';
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
@@ -29,10 +31,10 @@ export async function GET(req: NextRequest) {
       return NextResponse.redirect(fileUrl);
     }
 
-    const arrayBuffer = await res.arrayBuffer();
     const contentType = res.headers.get("content-type") || "application/pdf";
 
-    return new NextResponse(arrayBuffer, {
+    // Pass the stream directly for 0MB memory footprint and instant TTFB
+    return new NextResponse(res.body, {
       status: 200,
       headers: {
         "Content-Type": contentType.includes("pdf") ? "application/pdf" : contentType,
