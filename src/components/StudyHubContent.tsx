@@ -282,7 +282,11 @@ export default function StudyHubContent() {
       return `${activePdfUrl}#toolbar=0&navpanes=0&scrollbar=1`;
     }
     if (activePdfUrl.includes("drive.google.com")) {
-      return `/api/pdf-proxy?url=${encodeURIComponent(activePdfUrl)}#toolbar=0&navpanes=0&scrollbar=1`;
+      const match = activePdfUrl.match(/\/file\/d\/([^\/]+)/) || activePdfUrl.match(/id=([^&]+)/);
+      if (match && match[1]) {
+        return `https://drive.google.com/file/d/${match[1]}/preview`;
+      }
+      return activePdfUrl.replace(/\/view.*$/, "/preview");
     }
     return activePdfUrl;
   }, [activePdfUrl]);
@@ -294,7 +298,7 @@ export default function StudyHubContent() {
     const targetUrl = pdfUrl.includes("supabase.co")
       ? `${pdfUrl}#toolbar=0&navpanes=0&scrollbar=1`
       : pdfUrl.includes("drive.google.com")
-      ? `/api/pdf-proxy?url=${encodeURIComponent(pdfUrl)}#toolbar=0&navpanes=0&scrollbar=1`
+      ? pdfUrl.replace("/view", "/preview")
       : pdfUrl;
 
     if (!preloadedUrls.current.has(targetUrl)) {
@@ -908,7 +912,7 @@ export default function StudyHubContent() {
                       src={topic.pdf_url.includes("supabase.co")
                         ? `${topic.pdf_url}#page=1&toolbar=0&navpanes=0&scrollbar=0`
                         : topic.pdf_url.includes("drive.google.com")
-                        ? `/api/pdf-proxy?url=${encodeURIComponent(topic.pdf_url)}#page=1&toolbar=0&navpanes=0&scrollbar=0`
+                        ? `https://drive.google.com/file/d/${(topic.pdf_url.match(/\/d\/([^\/]+)/) || topic.pdf_url.match(/id=([^&]+)/))?.[1] || ""}/preview`
                         : topic.pdf_url}
                       title={cleanTitle}
                       style={{
