@@ -767,3 +767,15 @@ body.reading-mode .study-hub-container {
 
 .typing-dot { width: 6px; height: 6px; border-radius: 50%; background-color: #60a5fa; animation: typingBounce 1.4s infinite ease-in-out both; }
 @keyframes typingBounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+
+/* Focus Mode Auto-Hide Controls */
+.pdf-floating-controls {
+  transition: opacity 0.3s ease;
+}
+.pdf-floating-controls.focus-mode-active {
+  opacity: 0;
+}
+.pdf-floating-controls.focus-mode-active:hover {
+  opacity: 1;
+}
+

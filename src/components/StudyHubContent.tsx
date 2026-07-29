@@ -1095,14 +1095,17 @@ export default function StudyHubContent() {
                     style={{ position: "relative" }}
                   >
                     {/* Floating buttons — permanently visible so users don't get trapped in focus mode */}
-                    <div style={{
-                      position: "absolute",
-                      top: 14,
-                      left: 14,
-                      zIndex: 20,
-                      display: "flex",
-                      gap: 10,
-                    }}>
+                    <div 
+                      className={`pdf-floating-controls ${isFocusMode ? 'focus-mode-active' : ''}`}
+                      style={{
+                        position: "absolute",
+                        top: 14,
+                        left: 14,
+                        zIndex: 20,
+                        display: "flex",
+                        gap: 10,
+                      }}
+                    >
                       <button
                         className="pdf-back-btn"
                         onClick={() => {
