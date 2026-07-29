@@ -170,7 +170,7 @@ export function AddResourceModal({
       const fileId = driveData.id;
 
       // 3. Set sharing permission to 'anyone with link can view' so PDFs load seamlessly for students
-      await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}/permissions`, {
+      const permRes = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}/permissions`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -181,6 +181,15 @@ export function AddResourceModal({
           role: "reader"
         })
       });
+
+      if (!permRes.ok) {
+        // Delete the file since we can't use it
+        await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        throw new Error("Your Google account restricts public sharing (usually happens with college/work emails). Please upload using a personal Gmail account.");
+      }
 
       // 4. Construct direct view URL
       const fileUrl = `https://drive.google.com/file/d/${fileId}/view`;

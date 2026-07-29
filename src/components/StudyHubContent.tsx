@@ -284,8 +284,7 @@ export default function StudyHubContent() {
     if (activePdfUrl.includes("drive.google.com")) {
       const match = activePdfUrl.match(/\/file\/d\/([^\/]+)/) || activePdfUrl.match(/id=([^&]+)/);
       if (match && match[1]) {
-        const directUrl = `https://drive.google.com/uc?export=download&id=${match[1]}`;
-        return `https://docs.google.com/viewer?url=${encodeURIComponent(directUrl)}&embedded=true`;
+        return `https://drive.google.com/file/d/${match[1]}/preview`;
       }
       return activePdfUrl.replace(/\/view.*$/, "/preview");
     }
@@ -693,12 +692,21 @@ export default function StudyHubContent() {
 
             if (driveRes.ok) {
               const driveData = await driveRes.json();
-              await fetch(`https://www.googleapis.com/drive/v3/files/${driveData.id}/permissions`, {
+              const permRes = await fetch(`https://www.googleapis.com/drive/v3/files/${driveData.id}/permissions`, {
                 method: "POST",
                 headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
                 body: JSON.stringify({ type: "anyone", role: "reader" })
               });
-              finalFileUrl = `https://drive.google.com/file/d/${driveData.id}/view`;
+              
+              if (permRes.ok) {
+                finalFileUrl = `https://drive.google.com/file/d/${driveData.id}/view`;
+              } else {
+                console.warn("Could not set Drive file to public. Falling back to original URL.");
+                await fetch(`https://www.googleapis.com/drive/v3/files/${driveData.id}`, {
+                  method: 'DELETE',
+                  headers: { 'Authorization': `Bearer ${token}` }
+                });
+              }
             }
           }
         } catch (driveErr) {
