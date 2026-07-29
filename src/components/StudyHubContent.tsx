@@ -266,8 +266,23 @@ export default function StudyHubContent() {
       }
     });
 
-    return () => window.removeEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
   }, []);
+
+  // Prevent accidental refresh/close when reading a PDF
+  useEffect(() => {
+    if (!activePdfUrl) return;
+
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = ""; // Standard way to trigger browser warning
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [activePdfUrl]);
 
   const [activeSubject, setActiveSubject] = useState("");
   const [subjectsList, setSubjectsList] = useState<Subject[]>([]);
