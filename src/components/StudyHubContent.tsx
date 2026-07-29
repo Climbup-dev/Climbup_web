@@ -282,10 +282,6 @@ export default function StudyHubContent() {
       return `${activePdfUrl}#toolbar=0&navpanes=0&scrollbar=1`;
     }
     if (activePdfUrl.includes("drive.google.com")) {
-      const match = activePdfUrl.match(/\/file\/d\/([^\/]+)/) || activePdfUrl.match(/id=([^&]+)/);
-      if (match && match[1]) {
-        return `https://drive.google.com/file/d/${match[1]}/preview`;
-      }
       return activePdfUrl.replace(/\/view.*$/, "/preview");
     }
     return activePdfUrl;
@@ -921,7 +917,7 @@ export default function StudyHubContent() {
                       src={topic.pdf_url.includes("supabase.co")
                         ? `${topic.pdf_url}#page=1&toolbar=0&navpanes=0&scrollbar=0`
                         : topic.pdf_url.includes("drive.google.com")
-                        ? `https://drive.google.com/file/d/${(topic.pdf_url.match(/\/d\/([^\/]+)/) || topic.pdf_url.match(/id=([^&]+)/))?.[1] || ""}/preview`
+                        ? topic.pdf_url.replace(/\/view.*$/, "/preview")
                         : topic.pdf_url}
                       title={cleanTitle}
                       style={{
