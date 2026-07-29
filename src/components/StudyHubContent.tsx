@@ -284,7 +284,8 @@ export default function StudyHubContent() {
     if (activePdfUrl.includes("drive.google.com")) {
       const match = activePdfUrl.match(/\/file\/d\/([^\/]+)/) || activePdfUrl.match(/id=([^&]+)/);
       if (match && match[1]) {
-        return `https://drive.google.com/file/d/${match[1]}/preview`;
+        const directUrl = `https://drive.google.com/uc?export=download&id=${match[1]}`;
+        return `https://docs.google.com/viewer?url=${encodeURIComponent(directUrl)}&embedded=true`;
       }
       return activePdfUrl.replace(/\/view.*$/, "/preview");
     }
