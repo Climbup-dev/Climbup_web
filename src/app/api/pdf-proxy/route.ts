@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
     
     if (driveMatch && driveMatch[1]) {
       const fileId = driveMatch[1];
-      fetchUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
+      fetchUrl = `https://drive.google.com/uc?export=download&id=${fileId}&confirm=t`;
     }
 
     const res = await fetch(fetchUrl, {
