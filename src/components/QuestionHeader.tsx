@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import MathText from "@/components/MathText";
 
 type QuestionHeaderProps = {
   title: string;
@@ -43,7 +44,7 @@ export default function QuestionHeader({ title, imageUrl }: QuestionHeaderProps)
             Question
           </div>
           <h1 style={{ fontSize: "clamp(20px, 4vw, 26px)", lineHeight: 1.4, margin: 0, fontWeight: 700, color: "#fb7185" }}>
-            {title}
+            <MathText text={title} />
           </h1>
           {imageUrl && (
             <div style={{ marginTop: "16px", maxWidth: "100%", overflow: "hidden", borderRadius: "8px", background: "#fff", padding: "8px", display: "inline-block", border: "1px solid rgba(255,255,255,0.1)" }}>
@@ -84,7 +85,9 @@ export default function QuestionHeader({ title, imageUrl }: QuestionHeaderProps)
               </svg>
               Question
             </div>
-            <h1 style={{ fontSize: "clamp(18px, 3vw, 22px)", lineHeight: 1.4, margin: 0, fontWeight: 700, color: "#f8fafc" }}>{title}</h1>
+            <h1 style={{ fontSize: "clamp(18px, 3vw, 22px)", lineHeight: 1.4, margin: 0, fontWeight: 700, color: "#f8fafc" }}>
+              <MathText text={title} />
+            </h1>
             {imageUrl && (
               <div style={{ marginTop: "12px", maxWidth: "100%", overflow: "hidden", borderRadius: "8px", background: "#fff", padding: "6px", display: "inline-block", border: "1px solid rgba(255,255,255,0.1)" }}>
                 <img 
