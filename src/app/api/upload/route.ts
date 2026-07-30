@@ -39,23 +39,14 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'No URL provided' }, { status: 400 });
     }
 
-    // Extract public_id from Cloudinary URL
-    // URL format: https://res.cloudinary.com/<cloud_name>/image/upload/v<version>/<folder>/<public_id>.<ext>
-    const matches = url.match(/\/v\d+\/(.+)\.\w+$/);
-    if (!matches || !matches[1]) {
-      return NextResponse.json({ error: 'Invalid Cloudinary URL' }, { status: 400 });
-    }
-    
-    const publicId = matches[1];
-
-    // Delete from Cloudinary
-    await cloudinary.uploader.destroy(publicId);
-
-    return NextResponse.json({ success: true, publicId });
+    // Since we are now using base64 strings embedded in the document,
+    // there is no external storage cleanup required.
+    // The image will be deleted when the document is updated/saved without it.
+    return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error deleting from Cloudinary:', error);
+    console.error('Error in delete route:', error);
     return NextResponse.json(
-      { error: 'Failed to delete image' },
+      { error: 'Failed to process delete' },
       { status: 500 }
     );
   }
