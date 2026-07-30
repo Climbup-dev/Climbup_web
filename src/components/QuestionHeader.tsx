@@ -85,6 +85,15 @@ export default function QuestionHeader({ title, imageUrl }: QuestionHeaderProps)
               Question
             </div>
             <h1 style={{ fontSize: "clamp(18px, 3vw, 22px)", lineHeight: 1.4, margin: 0, fontWeight: 700, color: "#f8fafc" }}>{title}</h1>
+            {imageUrl && (
+              <div style={{ marginTop: "12px", maxWidth: "100%", overflow: "hidden", borderRadius: "8px", background: "#fff", padding: "6px", display: "inline-block", border: "1px solid rgba(255,255,255,0.1)" }}>
+                <img 
+                  src={imageUrl} 
+                  alt="Question visual" 
+                  style={{ display: "block", maxWidth: "100%", maxHeight: "200px", objectFit: "contain", borderRadius: "4px" }} 
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>
