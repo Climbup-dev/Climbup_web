@@ -1,12 +1,4 @@
 import { NextResponse } from 'next/server';
-import { v2 as cloudinary } from 'cloudinary';
-
-// Configure Cloudinary with environment variables
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
 
 export async function POST(request: Request) {
   try {
@@ -25,19 +17,15 @@ export async function POST(request: Request) {
     const buffer = Buffer.from(bytes);
     const base64Image = `data:${file.type};base64,${buffer.toString('base64')}`;
 
-    // Upload to Cloudinary
-    const result = await cloudinary.uploader.upload(base64Image, {
-      folder: 'climbup-editor',
-    });
-
+    // Return the base64 image directly since we don't have Cloudinary keys
     return NextResponse.json({
-      url: result.secure_url,
-      public_id: result.public_id,
+      url: base64Image,
+      public_id: `base64_${Date.now()}`,
     });
   } catch (error) {
-    console.error('Error uploading to Cloudinary:', error);
+    console.error('Error processing image:', error);
     return NextResponse.json(
-      { error: 'Failed to upload image' },
+      { error: 'Failed to process image' },
       { status: 500 }
     );
   }
