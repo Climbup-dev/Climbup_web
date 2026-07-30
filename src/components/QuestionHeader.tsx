@@ -4,9 +4,10 @@ import { useEffect, useRef, useState } from "react";
 
 type QuestionHeaderProps = {
   title: string;
+  imageUrl?: string;
 };
 
-export default function QuestionHeader({ title }: QuestionHeaderProps) {
+export default function QuestionHeader({ title, imageUrl }: QuestionHeaderProps) {
   const [isStickyVisible, setIsStickyVisible] = useState(false);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
@@ -44,6 +45,15 @@ export default function QuestionHeader({ title }: QuestionHeaderProps) {
           <h1 style={{ fontSize: "clamp(20px, 4vw, 26px)", lineHeight: 1.4, margin: 0, fontWeight: 700, color: "#fb7185" }}>
             {title}
           </h1>
+          {imageUrl && (
+            <div style={{ marginTop: "16px", maxWidth: "100%", overflow: "hidden", borderRadius: "8px", background: "#fff", padding: "8px", display: "inline-block", border: "1px solid rgba(255,255,255,0.1)" }}>
+              <img 
+                src={imageUrl} 
+                alt="Question visual" 
+                style={{ display: "block", maxWidth: "100%", maxHeight: "300px", objectFit: "contain", borderRadius: "4px" }} 
+              />
+            </div>
+          )}
         </header>
       </div>
 

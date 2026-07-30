@@ -58,6 +58,7 @@ export default async function QuestionDetailPage({
             <>
               <QuestionHeader 
                 title={question.title} 
+                imageUrl={question.imageUrls?.[0]}
               />
 
               <EditableAnswerRenderer
