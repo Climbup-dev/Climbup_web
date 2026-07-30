@@ -8,12 +8,19 @@ import { useRouter } from "next/navigation";
 
 const HeroSection = dynamic(() => import("@/components/HeroSection"), {
   ssr: false,
-  loading: () => <div className="skeleton h-96 w-full" />,
+  loading: () => (
+    <div 
+      className="w-full flex items-center justify-center bg-[#021526]" 
+      style={{ minHeight: '100vh' }}
+    >
+      <div style={{ width: "40px", height: "40px", border: "3px solid rgba(56, 211, 153, 0.1)", borderTopColor: "#38d399", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
+    </div>
+  ),
 });
 
 const HomeSections = dynamic(() => import("@/components/HomeSections"), {
   ssr: false,
-  loading: () => <div className="skeleton h-64 w-full" />,
+  loading: () => <div className="w-full bg-[#021526]" style={{ minHeight: '100vh' }} />,
 });
 
 export default function Page() {
