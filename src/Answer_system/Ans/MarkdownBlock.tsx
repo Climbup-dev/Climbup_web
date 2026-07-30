@@ -94,7 +94,8 @@ export function renderMarkdown(text: string) {
       return;
     }
 
-    const youtubeRegex = /^<?(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})[^\s>]*>?$/;
+    // Match bare YouTube URLs (including shorts) and Markdown-formatted YouTube links
+    const youtubeRegex = /^(?:\[.*?\]\()?<?(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})[^\s>)]*>?(?:\))?$/;
     const ytMatch = trimmed.match(youtubeRegex);
     
     if (ytMatch && ytMatch[1]) {
@@ -123,7 +124,7 @@ export function renderMarkdown(text: string) {
 }
 
 function renderInline(text: string) {
-  const parts = text.split(/(`[^`]+`|\*\*[^*]+\*\*|==[^=]+==|\$[^$]+\$)/g);
+  const parts = text.split(/(`[^`]+`|\*\*[^*]+\*\*|==[^=]+==|\$[^$]+\$|\[[^\]]+\]\([^)]+\))/g);
 
   return parts.map((part, index) => {
     if (part.startsWith("`") && part.endsWith("`")) {
@@ -143,6 +144,21 @@ function renderInline(text: string) {
         <span className="inline-math" key={index}>
           {part}
         </span>
+      );
+    }
+
+    const linkMatch = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+    if (linkMatch) {
+      return (
+        <a 
+          key={index} 
+          href={linkMatch[2]} 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          style={{ color: '#38bdf8', textDecoration: 'underline', textUnderlineOffset: '2px' }}
+        >
+          {linkMatch[1]}
+        </a>
       );
     }
 
