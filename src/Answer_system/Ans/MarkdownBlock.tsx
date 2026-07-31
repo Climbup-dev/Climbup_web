@@ -124,7 +124,7 @@ export function renderMarkdown(text: string) {
 }
 
 function renderInline(text: string) {
-  const parts = text.split(/(`[^`]+`|\*\*[^*]+\*\*|==[^=]+==|\$[^$]+\$|\[[^\]]+\]\([^)]+\))/g);
+  const parts = text.split(/(`[^`]+`|\*\*[^*]+\*\*|==[^=]+==|<mark[^>]*>.*?<\/mark>|\$[^$]+\$|\[[^\]]+\]\([^)]+\))/g);
 
   return parts.map((part, index) => {
     if (part.startsWith("`") && part.endsWith("`")) {
@@ -137,6 +137,14 @@ function renderInline(text: string) {
 
     if (part.startsWith("==") && part.endsWith("==")) {
       return <mark key={index}>{part.slice(2, -2)}</mark>;
+    }
+
+    if (part.startsWith("<mark") && part.endsWith("</mark>")) {
+      // Extract the text inside the <mark> tag
+      const markMatch = part.match(/<mark[^>]*>(.*?)<\/mark>/);
+      if (markMatch) {
+        return <mark className="highlight" key={index}>{markMatch[1]}</mark>;
+      }
     }
 
     if (part.startsWith("$") && part.endsWith("$")) {

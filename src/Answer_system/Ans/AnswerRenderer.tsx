@@ -46,7 +46,11 @@ export default function AnswerRenderer({ data, author, answeredAt, questionImage
       )}
 
       <div className="answer-content">
-        {blocks.map((block: any, index: number) => renderBlock(block, index))}
+        {blocks.map((block: any, index: number) => (
+          <div key={`wrapper-${index}`} data-block-index={index}>
+            {renderBlock(block, index)}
+          </div>
+        ))}
       </div>
     </div>
   );

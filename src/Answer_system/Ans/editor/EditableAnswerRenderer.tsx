@@ -146,6 +146,7 @@ export default function EditableAnswerRenderer({
   const [showHighlightTooltip, setShowHighlightTooltip] = useState(false);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
   const [selectedText, setSelectedText] = useState("");
+  const [selectionRange, setSelectionRange] = useState<Range | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -241,11 +242,12 @@ export default function EditableAnswerRenderer({
         y: rect.top + window.scrollY - 40,
       });
       setSelectedText(text);
+      setSelectionRange(range);
       setShowHighlightTooltip(true);
     };
 
     const handleMouseDown = (e: MouseEvent) => {
-      if ((e.target as Element).closest(".highlight-ask-ai-tooltip")) return;
+      if ((e.target as Element).closest(".highlight-tooltip-container")) return;
       setShowHighlightTooltip(false);
     };
 
@@ -289,6 +291,71 @@ export default function EditableAnswerRenderer({
       });
     });
   }, []);
+
+  const silentSaveChanges = async (blocksToSave: any[]) => {
+    try {
+      if (!questionId) return;
+
+      const snapshot = createAnswerEditorSnapshot({
+        question: normalized.question,
+        questionImage,
+        blocks: blocksToSave,
+        isPublic,
+        feedback,
+      });
+
+      await fetch("/api/student-answers", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          questionId,
+          answerJson: snapshot,
+          publish: isPublic,
+        }),
+      });
+    } catch (error) {
+      console.error("Silent auto-save failed:", error);
+    }
+  };
+
+  const applyHighlight = () => {
+    if (!selectionRange) return;
+
+    const textToHighlight = selectionRange.toString();
+    if (!textToHighlight.trim()) return;
+
+    let blockElement = selectionRange.commonAncestorContainer.parentElement?.closest('[data-block-index]');
+    if (!blockElement) return;
+
+    const blockIndexStr = blockElement.getAttribute('data-block-index');
+    if (blockIndexStr === null) return;
+    
+    const blockIndex = parseInt(blockIndexStr, 10);
+    const targetBlock = editableBlocks[blockIndex];
+
+    if (targetBlock && targetBlock.type === 'markdown') {
+      const contentKey = targetBlock.content !== undefined ? 'content' : (targetBlock.text !== undefined ? 'text' : 'description');
+      const oldContent = targetBlock[contentKey] || "";
+      
+      if (oldContent.includes(textToHighlight)) {
+        const newContent = oldContent.replace(textToHighlight, `<mark class="highlight">${textToHighlight}</mark>`);
+        
+        const newBlocks = [...editableBlocks];
+        newBlocks[blockIndex] = {
+          ...targetBlock,
+          [contentKey]: newContent
+        };
+        
+        setEditableBlocks(newBlocks);
+        silentSaveChanges(newBlocks);
+      }
+    }
+
+    setShowHighlightTooltip(false);
+    window.getSelection()?.removeAllRanges();
+  };
 
   const startEditing = () => {
     setEditableBlocks(normalized.blocks);
@@ -734,7 +801,7 @@ export default function EditableAnswerRenderer({
   };
 
   return (
-  <div className={`editable-answer-page answer-theme-${theme}`}>
+  <div className={`editable-answer-page answer-theme-${theme}`} ref={contentRef}>
 
 
     {saveMessage && (
@@ -829,7 +896,7 @@ export default function EditableAnswerRenderer({
                 const blockId = block.id || `${block.type}-${index}`;
 
                 return (
-                  <div key={blockId}>
+                  <div key={blockId} data-block-index={index}>
                     <div
                       className="editor-block-scroll-target"
                       data-editor-block-id={blockId}
@@ -922,56 +989,104 @@ export default function EditableAnswerRenderer({
       </div>
     )}
       {showHighlightTooltip && (
-        <button
-          className="highlight-ask-ai-tooltip"
-          style={{
-            position: "absolute",
-            left: `${tooltipPos.x}px`,
-            top: `${tooltipPos.y}px`,
-            transform: "translateX(-50%)",
-            zIndex: 1000,
-            background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-            color: "white",
-            border: "1px solid rgba(255, 255, 255, 0.2)",
-            borderRadius: "99px",
-            padding: "8px 16px",
-            fontSize: "14px",
-            fontWeight: 700,
-            boxShadow: "0 8px 24px rgba(16, 185, 129, 0.4)",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            animation: "tooltipPop 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
-          }}
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            window.dispatchEvent(
-              new CustomEvent("climbup-ai-fill-input", {
-                detail: { text: `Explain this to me: "${selectedText}"` },
-              })
-            );
-            setShowHighlightTooltip(false);
-            window.getSelection()?.removeAllRanges();
-          }}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
-          </svg>
-          Ask AI
-        </button>
-      )}
-      <style jsx global>{`
-        @keyframes tooltipPop {
-          0% { transform: translate(-50%, 10px) scale(0.8); opacity: 0; }
-          100% { transform: translate(-50%, 0) scale(1); opacity: 1; }
-        }
-        .highlight-ask-ai-tooltip:hover {
-          transform: translateX(-50%) scale(1.05) translateY(-2px) !important;
-          box-shadow: 0 12px 32px rgba(16, 185, 129, 0.5) !important;
-        }
-      `}</style>
+          <div
+            className="highlight-tooltip-container"
+            style={{
+              position: "absolute",
+              left: `${tooltipPos.x}px`,
+              top: `${tooltipPos.y}px`,
+              transform: "translateX(-50%)",
+              zIndex: 1000,
+              display: "flex",
+              gap: "4px",
+              background: "#1e293b",
+              borderRadius: "8px",
+              padding: "4px",
+              boxShadow: "0 8px 24px rgba(0, 0, 0, 0.2)",
+              animation: "tooltipPop 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
+            }}
+          >
+            <button
+              style={{
+                background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+                color: "white",
+                border: "1px solid rgba(255, 255, 255, 0.2)",
+                borderRadius: "6px",
+                padding: "6px 12px",
+                fontSize: "13px",
+                fontWeight: 600,
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                transition: "all 0.2s ease"
+              }}
+              className="tooltip-btn highlight-btn"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                applyHighlight();
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 19l7-7 3 3-7 7-3-3z"></path>
+                <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path>
+                <path d="M2 2l7.586 7.586"></path>
+                <circle cx="11" cy="11" r="2"></circle>
+              </svg>
+              Highlight
+            </button>
+            <button
+              style={{
+                background: "transparent",
+                color: "#94a3b8",
+                border: "none",
+                borderRadius: "6px",
+                padding: "6px 12px",
+                fontSize: "13px",
+                fontWeight: 600,
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                transition: "all 0.2s ease"
+              }}
+              className="tooltip-btn ask-ai-btn"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                window.dispatchEvent(
+                  new CustomEvent("climbup-ai-fill-input", {
+                    detail: { text: `Explain this to me: "${selectedText}"` },
+                  })
+                );
+                setShowHighlightTooltip(false);
+                window.getSelection()?.removeAllRanges();
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+              </svg>
+              Ask AI
+            </button>
+          </div>
+        )}
+        <style jsx global>{`
+          @keyframes tooltipPop {
+            0% { transform: translate(-50%, 10px) scale(0.8); opacity: 0; }
+            100% { transform: translate(-50%, 0) scale(1); opacity: 1; }
+          }
+          .tooltip-btn:hover {
+            transform: translateY(-1px);
+          }
+          .highlight-btn:hover {
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+          }
+          .ask-ai-btn:hover {
+            color: #fff !important;
+            background: rgba(255, 255, 255, 0.1) !important;
+          }
+        `}</style>
     </div>
   );
 }
