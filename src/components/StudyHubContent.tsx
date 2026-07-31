@@ -329,7 +329,9 @@ export default function StudyHubContent() {
 
   /* ── Modals State ── */
   const [addCategory, setAddCategory] = useState<"assignment" | "practical" | "personal_document" | null>(null);
-  const [shareResourceId, setShareResourceId] = useState<string | null>(null);
+  const [shareResourceIds, setShareResourceIds] = useState<string[] | null>(null);
+  const [selectedResourceIds, setSelectedResourceIds] = useState<string[]>([]);
+  const [isAcceptingAll, setIsAcceptingAll] = useState(false);
   const [shareTheme, setShareTheme] = useState<string>("#38d399");
 
   /* ── Chat state ── */
@@ -765,6 +767,76 @@ export default function StudyHubContent() {
     }
   };
 
+  const handleAcceptAllSharedRequests = async () => {
+    setIsAcceptingAll(true);
+    try {
+      const pendingRequests = topicsList.filter(t => t.status === "pending");
+      if (pendingRequests.length === 0) return;
+
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      const token = session?.provider_token;
+      
+      let folderId = null;
+      if (token) {
+        try {
+          folderId = await getOrCreateClimbUPFolder(token);
+        } catch (e) {}
+      }
+
+      let updatedTopics = [...topicsList];
+
+      for (const topic of pendingRequests) {
+        let finalFileUrl = topic.pdf_url || "";
+        
+        if (token && folderId && topic.pdf_url) {
+          try {
+            const pdfRes = await fetch(topic.pdf_url);
+            if (pdfRes.ok) {
+              const blob = await pdfRes.blob();
+              const file = new File([blob], `${topic.topic_name}.pdf`, { type: "application/pdf" });
+
+              const metadata: any = { name: file.name, mimeType: "application/pdf", parents: [folderId] };
+              const form = new FormData();
+              form.append("metadata", new Blob([JSON.stringify(metadata)], { type: "application/json" }));
+              form.append("file", file);
+
+              const uploadRes = await fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart", {
+                method: "POST", headers: { Authorization: `Bearer ${token}` }, body: form
+              });
+              
+              if (uploadRes.ok) {
+                const driveData = await uploadRes.json();
+                await fetch(`https://www.googleapis.com/drive/v3/files/${driveData.id}/permissions`, {
+                  method: "POST", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+                  body: JSON.stringify({ type: "anyone", role: "reader" })
+                });
+                finalFileUrl = `https://drive.google.com/file/d/${driveData.id}/view`;
+              }
+            }
+          } catch (e) {
+            console.warn("Silent drive sync failed", e);
+          }
+        }
+
+        const { error } = await supabaseClient
+          .from("student_resources")
+          .update({ status: "accepted", file_url: finalFileUrl })
+          .eq("id", topic.classroom_id);
+
+        if (!error) {
+          updatedTopics = updatedTopics.map(t => t.classroom_id === topic.classroom_id ? { ...t, status: "accepted", pdf_url: finalFileUrl } : t);
+        }
+      }
+      
+      setTopicsList(updatedTopics);
+    } catch (err) {
+      console.error(err);
+      alert("Error accepting all requests.");
+    } finally {
+      setIsAcceptingAll(false);
+    }
+  };
+
   const handleFocusToggle = () => {
     setIsFocusMode((prev) => !prev);
     setIsTransitioning(true);
@@ -926,6 +998,36 @@ export default function StudyHubContent() {
                   position: "relative",
                   overflow: "hidden",
                 }}>
+                  {topic.is_personal && topic.status !== "pending" && (
+                    <div
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedResourceIds(prev =>
+                          prev.includes(topic.classroom_id)
+                            ? prev.filter(id => id !== topic.classroom_id)
+                            : [...prev, topic.classroom_id]
+                        );
+                      }}
+                      style={{
+                        position: "absolute",
+                        top: 8,
+                        right: 8,
+                        zIndex: 10,
+                        width: 24,
+                        height: 24,
+                        borderRadius: 6,
+                        background: selectedResourceIds.includes(topic.classroom_id) ? themeColor : "rgba(0,0,0,0.4)",
+                        border: `1.5px solid ${selectedResourceIds.includes(topic.classroom_id) ? themeColor : "rgba(255,255,255,0.3)"}`,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        cursor: "pointer",
+                        boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
+                      }}
+                    >
+                      {selectedResourceIds.includes(topic.classroom_id) && <CheckCircle size={16} color="#000" />}
+                    </div>
+                  )}
                   {/* Miniature Live 1st Page Preview of the Actual PDF */}
                   {topic.pdf_url ? (
                     <iframe
@@ -998,7 +1100,7 @@ export default function StudyHubContent() {
                           <button
                             className="read-btn"
                             style={{ background: `${themeColor}20`, color: themeColor }}
-                            onClick={(e) => { e.stopPropagation(); setShareResourceId(topic.classroom_id); setShareTheme(themeColor); }}
+                            onClick={(e) => { e.stopPropagation(); setShareResourceIds([topic.classroom_id]); setShareTheme(themeColor); }}
                           >
                             <Share2 size={13} /> Share
                           </button>
@@ -1370,6 +1472,30 @@ export default function StudyHubContent() {
                                     <p className="section-label" style={{ color: "#38d399", marginBottom: 0, display: "flex", alignItems: "center", gap: 6 }}>
                                       <span>📥 Shared Requests ({topicsList.filter(t => t.status === "pending").length})</span>
                                     </p>
+                                    {topicsList.filter(t => t.status === "pending").length > 1 && (
+                                      <button
+                                        onClick={handleAcceptAllSharedRequests}
+                                        disabled={isAcceptingAll}
+                                        style={{
+                                          background: "linear-gradient(135deg, #10b981, #059669)",
+                                          color: "#fff",
+                                          border: "none",
+                                          borderRadius: "8px",
+                                          padding: "6px 12px",
+                                          fontSize: "0.82rem",
+                                          fontWeight: 700,
+                                          cursor: isAcceptingAll ? "not-allowed" : "pointer",
+                                          display: "flex",
+                                          alignItems: "center",
+                                          gap: "6px",
+                                          opacity: isAcceptingAll ? 0.7 : 1,
+                                          boxShadow: "0 4px 12px rgba(16,185,129,0.2)"
+                                        }}
+                                      >
+                                        <CheckCircle size={14} />
+                                        {isAcceptingAll ? "Accepting..." : "Accept All"}
+                                      </button>
+                                    )}
                                   </div>
                                   <div className="notes-grid">
                                     {topicsList.filter(t => t.status === "pending").map((topic, index) => {
@@ -1768,6 +1894,74 @@ export default function StudyHubContent() {
         })()}
       </div>
 
+        {/* Floating Action Bar for Multi-Share */}
+        <AnimatePresence>
+          {selectedResourceIds.length > 0 && (
+            <motion.div
+              initial={{ y: 100, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 100, opacity: 0 }}
+              style={{
+                position: "fixed",
+                bottom: 30,
+                left: "50%",
+                transform: "translateX(-50%)",
+                background: "rgba(15, 23, 42, 0.95)",
+                backdropFilter: "blur(10px)",
+                border: "1px solid rgba(56, 211, 153, 0.3)",
+                padding: "12px 24px",
+                borderRadius: "100px",
+                display: "flex",
+                alignItems: "center",
+                gap: "20px",
+                zIndex: 9999,
+                boxShadow: "0 10px 40px rgba(0,0,0,0.5), 0 0 20px rgba(56,211,153,0.15)"
+              }}
+            >
+              <span style={{ color: "#fff", fontWeight: 600 }}>
+                {selectedResourceIds.length} item{selectedResourceIds.length > 1 ? "s" : ""} selected
+              </span>
+              <div style={{ display: "flex", gap: "10px" }}>
+                <button
+                  onClick={() => {
+                    setShareResourceIds(selectedResourceIds);
+                    setShareTheme("#38d399");
+                    setSelectedResourceIds([]);
+                  }}
+                  style={{
+                    background: "#38d399",
+                    color: "#020c1b",
+                    border: "none",
+                    borderRadius: "100px",
+                    padding: "8px 16px",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px"
+                  }}
+                >
+                  <Share2 size={14} /> Share All
+                </button>
+                <button
+                  onClick={() => setSelectedResourceIds([])}
+                  style={{
+                    background: "rgba(255,255,255,0.1)",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: "100px",
+                    padding: "8px 16px",
+                    fontWeight: 600,
+                    cursor: "pointer"
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
       {authOpen && (
         <AuthModal open={authOpen} onClose={closeAuth} initialMode={entryMode} />
       )}
@@ -1792,11 +1986,11 @@ export default function StudyHubContent() {
         />
       )}
 
-      {shareResourceId && userAcademicProfile && (
+      {shareResourceIds && userAcademicProfile && (
         <ShareResourceModal
-          isOpen={!!shareResourceId}
-          onClose={() => setShareResourceId(null)}
-          resourceId={shareResourceId}
+          isOpen={!!shareResourceIds}
+          onClose={() => setShareResourceIds(null)}
+          resourceIds={shareResourceIds}
           currentUserId={studentId}
           currentUserName={studentName}
           universityId={userAcademicProfile.university_id}

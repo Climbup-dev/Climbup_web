@@ -317,7 +317,7 @@ export function AddResourceModal({
 export function ShareResourceModal({
   isOpen,
   onClose,
-  resourceId,
+  resourceIds,
   currentUserId,
   currentUserName,
   universityId,
@@ -327,7 +327,7 @@ export function ShareResourceModal({
 }: {
   isOpen: boolean;
   onClose: () => void;
-  resourceId: string;
+  resourceIds: string[];
   currentUserId: string;
   currentUserName: string;
   universityId: string;
@@ -413,20 +413,22 @@ export function ShareResourceModal({
     setSharingTo(targetUserId);
     setError("");
     try {
-      const { data, error } = await supabase.rpc('share_student_resource', {
-        p_resource_id: resourceId,
-        p_target_user_id: targetUserId,
-        p_sender_name: currentUserName
-      });
+      await Promise.all(resourceIds.map(async (resId) => {
+        const { data, error } = await supabase.rpc('share_student_resource', {
+          p_resource_id: resId,
+          p_target_user_id: targetUserId,
+          p_sender_name: currentUserName
+        });
 
-      if (error) throw error;
-      if (!data.success) throw new Error(data.error || "Sharing failed");
+        if (error) throw error;
+        if (!data.success) throw new Error(data.error || "Sharing failed");
+      }));
 
       setSuccess(true);
       setTimeout(() => onClose(), 2000);
     } catch (err: any) {
       console.error(err);
-      setError(err.message || "Failed to share resource");
+      setError(err.message || "Failed to share resource(s)");
     } finally {
       setSharingTo(null);
     }
@@ -450,7 +452,7 @@ export function ShareResourceModal({
           <Share2 color={themeColor} /> Share with Classmate
         </h3>
         <p style={{ color: "#94a3b8", fontSize: "0.9rem", marginBottom: "20px" }}>
-          Select a classmate to securely send a copy of this resource to their assignments.
+          Select a classmate to securely send {resourceIds?.length > 1 ? `a copy of these ${resourceIds.length} resources` : "a copy of this resource"} to their assignments.
         </p>
 
         {error && <div style={{ background: "rgba(239,68,68,0.1)", color: "#ef4444", padding: "10px", borderRadius: "8px", fontSize: "0.85rem", marginBottom: "16px" }}>{error}</div>}
