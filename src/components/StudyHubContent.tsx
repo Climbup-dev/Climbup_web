@@ -518,22 +518,23 @@ export default function StudyHubContent() {
     const cacheKey = `topics_${subjectId}_${currentUser?.id || 'guest'}`;
     const cached = getCache(cacheKey);
 
-    // Use cached data if available and we're not forcing a refresh
-    if (!forceRefresh && (topicsCache[subjectId] || cached)) {
+    // SWR Pattern: Immediately show cached data if available
+    if (topicsCache[subjectId] || cached) {
       const dataToUse = (topicsCache[subjectId] || cached) as Topic[];
       setTopicsList(dataToUse);
       if (!topicsCache[subjectId]) {
         setTopicsCache(prev => ({ ...prev, [subjectId]: dataToUse }));
       }
-      return;
+      if (!forceRefresh) {
+        // Still allow background fetch to happen, but don't show full loading screen
+      }
+    } else {
+      setIsFetchingTopics(true);
+      setTopicsList([]);
     }
 
-    setIsFetchingTopics(true);
-    setTopicsList([]);
-
     try {
-      // Fetch user's personal resources for this subject (fresh fetch from DB)
-      let allTopics: Topic[] = [];
+      // Always fetch fresh data in the background (unless we strictly shouldn't)
       if (studentId) {
         const { data: resources } = await supabase
           .from('student_resources')
@@ -542,10 +543,10 @@ export default function StudyHubContent() {
           .eq('user_id', studentId)
           .order('created_at', { ascending: false });
         
-        allTopics = (resources || []).map((r: any) => ({
+        const allTopics: Topic[] = (resources || []).map((r: any) => ({
           classroom_id: r.id, 
           topic_name: r.title,
-          category: r.type || "assignment", // Ensure fallback category
+          category: r.type || "assignment",
           pdf_url: r.file_url,
           status: r.status || "accepted",
           sender_name: r.sender_name,
@@ -553,13 +554,11 @@ export default function StudyHubContent() {
           created_at: r.created_at,
           is_personal: true
         }));
-      }
 
-      setTopicsList(allTopics);
-      
-      // Save to cache
-      setTopicsCache(prev => ({ ...prev, [subjectId]: allTopics }));
-      setCache(cacheKey, allTopics);
+        setTopicsList(allTopics);
+        setTopicsCache(prev => ({ ...prev, [subjectId]: allTopics }));
+        setCache(cacheKey, allTopics);
+      }
     } catch (err: any) {
       console.warn("Failed to fetch topics:", err);
     } finally {
