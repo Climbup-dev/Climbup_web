@@ -450,7 +450,6 @@ export default function StudyHubContent() {
   /* ── Auto-fetch subjects from academic profile ── */
   useEffect(() => {
     if (!userAcademicProfile) return;
-    if (subjectsList.length > 0) return; // Prevent re-fetching if already loaded
 
     const { university_id, branch_id, semester, mdm_branch_id } = userAcademicProfile as any;
     fetchSubjects(university_id, branch_id, semester, mdm_branch_id);
@@ -518,8 +517,13 @@ export default function StudyHubContent() {
       if (currentUser?.id) {
         fetchPromises.push(
           supabase
-            .from("user_oe_selections")
-            .select(`subjects (subject_id, subject_name, subject_code)`)
+            .from("student_open_electives")
+            .select(`
+              oe_id,
+              open_elective_baskets (
+                subjects (subject_id, subject_name, subject_code)
+              )
+            `)
             .eq("user_id", currentUser.id)
             .eq("semester", semester)
             .maybeSingle()
@@ -533,7 +537,12 @@ export default function StudyHubContent() {
       
       const oeIndex = mdmBranchId ? 2 : 1;
       const oeData = (currentUser?.id && results[oeIndex]?.data) ? results[oeIndex].data : null;
-      const oeSubject = oeData?.subjects ? [oeData.subjects] : [];
+      // Handle the nested structure from student_open_electives -> open_elective_baskets -> subjects
+      const oeSubjectRaw = oeData?.open_elective_baskets?.subjects;
+      // Sometimes it might return an array if the relation is many-to-many, but it should be a single object here.
+      // If it is an array, we take the first element, otherwise just use it.
+      const actualOeSubject = Array.isArray(oeSubjectRaw) ? oeSubjectRaw[0] : oeSubjectRaw;
+      const oeSubject = actualOeSubject ? [actualOeSubject] : [];
 
       let combined = [
         ...regularSubjects.map((s: any) => ({ id: s.subject_id, subject_name: s.subject_name })),

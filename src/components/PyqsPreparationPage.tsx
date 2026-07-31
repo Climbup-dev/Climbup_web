@@ -72,7 +72,7 @@ const INSPIRING_QUOTES = [
 
 export default function PyqsPreparationClient() {
   const router = useRouter();
-  const { currentUser, loading, passwordRecovery } = useAuth();
+  const { currentUser, loading, passwordRecovery, refreshProfile } = useAuth();
   const supabase = useMemo(() => createClient(), []);
 
   const [authOpen, setAuthOpen] = useState(false);
@@ -359,6 +359,7 @@ export default function PyqsPreparationClient() {
         const newProfile = { ...profile, mdm_branch_id: newBranchId };
         setProfile(newProfile);
         setCache(`pyqs_profile_${currentUser.id}`, { profile: newProfile, subjects });
+        await refreshProfile(); // Sync global auth state
       }
     }
   };
@@ -481,6 +482,8 @@ export default function PyqsPreparationClient() {
           semester: profile.semester
         });
     }
+
+    await refreshProfile();
   };
   // -----------------
 
