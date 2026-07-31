@@ -506,9 +506,9 @@ export default function StudyHubContent() {
         fetchPromises.push(
           supabase
             .from('mdm_subjects')
-            .select('mdm_subject_id, subject_name, subject_code')
-            .eq('branch_id', mdmBranchId)
-            .eq('semester', semester)
+            .select('mdm_subject_id, subject_name, subject_code, mdm_branch_subject_mapping!inner(branch_id, semester)')
+            .eq('mdm_branch_subject_mapping.branch_id', mdmBranchId)
+            .eq('mdm_branch_subject_mapping.semester', semester)
             .order('subject_name')
         );
       }
