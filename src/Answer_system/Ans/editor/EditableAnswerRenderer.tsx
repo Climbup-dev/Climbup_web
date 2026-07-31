@@ -373,7 +373,7 @@ export default function EditableAnswerRenderer({
         let newContent = oldContent.replace(textToHighlight, `<mark class="highlight">${textToHighlight}</mark>`);
         
         // Flatten any nested mark tags that might have been accidentally created
-        newContent = newContent.replace(/<mark[^>]*>(.*?)<\/mark>/g, (match) => {
+        newContent = newContent.replace(/<mark[^>]*>(.*?)<\/mark>/g, (match: string) => {
             const innerText = match.replace(/<\/?mark[^>]*>/g, '');
             return `<mark class="highlight">${innerText}</mark>`;
         });
