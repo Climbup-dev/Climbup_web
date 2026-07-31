@@ -452,8 +452,8 @@ export default function StudyHubContent() {
     if (!userAcademicProfile) return;
     if (subjectsList.length > 0) return; // Prevent re-fetching if already loaded
 
-    const { university_id, branch_id, semester } = userAcademicProfile;
-    fetchSubjects(university_id, branch_id, semester);
+    const { university_id, branch_id, semester, mdm_branch_id } = userAcademicProfile as any;
+    fetchSubjects(university_id, branch_id, semester, mdm_branch_id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userAcademicProfile]);
 
@@ -464,8 +464,8 @@ export default function StudyHubContent() {
   const closeAuth = () => { setAuthOpen(false); if (!currentUser) window.location.assign("/"); };
 
   /* ── Fetch subjects from DB1 (Supabase) ── */
-  const fetchSubjects = async (universityId: string, branchId: string, semester: number) => {
-    const cacheKey = `subjects_${universityId}_${branchId}_${semester}`;
+  const fetchSubjects = async (universityId: string, branchId: string, semester: number, mdmBranchId?: string | null) => {
+    const cacheKey = `subjects_${universityId}_${branchId}_${semester}_${mdmBranchId || ''}_${currentUser?.id || ''}`;
     const nameCacheKey = `profile_names_${universityId}_${branchId}`;
     const cachedSubjects = getCache(cacheKey);
     const cachedNames = getCache(nameCacheKey);
@@ -490,19 +490,61 @@ export default function StudyHubContent() {
       return;
     }
 
-    const { data: subjects, error } = await supabase
-      .from("subjects")
-      .select("subject_id, subject_name, subject_code, semester")
-      .eq("university_id", universityId)
-      .eq("branch_id", branchId)
-      .eq("semester", String(semester))
-      .order("subject_name", { ascending: true });
+    try {
+      const fetchPromises: any[] = [
+        // 1. Regular Subjects
+        supabase
+          .from("subjects")
+          .select("subject_id, subject_name, subject_code, semester")
+          .eq("university_id", universityId)
+          .eq("branch_id", branchId)
+          .eq("semester", String(semester))
+          .order("subject_name", { ascending: true })
+      ];
 
-    if (error) { console.error("Error fetching subjects:", error); return; }
-    if (subjects) {
-      const mapped = subjects.map((s: any) => ({ id: s.subject_id, subject_name: s.subject_name }));
-      setSubjectsList(mapped);
-      setCache(cacheKey, mapped);
+      // 2. MDM Subjects
+      if (mdmBranchId) {
+        fetchPromises.push(
+          supabase
+            .from('mdm_subjects')
+            .select('mdm_subject_id, subject_name, subject_code')
+            .eq('branch_id', mdmBranchId)
+            .eq('semester', semester)
+            .order('subject_name')
+        );
+      }
+
+      // 3. OE Subjects
+      if (currentUser?.id) {
+        fetchPromises.push(
+          supabase
+            .from("user_oe_selections")
+            .select(`subjects (subject_id, subject_name, subject_code)`)
+            .eq("user_id", currentUser.id)
+            .eq("semester", semester)
+            .maybeSingle()
+        );
+      }
+
+      const results = await Promise.all(fetchPromises);
+      
+      const regularSubjects = results[0].data || [];
+      const mdmSubjects = (mdmBranchId && results[1]?.data) ? results[1].data : [];
+      
+      const oeIndex = mdmBranchId ? 2 : 1;
+      const oeData = (currentUser?.id && results[oeIndex]?.data) ? results[oeIndex].data : null;
+      const oeSubject = oeData?.subjects ? [oeData.subjects] : [];
+
+      let combined = [
+        ...regularSubjects.map((s: any) => ({ id: s.subject_id, subject_name: s.subject_name })),
+        ...mdmSubjects.map((s: any) => ({ id: s.mdm_subject_id, subject_name: s.subject_name + ' (MDM)' })),
+        ...oeSubject.map((s: any) => ({ id: s.subject_id, subject_name: s.subject_name + ' (OE)' }))
+      ];
+
+      setSubjectsList(combined);
+      setCache(cacheKey, combined);
+    } catch (error) {
+      console.error("Error fetching combined subjects:", error);
     }
   };
 
