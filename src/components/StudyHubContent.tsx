@@ -672,60 +672,71 @@ export default function StudyHubContent() {
   const [acceptingId, setAcceptingId] = useState<string | null>(null);
   const [decliningId, setDecliningId] = useState<string | null>(null);
 
+  const cloneSharedFile = async (topic: Topic) => {
+    let finalFileUrl = topic.pdf_url || "";
+    try {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      const token = session?.provider_token;
+      if (!token || !topic.pdf_url) return finalFileUrl;
+
+      const folderId = await getOrCreateClimbUPFolder(token);
+      const match = topic.pdf_url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+      const sourceFileId = match ? match[1] : null;
+
+      if (sourceFileId) {
+        // Native Google Drive Copy
+        const copyRes = await fetch(`https://www.googleapis.com/drive/v3/files/${sourceFileId}/copy`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ name: `${topic.topic_name}.pdf`, parents: folderId ? [folderId] : [] })
+        });
+        
+        if (copyRes.ok) {
+          const copyData = await copyRes.json();
+          await fetch(`https://www.googleapis.com/drive/v3/files/${copyData.id}/permissions`, {
+            method: "POST",
+            headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+            body: JSON.stringify({ type: "anyone", role: "reader" })
+          });
+          finalFileUrl = `https://drive.google.com/file/d/${copyData.id}/view`;
+        }
+      } else if (topic.pdf_url.includes("supabase.co")) {
+        // Fallback for Supabase files
+        const pdfRes = await fetch(topic.pdf_url);
+        if (pdfRes.ok) {
+          const blob = await pdfRes.blob();
+          const file = new File([blob], `${topic.topic_name}.pdf`, { type: "application/pdf" });
+          const metadata: any = { name: file.name, mimeType: "application/pdf" };
+          if (folderId) metadata.parents = [folderId];
+
+          const form = new FormData();
+          form.append("metadata", new Blob([JSON.stringify(metadata)], { type: "application/json" }));
+          form.append("file", file);
+
+          const uploadRes = await fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart", {
+            method: "POST", headers: { Authorization: `Bearer ${token}` }, body: form
+          });
+          if (uploadRes.ok) {
+            const driveData = await uploadRes.json();
+            await fetch(`https://www.googleapis.com/drive/v3/files/${driveData.id}/permissions`, {
+              method: "POST", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+              body: JSON.stringify({ type: "anyone", role: "reader" })
+            });
+            finalFileUrl = `https://drive.google.com/file/d/${driveData.id}/view`;
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("Drive sync failed", e);
+    }
+    return finalFileUrl;
+  };
+
   const handleAcceptSharedRequest = async (topic: Topic, e: React.MouseEvent) => {
     e.stopPropagation();
     setAcceptingId(topic.classroom_id);
     try {
-      let finalFileUrl = topic.pdf_url || "";
-
-      // Try copying file to student's personal Google Drive if session has Google token
-      const { data: { session } } = await supabaseClient.auth.getSession();
-      const token = session?.provider_token;
-
-      if (token && topic.pdf_url) {
-        try {
-          const pdfRes = await fetch(topic.pdf_url);
-          if (pdfRes.ok) {
-            const blob = await pdfRes.blob();
-            const file = new File([blob], `${topic.topic_name}.pdf`, { type: "application/pdf" });
-
-            const folderId = await getOrCreateClimbUPFolder(token);
-            const metadata: any = { name: file.name, mimeType: "application/pdf" };
-            if (folderId) metadata.parents = [folderId];
-
-            const form = new FormData();
-            form.append("metadata", new Blob([JSON.stringify(metadata)], { type: "application/json" }));
-            form.append("file", file);
-
-            const driveRes = await fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart", {
-              method: "POST",
-              headers: { Authorization: `Bearer ${token}` },
-              body: form
-            });
-
-            if (driveRes.ok) {
-              const driveData = await driveRes.json();
-              const permRes = await fetch(`https://www.googleapis.com/drive/v3/files/${driveData.id}/permissions`, {
-                method: "POST",
-                headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-                body: JSON.stringify({ type: "anyone", role: "reader" })
-              });
-              
-              if (permRes.ok) {
-                finalFileUrl = `https://drive.google.com/file/d/${driveData.id}/view`;
-              } else {
-                console.warn("Could not set Drive file to public. Falling back to original URL.");
-                await fetch(`https://www.googleapis.com/drive/v3/files/${driveData.id}`, {
-                  method: 'DELETE',
-                  headers: { 'Authorization': `Bearer ${token}` }
-                });
-              }
-            }
-          }
-        } catch (driveErr) {
-          console.warn("Could not copy to Google Drive, proceeding with direct URL:", driveErr);
-        }
-      }
+      const finalFileUrl = await cloneSharedFile(topic);
 
       // Update DB status to 'accepted'
       const { error } = await supabaseClient
@@ -773,50 +784,10 @@ export default function StudyHubContent() {
       const pendingRequests = topicsList.filter(t => t.status === "pending");
       if (pendingRequests.length === 0) return;
 
-      const { data: { session } } = await supabaseClient.auth.getSession();
-      const token = session?.provider_token;
-      
-      let folderId = null;
-      if (token) {
-        try {
-          folderId = await getOrCreateClimbUPFolder(token);
-        } catch (e) {}
-      }
-
       let updatedTopics = [...topicsList];
 
       for (const topic of pendingRequests) {
-        let finalFileUrl = topic.pdf_url || "";
-        
-        if (token && folderId && topic.pdf_url) {
-          try {
-            const pdfRes = await fetch(topic.pdf_url);
-            if (pdfRes.ok) {
-              const blob = await pdfRes.blob();
-              const file = new File([blob], `${topic.topic_name}.pdf`, { type: "application/pdf" });
-
-              const metadata: any = { name: file.name, mimeType: "application/pdf", parents: [folderId] };
-              const form = new FormData();
-              form.append("metadata", new Blob([JSON.stringify(metadata)], { type: "application/json" }));
-              form.append("file", file);
-
-              const uploadRes = await fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart", {
-                method: "POST", headers: { Authorization: `Bearer ${token}` }, body: form
-              });
-              
-              if (uploadRes.ok) {
-                const driveData = await uploadRes.json();
-                await fetch(`https://www.googleapis.com/drive/v3/files/${driveData.id}/permissions`, {
-                  method: "POST", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-                  body: JSON.stringify({ type: "anyone", role: "reader" })
-                });
-                finalFileUrl = `https://drive.google.com/file/d/${driveData.id}/view`;
-              }
-            }
-          } catch (e) {
-            console.warn("Silent drive sync failed", e);
-          }
-        }
+        const finalFileUrl = await cloneSharedFile(topic);
 
         const { error } = await supabaseClient
           .from("student_resources")
@@ -1029,32 +1000,58 @@ export default function StudyHubContent() {
                     </div>
                   )}
                   {/* Miniature Live 1st Page Preview of the Actual PDF */}
-                  {topic.pdf_url ? (
-                    <iframe
-                      src={topic.pdf_url.includes("supabase.co")
-                        ? `${topic.pdf_url}#page=1&toolbar=0&navpanes=0&scrollbar=0`
-                        : topic.pdf_url.includes("drive.google.com")
-                        ? topic.pdf_url.replace(/\/view.*$/, "/preview")
-                        : topic.pdf_url}
-                      title={cleanTitle}
-                      style={{
-                        width: "230%",
-                        height: "230%",
-                        border: "none",
-                        transform: "scale(0.43)",
-                        transformOrigin: "top left",
-                        pointerEvents: "none",
-                        opacity: 0.88,
-                        overflow: "hidden"
-                      }}
-                      scrolling="no"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "#64748b" }}>
-                      <FileText size={24} />
-                    </div>
-                  )}
+                  {(() => {
+                    if (!topic.pdf_url) return <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "#64748b" }}><FileText size={24} /></div>;
+
+                    const isDrive = topic.pdf_url.includes("drive.google.com");
+                    const match = isDrive ? topic.pdf_url.match(/\/d\/([a-zA-Z0-9_-]+)/) : null;
+                    const driveFileId = match ? match[1] : null;
+
+                    return (
+                      <div style={{ position: "relative", width: "100%", height: "100%" }}>
+                        {/* Fallback Icon underneath */}
+                        <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", color: themeColor, opacity: 0.3 }}>
+                          <FileText size={32} />
+                        </div>
+
+                        {isDrive && driveFileId ? (
+                          <img
+                            src={`https://drive.google.com/thumbnail?id=${driveFileId}&sz=w600`}
+                            alt={cleanTitle}
+                            style={{
+                              position: "absolute",
+                              inset: 0,
+                              width: "100%",
+                              height: "100%",
+                              objectFit: "cover",
+                              objectPosition: "top",
+                              opacity: 0.88,
+                              zIndex: 1
+                            }}
+                            onError={(e) => { (e.target as HTMLImageElement).style.opacity = '0'; }}
+                          />
+                        ) : (
+                          <iframe
+                            src={topic.pdf_url.includes("supabase.co") ? `${topic.pdf_url}#page=1&toolbar=0&navpanes=0&scrollbar=0` : topic.pdf_url}
+                            title={cleanTitle}
+                            style={{
+                              position: "absolute",
+                              width: "230%",
+                              height: "230%",
+                              border: "none",
+                              transform: "scale(0.43)",
+                              transformOrigin: "top left",
+                              pointerEvents: "none",
+                              opacity: 0.88,
+                              zIndex: 1
+                            }}
+                            scrolling="no"
+                            loading="lazy"
+                          />
+                        )}
+                      </div>
+                    );
+                  })()}
 
                   {/* Gradient Overlay for crisp readability */}
                   <div style={{
