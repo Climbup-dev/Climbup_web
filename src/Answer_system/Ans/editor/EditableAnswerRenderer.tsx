@@ -147,6 +147,9 @@ export default function EditableAnswerRenderer({
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
   const [selectedText, setSelectedText] = useState("");
   const [selectionRange, setSelectionRange] = useState<Range | null>(null);
+  const [isRemovingHighlight, setIsRemovingHighlight] = useState(false);
+  const [clickedMarkText, setClickedMarkText] = useState("");
+  const [clickedBlockIndex, setClickedBlockIndex] = useState<number | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -224,6 +227,33 @@ export default function EditableAnswerRenderer({
   useEffect(() => {
     const handleMouseUp = (e: MouseEvent) => {
       if (isEditing || !contentRef.current) return;
+      
+      // Check if we clicked on an existing highlight
+      const targetElement = e.target as Element;
+      const markElement = targetElement.closest("mark.highlight");
+      
+      if (markElement) {
+        const text = markElement.textContent || "";
+        const blockElement = markElement.closest('[data-block-index]');
+        const blockIndexStr = blockElement?.getAttribute('data-block-index');
+        
+        if (text && blockIndexStr) {
+          const rect = markElement.getBoundingClientRect();
+          setTooltipPos({
+            x: rect.left + rect.width / 2,
+            y: rect.top + window.scrollY - 40,
+          });
+          setIsRemovingHighlight(true);
+          setClickedMarkText(text);
+          setClickedBlockIndex(parseInt(blockIndexStr, 10));
+          setSelectedText(text);
+          setShowHighlightTooltip(true);
+          return;
+        }
+      }
+
+      setIsRemovingHighlight(false);
+
       const selection = window.getSelection();
       if (!selection || selection.isCollapsed) {
         setShowHighlightTooltip(false);
@@ -340,7 +370,13 @@ export default function EditableAnswerRenderer({
       const oldContent = targetBlock[contentKey] || "";
       
       if (oldContent.includes(textToHighlight)) {
-        const newContent = oldContent.replace(textToHighlight, `<mark class="highlight">${textToHighlight}</mark>`);
+        let newContent = oldContent.replace(textToHighlight, `<mark class="highlight">${textToHighlight}</mark>`);
+        
+        // Flatten any nested mark tags that might have been accidentally created
+        newContent = newContent.replace(/<mark[^>]*>(.*?)<\/mark>/g, (match) => {
+            const innerText = match.replace(/<\/?mark[^>]*>/g, '');
+            return `<mark class="highlight">${innerText}</mark>`;
+        });
         
         const newBlocks = [...editableBlocks];
         newBlocks[blockIndex] = {
@@ -355,6 +391,32 @@ export default function EditableAnswerRenderer({
 
     setShowHighlightTooltip(false);
     window.getSelection()?.removeAllRanges();
+  };
+
+  const removeHighlight = () => {
+    if (clickedBlockIndex === null || !clickedMarkText) return;
+    
+    const targetBlock = editableBlocks[clickedBlockIndex];
+    if (targetBlock && targetBlock.type === 'markdown') {
+      const contentKey = targetBlock.content !== undefined ? 'content' : (targetBlock.text !== undefined ? 'text' : 'description');
+      const oldContent = targetBlock[contentKey] || "";
+      
+      const escapeRegExp = (string: string) => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(`<mark[^>]*>\\s*${escapeRegExp(clickedMarkText)}\\s*<\\/mark>`, 'g');
+      
+      const newContent = oldContent.replace(regex, clickedMarkText);
+      
+      const newBlocks = [...editableBlocks];
+      newBlocks[clickedBlockIndex] = {
+        ...targetBlock,
+        [contentKey]: newContent
+      };
+      
+      setEditableBlocks(newBlocks);
+      silentSaveChanges(newBlocks);
+    }
+    
+    setShowHighlightTooltip(false);
   };
 
   const startEditing = () => {
@@ -1008,7 +1070,7 @@ export default function EditableAnswerRenderer({
           >
             <button
               style={{
-                background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+                background: isRemovingHighlight ? "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)" : "linear-gradient(135deg, #10b981 0%, #059669 100%)",
                 color: "white",
                 border: "1px solid rgba(255, 255, 255, 0.2)",
                 borderRadius: "6px",
@@ -1025,16 +1087,26 @@ export default function EditableAnswerRenderer({
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                applyHighlight();
+                if (isRemovingHighlight) {
+                  removeHighlight();
+                } else {
+                  applyHighlight();
+                }
               }}
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 19l7-7 3 3-7 7-3-3z"></path>
-                <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path>
-                <path d="M2 2l7.586 7.586"></path>
-                <circle cx="11" cy="11" r="2"></circle>
-              </svg>
-              Highlight
+              {isRemovingHighlight ? (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 6L6 18M6 6l12 12"></path>
+                </svg>
+              ) : (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 19l7-7 3 3-7 7-3-3z"></path>
+                  <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path>
+                  <path d="M2 2l7.586 7.586"></path>
+                  <circle cx="11" cy="11" r="2"></circle>
+                </svg>
+              )}
+              {isRemovingHighlight ? "Remove" : "Highlight"}
             </button>
             <button
               style={{
