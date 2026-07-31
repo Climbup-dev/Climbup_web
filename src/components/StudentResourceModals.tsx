@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
-import { X, UploadCloud, Share2, CheckCircle, User, LogIn, Search } from "lucide-react";
+import { X, UploadCloud, Share2, CheckCircle, User, LogIn, Search, Plus, Check } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { getOrCreateClimbUPFolder } from "@/lib/googleDriveHelper";
 
@@ -336,6 +336,7 @@ export function ShareResourceModal({
   themeColor?: string;
 }) {
   const [classmates, setClassmates] = useState<UserProfile[]>([]);
+  const [pinnedUserIds, setPinnedUserIds] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [sharingTo, setSharingTo] = useState<string | null>(null);
@@ -350,19 +351,37 @@ export function ShareResourceModal({
       setError("");
       setSearchQuery("");
       fetchClassmates();
+      fetchPinnedUsers();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
+  const fetchPinnedUsers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('pinned_classmates')
+        .select('pinned_user_id')
+        .eq('user_id', currentUserId);
+      if (!error && data) {
+        setPinnedUserIds(data.map((r: any) => r.pinned_user_id));
+      }
+    } catch (err) {
+      console.warn("Could not fetch pinned users", err);
+    }
+  };
+
   // Sub-string match filtering (matches anywhere in name or email with zero DB requests)
   const filteredClassmates = useMemo(() => {
-    if (!searchQuery.trim()) return classmates;
+    if (!searchQuery.trim()) {
+      // If no search query, ONLY show pinned users
+      return classmates.filter(user => pinnedUserIds.includes(user.user_id));
+    }
     const q = searchQuery.toLowerCase().trim();
     return classmates.filter(user =>
       user.full_name?.toLowerCase().includes(q) ||
       user.email?.toLowerCase().includes(q)
     );
-  }, [classmates, searchQuery]);
+  }, [classmates, searchQuery, pinnedUserIds]);
 
   const fetchClassmates = async () => {
     setLoading(true);
@@ -406,6 +425,37 @@ export function ShareResourceModal({
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const togglePinClassmate = async (classmateId: string) => {
+    const isPinned = pinnedUserIds.includes(classmateId);
+    
+    // Optimistic UI update
+    setPinnedUserIds(prev => 
+      isPinned ? prev.filter(id => id !== classmateId) : [...prev, classmateId]
+    );
+
+    try {
+      if (isPinned) {
+        // Unpin
+        await supabase
+          .from('pinned_classmates')
+          .delete()
+          .eq('user_id', currentUserId)
+          .eq('pinned_user_id', classmateId);
+      } else {
+        // Pin
+        await supabase
+          .from('pinned_classmates')
+          .insert({ user_id: currentUserId, pinned_user_id: classmateId });
+      }
+    } catch (err) {
+      console.error("Failed to toggle pin state:", err);
+      // Revert on error
+      setPinnedUserIds(prev => 
+        isPinned ? [...prev, classmateId] : prev.filter(id => id !== classmateId)
+      );
     }
   };
 
@@ -508,6 +558,14 @@ export function ShareResourceModal({
               <p style={{ color: "#94a3b8", textAlign: "center", padding: "20px 0" }}>Loading classmates...</p>
             ) : classmates.length === 0 ? (
               <p style={{ color: "#94a3b8", textAlign: "center", padding: "20px 0" }}>No classmates found in your current semester.</p>
+            ) : filteredClassmates.length === 0 && !searchQuery.trim() ? (
+              <div style={{ textAlign: "center", padding: "30px 20px", color: "#94a3b8" }}>
+                <div style={{ background: "rgba(255,255,255,0.05)", width: 48, height: 48, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+                  <Search size={24} color="#64748b" />
+                </div>
+                <p style={{ margin: "0 0 8px", fontSize: "0.95rem", fontWeight: 500, color: "#cbd5e1" }}>No pinned classmates yet.</p>
+                <p style={{ margin: 0, fontSize: "0.85rem", lineHeight: 1.5 }}>Search for your friends above and click the <strong>+</strong> icon to pin them here for quick sharing.</p>
+              </div>
             ) : filteredClassmates.length === 0 ? (
               <div style={{ textAlign: "center", padding: "20px 0", color: "#94a3b8" }}>
                 <p style={{ margin: "0 0 8px", fontSize: "0.9rem" }}>No classmate found matching &quot;{searchQuery}&quot;</p>
@@ -601,24 +659,44 @@ export function ShareResourceModal({
                         </div>
                       </div>
 
-                      <button
-                        onClick={() => handleShare(user.user_id)}
-                        disabled={sharingTo === user.user_id}
-                        style={{
-                          background: themeColor,
-                          color: "#020c1b",
-                          border: "none",
-                          borderRadius: "8px",
-                          padding: "7px 14px",
-                          fontSize: "0.82rem",
-                          fontWeight: 700,
-                          cursor: sharingTo === user.user_id ? "not-allowed" : "pointer",
-                          opacity: sharingTo === user.user_id ? 0.7 : 1,
-                          boxShadow: `0 4px 12px ${themeColor}30`,
-                        }}
-                      >
-                        {sharingTo === user.user_id ? "Sending..." : "Share"}
-                      </button>
+                      <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); togglePinClassmate(user.user_id); }}
+                          title={pinnedUserIds.includes(user.user_id) ? "Unpin classmate" : "Pin classmate"}
+                          style={{
+                            background: pinnedUserIds.includes(user.user_id) ? "rgba(16,185,129,0.15)" : "rgba(255,255,255,0.05)",
+                            color: pinnedUserIds.includes(user.user_id) ? "#10b981" : "#94a3b8",
+                            border: `1px solid ${pinnedUserIds.includes(user.user_id) ? "rgba(16,185,129,0.3)" : "transparent"}`,
+                            borderRadius: "8px",
+                            padding: "6px 8px",
+                            cursor: "pointer",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            transition: "all 0.2s"
+                          }}
+                        >
+                          {pinnedUserIds.includes(user.user_id) ? <Check size={16} /> : <Plus size={16} />}
+                        </button>
+                        <button
+                          onClick={() => handleShare(user.user_id)}
+                          disabled={sharingTo === user.user_id}
+                          style={{
+                            background: themeColor,
+                            color: "#020c1b",
+                            border: "none",
+                            borderRadius: "8px",
+                            padding: "7px 14px",
+                            fontSize: "0.82rem",
+                            fontWeight: 700,
+                            cursor: sharingTo === user.user_id ? "not-allowed" : "pointer",
+                            opacity: sharingTo === user.user_id ? 0.7 : 1,
+                            boxShadow: `0 4px 12px ${themeColor}30`,
+                          }}
+                        >
+                          {sharingTo === user.user_id ? "Sending..." : "Share"}
+                        </button>
+                      </div>
                     </div>
                   );
                 })}
