@@ -8,6 +8,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import Navbar from "@/components/Navbar";
 import MathText from "@/components/MathText";
+import WhatsAppLinking from "@/components/WhatsAppLinking";
+import NotesManager from "@/components/NotesManager";
 import { useAuth } from "@/hooks/useAuth";
 import { createClient } from "@/lib/supabase/client";
 import { getCache, setCache, clearCache } from "@/lib/cache";
@@ -581,6 +583,9 @@ export default function ProfilePageContent() {
                 </div>
               )}
             </div>
+
+            <WhatsAppLinking />
+            <NotesManager />
           </div>
         )}
       </section>

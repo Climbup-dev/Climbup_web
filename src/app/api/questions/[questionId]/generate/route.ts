@@ -17,7 +17,7 @@ export async function POST(
     }
 
     // Use environment variable if available, otherwise fallback to the hardcoded URL
-    const pythonBackendUrl = process.env.PYTHON_BACKEND_URL || "https://bacend-climbup.onrender.com";
+    const pythonBackendUrl = process.env.NEXT_PUBLIC_PYTHON_BACKEND_URL || "https://bacend-climbup.onrender.com";
     const targetUrl = `${pythonBackendUrl}/api/generate-only`;
 
     // Forward auth headers

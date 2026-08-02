@@ -94,12 +94,7 @@ export function AddResourceModal({
       await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          scopes: "https://www.googleapis.com/auth/drive.file",
           redirectTo: window.location.href,
-          queryParams: {
-            access_type: "offline",
-            prompt: "consent",
-          },
         },
       });
     } catch (err: any) {
@@ -123,78 +118,25 @@ export function AddResourceModal({
     setUploading(true);
 
     try {
-      // 1. Get Google Drive Access Token for this student
-      const token = await getGoogleToken();
-
-      if (!token) {
-        setNeedsGoogleConnect(true);
-        setError("Google Drive connection expired or missing. Please click the button below to connect your Google Drive.");
-        setUploading(false);
-        return;
-      }
-
-      // 2. Find or create dedicated "ClimbUP" folder in Student's Drive
-      const folderId = await getOrCreateClimbUPFolder(token);
-
-      // 3. Upload file directly to Student's Personal Google Drive inside "ClimbUP" folder
-      const metadata: any = {
-        name: file.name,
-        mimeType: file.type || "application/pdf",
-      };
-
-      if (folderId) {
-        metadata.parents = [folderId];
-      }
-
+      // 1. Create FormData for the backend API route
       const form = new FormData();
-      form.append("metadata", new Blob([JSON.stringify(metadata)], { type: "application/json" }));
       form.append("file", file);
 
-      const driveUploadRes = await fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart", {
+      // 2. Upload file to our secure centralized Drive via Next.js
+      const driveUploadRes = await fetch("/api/drive-upload", {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`
-        },
         body: form
       });
 
-      if (!driveUploadRes.ok) {
-        if (driveUploadRes.status === 401) {
-          setNeedsGoogleConnect(true);
-          throw new Error("Google Drive access expired. Please connect your Google account below.");
-        }
-        throw new Error(`Google Drive upload failed (${driveUploadRes.statusText})`);
-      }
-
       const driveData = await driveUploadRes.json();
-      const fileId = driveData.id;
 
-      // 3. Set sharing permission to 'anyone with link can view' so PDFs load seamlessly for students
-      const permRes = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}/permissions`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          type: "anyone",
-          role: "reader"
-        })
-      });
-
-      if (!permRes.ok) {
-        // Delete the file since we can't use it
-        await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}`, {
-          method: "DELETE",
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        throw new Error("Your Google account restricts public sharing (usually happens with college/work emails). Please upload using a personal Gmail account.");
+      if (!driveUploadRes.ok || !driveData.success) {
+        throw new Error(driveData.error || "Google Drive upload failed");
       }
 
-      // 4. Construct direct view URL
-      const fileUrl = `https://drive.google.com/file/d/${fileId}/view`;
+      const fileUrl = driveData.webViewLink;
 
-      // 5. Save metadata to database
+      // 3. Save metadata to database (this keeps it visible in their profile)
       const { error: dbError } = await supabase
         .from("student_resources")
         .insert({
