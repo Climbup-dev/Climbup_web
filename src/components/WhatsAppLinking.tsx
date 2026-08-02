@@ -1,17 +1,73 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageCircle, ArrowRight, Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
+import { MessageCircle, ArrowRight, Loader2, AlertCircle, CheckCircle2, QrCode, Phone } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { QRCodeSVG } from "qrcode.react";
 
 export default function WhatsAppLinking() {
+  const [flowType, setFlowType] = useState<"direct" | "otp">("direct");
   const [step, setStep] = useState<"request" | "verify" | "success">("request");
+  
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [linkData, setLinkData] = useState<{ link: string; code: string } | null>(null);
+
+  useEffect(() => {
+    if (flowType === "direct" && !linkData && !loading) {
+      handleGenerateLink();
+    }
+  }, [flowType]);
+
+  const handleGenerateLink = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const supabase = createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session || !session.user || !session.user.id) {
+        console.error("Frontend Auth Error: No session found!", session);
+        throw new Error("Missing user session in Frontend! Please refresh or log in again.");
+      }
+      
+      const backendUrl = process.env.NEXT_PUBLIC_PYTHON_BACKEND_URL || "https://bacend-climbup.onrender.com";
+      const res = await fetch(`${backendUrl}/api/whatsapp/generate-link`, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({
+          user_id: session.user.id,
+          userId: session.user.id
+        })
+      });
+      
+      let data: any = {};
+      const contentType = res.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        data = await res.json();
+      } else {
+        const text = await res.text();
+        throw new Error(text || `Server returned status ${res.status}`);
+      }
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || data.message || "Failed to generate link");
+      }
+      
+      setLinkData({ link: data.link, code: data.code });
+    } catch (err: any) {
+      setError(err.message || "Failed to generate link");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleRequestOtp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,7 +80,7 @@ export default function WhatsAppLinking() {
       const supabase = createClient();
       const { data: { session } } = await supabase.auth.getSession();
       
-      const backendUrl = process.env.NEXT_PUBLIC_PYTHON_BACKEND_URL || process.env.NEXT_PUBLIC_AI_BACKEND_URL || "";
+      const backendUrl = process.env.NEXT_PUBLIC_PYTHON_BACKEND_URL || "https://bacend-climbup.onrender.com";
       const res = await fetch(`${backendUrl}/api/whatsapp/request-otp`, {
         method: "POST",
         headers: { 
@@ -37,7 +93,15 @@ export default function WhatsAppLinking() {
         })
       });
       
-      const data = await res.json();
+      let data: any = {};
+      const contentType = res.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        data = await res.json();
+      } else {
+        const text = await res.text();
+        throw new Error(text || `Server returned status ${res.status}`);
+      }
+
       // Check if it's either status === "otp_sent" OR success === true
       if (!res.ok || !(data.status === "otp_sent" || data.success === true)) {
         throw new Error(data.message || data.error || "Failed to request OTP");
@@ -62,7 +126,7 @@ export default function WhatsAppLinking() {
       const supabase = createClient();
       const { data: { session } } = await supabase.auth.getSession();
 
-      const backendUrl = process.env.NEXT_PUBLIC_PYTHON_BACKEND_URL || process.env.NEXT_PUBLIC_AI_BACKEND_URL || "";
+      const backendUrl = process.env.NEXT_PUBLIC_PYTHON_BACKEND_URL || "https://bacend-climbup.onrender.com";
       const res = await fetch(`${backendUrl}/api/whatsapp/verify-otp`, {
         method: "POST",
         headers: { 
@@ -75,7 +139,15 @@ export default function WhatsAppLinking() {
         })
       });
       
-      const data = await res.json();
+      let data: any = {};
+      const contentType = res.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        data = await res.json();
+      } else {
+        const text = await res.text();
+        throw new Error(text || `Server returned status ${res.status}`);
+      }
+
       // Check if it's either status === "verified" OR success === true
       if (!res.ok || !(data.status === "verified" || data.success === true)) {
         throw new Error(data.message || data.error || "Invalid or Expired OTP");
@@ -101,16 +173,79 @@ export default function WhatsAppLinking() {
 
       <div className="wa-linking-card">
         <AnimatePresence mode="wait">
-          {step === "request" && (
+          {flowType === "direct" && (
             <motion.div
-              key="request"
+              key="direct"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95 }}
               className="wa-action-area"
+              style={{ display: "flex", flexDirection: "column", alignItems: "center" }}
             >
+              {loading && !linkData ? (
+                 <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "16px", padding: "40px 0" }}>
+                   <Loader2 size={32} color="#25D366" className="spin" />
+                   <span style={{ color: "#94a3b8" }}>Generating secure connection link...</span>
+                 </div>
+              ) : error ? (
+                 <div className="wa-error" style={{ marginBottom: "20px" }}>
+                   <AlertCircle size={18} />
+                   <span>{error}</span>
+                   <button onClick={handleGenerateLink} style={{ marginLeft: "10px", background: "transparent", color: "#fff", border: "1px solid #fff", borderRadius: "4px", padding: "2px 8px", cursor: "pointer" }}>Retry</button>
+                 </div>
+              ) : linkData ? (
+                 <>
+                    <div style={{ background: "#fff", padding: "16px", borderRadius: "16px", marginBottom: "20px" }}>
+                      <QRCodeSVG 
+                        value={linkData.link}
+                        size={160}
+                        level="H"
+                        includeMargin={false}
+                        fgColor="#020c1b"
+                      />
+                    </div>
+                    <p style={{ color: "#e2e8f0", fontSize: "0.95rem", fontWeight: 500, margin: "0 0 16px 0", textAlign: "center" }}>
+                      Scan QR code with phone<br/>
+                      <span style={{ color: "#64748b", fontSize: "0.8rem", fontWeight: 400 }}>or click below if on mobile</span>
+                    </p>
+                    <a
+                      href={linkData.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="wa-connect-btn"
+                      style={{ textDecoration: "none", width: "100%", maxWidth: "300px" }}
+                    >
+                      <MessageCircle size={18} /> Open WhatsApp
+                    </a>
+                 </>
+              ) : null}
+              
+              <button 
+                onClick={() => setFlowType("otp")}
+                style={{ background: "transparent", border: "none", color: "rgba(158, 248, 220, 0.7)", cursor: "pointer", fontSize: "14px", marginTop: "24px", display: "flex", alignItems: "center", gap: "6px" }}
+              >
+                <Phone size={14} /> Link with Phone Number instead
+              </button>
+            </motion.div>
+          )}
+
+          {flowType === "otp" && step === "request" && (
+            <motion.div
+              key="request"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="wa-action-area"
+            >
+              <button 
+                onClick={() => setFlowType("direct")}
+                style={{ background: "transparent", border: "none", color: "rgba(158, 248, 220, 0.7)", cursor: "pointer", fontSize: "14px", marginBottom: "16px", display: "flex", alignItems: "center", gap: "6px" }}
+              >
+                <QrCode size={14} /> Back to QR Scanner
+              </button>
+              
               <p className="wa-description">
-                Link your WhatsApp account to securely upload notes and PDFs directly to ClimbUP. Enter your phone number to get started.
+                Enter your phone number to get started.
               </p>
               
               {error && (
