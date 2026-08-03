@@ -196,10 +196,11 @@
 
 .profileFormGrid {
   display: grid;
-  grid-template-columns: minmax(240px, 1.2fr) minmax(260px, 1.8fr) minmax(160px, 1fr);
-  gap: 18px;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 16px;
   align-items: start;
   width: 100%;
+  box-sizing: border-box;
 }
 
 .profileSelectField {

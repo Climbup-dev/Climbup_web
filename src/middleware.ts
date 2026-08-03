@@ -18,6 +18,11 @@ export async function middleware(request: NextRequest) {
   const isPublic = isPublicRoute(pathname);
   const isApiRoute = pathname.startsWith("/api/");
 
+  // For file upload routes, return immediately without cloning request stream in updateSession
+  if (pathname.startsWith("/api/drive-upload")) {
+    return NextResponse.next();
+  }
+
   // We update the session cookies first
   const response = await updateSession(request);
 

@@ -8,7 +8,8 @@ import { QRCodeSVG } from "qrcode.react";
 
 export default function WhatsAppLinking() {
   const [flowType, setFlowType] = useState<"direct" | "otp">("direct");
-  const [step, setStep] = useState<"request" | "verify" | "success">("request");
+  const [step, setStep] = useState<"checking" | "request" | "verify" | "success">("checking");
+  const [connectedNumber, setConnectedNumber] = useState<string | null>(null);
   
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
@@ -17,11 +18,50 @@ export default function WhatsAppLinking() {
   const [error, setError] = useState<string | null>(null);
   const [linkData, setLinkData] = useState<{ link: string; code: string } | null>(null);
 
+  // Check Supabase directly on mount for existing WhatsApp connection
   useEffect(() => {
-    if (flowType === "direct" && !linkData && !loading) {
+    let intervalId: any;
+
+    async function checkStatus() {
+      try {
+        const supabase = createClient();
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user?.id) {
+          setStep("request");
+          return;
+        }
+
+        const { data: userData } = await supabase
+          .from("users")
+          .select("whatsapp_number")
+          .eq("user_id", session.user.id)
+          .maybeSingle();
+
+        if (userData && userData.whatsapp_number) {
+          setConnectedNumber(userData.whatsapp_number);
+          setStep("success");
+          if (intervalId) clearInterval(intervalId);
+        } else if (step === "checking") {
+          setStep("request");
+        }
+      } catch (err) {
+        if (step === "checking") setStep("request");
+      }
+    }
+
+    checkStatus();
+
+    // Poll every 3 seconds to auto-detect when Render saves the number in Supabase
+    intervalId = setInterval(checkStatus, 3000);
+
+    return () => clearInterval(intervalId);
+  }, []);
+
+  useEffect(() => {
+    if (flowType === "direct" && !linkData && !loading && step !== "success" && step !== "checking") {
       handleGenerateLink();
     }
-  }, [flowType]);
+  }, [flowType, step]);
 
   const handleGenerateLink = async () => {
     setLoading(true);
@@ -347,9 +387,14 @@ export default function WhatsAppLinking() {
               <div style={{ color: '#25D366', background: 'rgba(37, 211, 102, 0.1)', padding: '20px', borderRadius: '50%' }}>
                 <CheckCircle2 size={48} />
               </div>
-              <h3 style={{ margin: 0, fontSize: '24px', color: '#fff' }}>Connected Successfully!</h3>
+              <h3 style={{ margin: 0, fontSize: '24px', color: '#fff' }}>WhatsApp Connected! ✅</h3>
+              {connectedNumber && (
+                <div style={{ background: 'rgba(37, 211, 102, 0.15)', border: '1px solid rgba(37, 211, 102, 0.3)', padding: '8px 16px', borderRadius: '20px', color: '#38d399', fontSize: '14px', fontWeight: 600 }}>
+                  Linked Number: {connectedNumber}
+                </div>
+              )}
               <p className="wa-instruction" style={{ textAlign: 'center' }}>
-                Your WhatsApp account is now linked. You can directly send us notes and PDFs via WhatsApp to upload them instantly.
+                Your WhatsApp account is linked directly in Supabase. You can now send notes and PDFs directly via WhatsApp to upload them instantly!
               </p>
             </motion.div>
           )}
