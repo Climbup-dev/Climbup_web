@@ -13,6 +13,7 @@ interface StudyHubSidebarProps {
   activeSubject: string | null;
   handleSubjectClick: (id: string) => void;
   setShowWhatsappModal: (show: boolean) => void;
+  whatsappNumber?: string;
 }
 
 export const StudyHubSidebar: React.FC<StudyHubSidebarProps> = ({
@@ -25,6 +26,7 @@ export const StudyHubSidebar: React.FC<StudyHubSidebarProps> = ({
   activeSubject,
   handleSubjectClick,
   setShowWhatsappModal,
+  whatsappNumber,
 }) => {
   return (
     <>
@@ -88,11 +90,37 @@ export const StudyHubSidebar: React.FC<StudyHubSidebarProps> = ({
 
         <div style={{ padding: "16px", borderTop: "1px solid rgba(255,255,255,0.05)", marginTop: "auto" }}>
           <button 
-            onClick={() => setShowWhatsappModal(true)}
+            onClick={() => {
+              if (!whatsappNumber) {
+                setShowWhatsappModal(true);
+              }
+            }}
             className="read-btn" 
-            style={{ width: "100%", background: "linear-gradient(135deg, #25D366, #128C7E)", color: "#fff", fontWeight: 700, padding: "12px", borderRadius: "10px", display: "flex", gap: "8px", justifyContent: "center", alignItems: "center", boxShadow: "0 4px 12px rgba(37, 211, 102, 0.2)", border: "none", cursor: "pointer" }}
+            style={{ 
+              width: "100%", 
+              background: whatsappNumber ? "linear-gradient(135deg, rgba(37, 211, 102, 0.1), rgba(18, 140, 126, 0.1))" : "linear-gradient(135deg, #25D366, #128C7E)", 
+              color: whatsappNumber ? "#25D366" : "#fff", 
+              fontWeight: 700, 
+              padding: "12px", 
+              borderRadius: "10px", 
+              display: "flex", 
+              gap: "8px", 
+              justifyContent: "center", 
+              alignItems: "center", 
+              boxShadow: whatsappNumber ? "none" : "0 4px 12px rgba(37, 211, 102, 0.2)", 
+              border: whatsappNumber ? "1px solid rgba(37, 211, 102, 0.2)" : "none", 
+              cursor: whatsappNumber ? "default" : "pointer" 
+            }}
           >
-            <MessageSquare size={18} /> Connect WhatsApp
+            {whatsappNumber ? (
+              <>
+                <MessageSquare size={18} /> Connected: {whatsappNumber}
+              </>
+            ) : (
+              <>
+                <MessageSquare size={18} /> Connect WhatsApp
+              </>
+            )}
           </button>
         </div>
       </motion.aside>
