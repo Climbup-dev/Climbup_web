@@ -20,6 +20,7 @@ interface StudyHubSidebarProps {
   activeClassroomId?: string;
   onSelectTopic?: (topic: Topic) => void;
   onBackFromPdf?: () => void;
+  onEditSubjects?: () => void;
 }
 
 export const StudyHubSidebar: React.FC<StudyHubSidebarProps> = ({
@@ -38,7 +39,8 @@ export const StudyHubSidebar: React.FC<StudyHubSidebarProps> = ({
   pdfTopicsList = [],
   activeClassroomId = "",
   onSelectTopic,
-  onBackFromPdf
+  onBackFromPdf,
+  onEditSubjects
 }) => {
   return (
     <>
@@ -164,6 +166,37 @@ export const StudyHubSidebar: React.FC<StudyHubSidebarProps> = ({
                 </button>
               ))
             )
+          )}
+
+          {!isPdfOpen && onEditSubjects && (
+            <div style={{ marginTop: "16px", padding: "0 14px" }}>
+              <button
+                onClick={() => {
+                  onEditSubjects();
+                  if (isMobile) setIsMobileSidebarOpen(false);
+                }}
+                style={{
+                  width: "100%",
+                  background: "rgba(56, 211, 153, 0.08)",
+                  border: "1px dashed rgba(56, 211, 153, 0.3)",
+                  borderRadius: "10px",
+                  padding: "10px",
+                  color: "#38d399",
+                  fontWeight: 600,
+                  fontSize: "0.82rem",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "6px",
+                  transition: "all 0.2s"
+                }}
+                onMouseOver={e => e.currentTarget.style.background = "rgba(56, 211, 153, 0.15)"}
+                onMouseOut={e => e.currentTarget.style.background = "rgba(56, 211, 153, 0.08)"}
+              >
+                ⚙️ Manage MDM/OE Subjects
+              </button>
+            </div>
           )}
         </nav>
 

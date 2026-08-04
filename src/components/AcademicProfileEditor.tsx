@@ -22,6 +22,19 @@ type UserProfile = {
   university_id: string | null;
   branch_id: string | null;
   semester: number | null;
+  mdm_branch_id: string | null;
+  oe_id: string | null;
+};
+
+type OEBasket = {
+  oe_id: string;
+  semester: number;
+  subject_id: string;
+  course_code: string;
+  subjects: {
+    subject_name: string;
+    subject_code: string;
+  };
 };
 
 interface AcademicProfileEditorProps {
@@ -39,7 +52,11 @@ export default function AcademicProfileEditor({ userId, onProfileUpdated }: Acad
     university_id: null,
     branch_id: null,
     semester: null,
+    mdm_branch_id: null,
+    oe_id: null,
   });
+
+  const [oeBaskets, setOeBaskets] = useState<OEBasket[]>([]);
 
   const [profileLoading, setProfileLoading] = useState(true);
   const [profileSaving, setProfileSaving] = useState(false);
@@ -74,7 +91,7 @@ export default function AcademicProfileEditor({ userId, onProfileUpdated }: Acad
 
         supabase
           .from("users")
-          .select("university_id, branch_id, semester")
+          .select("university_id, branch_id, semester, mdm_branch_id, oe_id")
           .eq("user_id", userId)
           .maybeSingle(),
       ]);
@@ -92,6 +109,8 @@ export default function AcademicProfileEditor({ userId, onProfileUpdated }: Acad
           university_id: profileResult.data.university_id,
           branch_id: profileResult.data.branch_id,
           semester: profileResult.data.semester,
+          mdm_branch_id: profileResult.data.mdm_branch_id,
+          oe_id: profileResult.data.oe_id,
         };
         setProfile(newProfile);
 
@@ -141,6 +160,34 @@ export default function AcademicProfileEditor({ userId, onProfileUpdated }: Acad
     loadBranches();
   }, [profile.university_id, supabase]);
 
+  useEffect(() => {
+    async function loadOEs() {
+      if (!supabase || !profile.semester) {
+        setOeBaskets([]);
+        return;
+      }
+      const { data, error } = await supabase
+        .from("open_elective_baskets")
+        .select(`
+          oe_id, semester, subject_id, course_code,
+          subjects (subject_name, subject_code)
+        `)
+        .eq("semester", profile.semester)
+        .eq("is_active", true);
+
+      if (!error && data) {
+        const validBaskets = data.map((item: any) => ({
+          ...item,
+          subjects: Array.isArray(item.subjects) ? item.subjects[0] : item.subjects
+        })).filter((item: any) => item.subjects != null);
+        setOeBaskets(validBaskets as any);
+      } else {
+        setOeBaskets([]);
+      }
+    }
+    loadOEs();
+  }, [profile.semester, supabase]);
+
   const saveProfile = async () => {
     if (!profile.university_id || !profile.branch_id || !profile.semester) {
       setProfileMessage("Please complete all fields.");
@@ -157,6 +204,8 @@ export default function AcademicProfileEditor({ userId, onProfileUpdated }: Acad
           university_id: profile.university_id,
           branch_id: profile.branch_id,
           semester: profile.semester,
+          mdm_branch_id: profile.mdm_branch_id,
+          oe_id: profile.oe_id,
         })
         .eq("user_id", userId);
 
@@ -201,11 +250,13 @@ export default function AcademicProfileEditor({ userId, onProfileUpdated }: Acad
             label: u.university_name,
           }))}
           onChange={(value) =>
-            setProfile({
+            setProfile((current) => ({
               university_id: value || null,
               branch_id: null,
-              semester: profile.semester,
-            })
+              semester: current.semester,
+              mdm_branch_id: current.mdm_branch_id,
+              oe_id: current.oe_id,
+            }))
           }
         />
 
@@ -239,9 +290,56 @@ export default function AcademicProfileEditor({ userId, onProfileUpdated }: Acad
             setProfile((current) => ({
               ...current,
               semester: value ? Number(value) : null,
+              oe_id: null, // Reset OE when semester changes
             }))
           }
         />
+
+        {/* MDM Branch Selection */}
+        {(profile.semester && profile.semester >= 3) && (
+          <CustomSelect
+            label="MDM Branch (Optional)"
+            value={profile.mdm_branch_id || ""}
+            placeholder="Select MDM branch"
+            disabled={profileLoading}
+            options={[
+              { value: "", label: "No MDM selected" },
+              ...filteredBranches.map((b) => ({
+                value: b.branch_id,
+                label: `${b.branch_name}${b.branch_code ? ` (${b.branch_code})` : ""}`,
+              }))
+            ]}
+            onChange={(value) =>
+              setProfile((current) => ({
+                ...current,
+                mdm_branch_id: value || null,
+              }))
+            }
+          />
+        )}
+
+        {/* OE Selection */}
+        {(profile.semester && profile.semester >= 3) && (
+          <CustomSelect
+            label="Open Elective (Optional)"
+            value={profile.oe_id || ""}
+            placeholder="Select OE subject"
+            disabled={profileLoading || oeBaskets.length === 0}
+            options={[
+              { value: "", label: "No OE selected" },
+              ...oeBaskets.map((oe) => ({
+                value: oe.oe_id,
+                label: `${oe.subjects?.subject_name} (${oe.course_code || oe.subjects?.subject_code})`,
+              }))
+            ]}
+            onChange={(value) =>
+              setProfile((current) => ({
+                ...current,
+                oe_id: value || null,
+              }))
+            }
+          />
+        )}
       </div>
 
       <div className="profileFormActions">

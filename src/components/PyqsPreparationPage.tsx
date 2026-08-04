@@ -22,6 +22,7 @@ type UserAcademicProfile = {
   branch_id: string | null;
   semester: number | null;
   mdm_branch_id: string | null;
+  oe_id: string | null;
   universities?: { university_name: string } | null;
   branches?: { branch_name: string; branch_code: string | null } | null;
 };
@@ -212,6 +213,7 @@ export default function PyqsPreparationClient() {
           branch_id,
           semester,
           mdm_branch_id,
+          oe_id,
           universities:university_id (
             university_name
           ),
@@ -414,15 +416,8 @@ export default function PyqsPreparationClient() {
         setAvailableOEs([]);
       }
 
-      const { data: selData } = await supabase
-        .from("student_open_electives")
-        .select("oe_id")
-        .eq("user_id", currentUser.id)
-        .eq("semester", profile.semester)
-        .maybeSingle();
-
-      if (selData?.oe_id) {
-        setSelectedOeId(selData.oe_id);
+      if (profile?.oe_id) {
+        setSelectedOeId(profile.oe_id);
       } else {
         setSelectedOeId("");
       }
@@ -452,37 +447,14 @@ export default function PyqsPreparationClient() {
     setSelectedOeId(newOeId);
     if (!currentUser?.id || !profile?.semester) return;
     
-    if (!newOeId) {
-      await supabase
-        .from("student_open_electives")
-        .delete()
-        .eq("user_id", currentUser.id)
-        .eq("semester", profile.semester);
-      return;
-    }
+    await supabase
+      .from("users")
+      .update({ oe_id: newOeId || null })
+      .eq("user_id", currentUser.id);
 
-    const { data: existing } = await supabase
-      .from("student_open_electives")
-      .select("selection_id")
-      .eq("user_id", currentUser.id)
-      .eq("semester", profile.semester)
-      .maybeSingle();
-      
-    if (existing) {
-      await supabase
-        .from("student_open_electives")
-        .update({ oe_id: newOeId })
-        .eq("selection_id", existing.selection_id);
-    } else {
-      await supabase
-        .from("student_open_electives")
-        .insert({
-          user_id: currentUser.id,
-          oe_id: newOeId,
-          semester: profile.semester
-        });
-    }
-
+    const newProfile = { ...profile, oe_id: newOeId || null };
+    setProfile(newProfile);
+    setCache(`pyqs_profile_${currentUser.id}`, { profile: newProfile, subjects });
     await refreshProfile();
   };
   // -----------------

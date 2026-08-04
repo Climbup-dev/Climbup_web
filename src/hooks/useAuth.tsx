@@ -45,8 +45,8 @@ interface AuthContextValue {
   logout: () => Promise<void>;
   /* ── Academic Setup ── */
   needsAcademicSetup: boolean;
-  userAcademicProfile: { university_id: string; branch_id: string; semester: number; mdm_branch_id?: string | null } | null;
-  completeAcademicSetup: (data: { university_id: string; branch_id: string; semester: number; mdm_branch_id?: string | null }) => void;
+  userAcademicProfile: { university_id: string; branch_id: string; semester: number; mdm_branch_id?: string | null; oe_id?: string | null } | null;
+  completeAcademicSetup: (data: { university_id: string; branch_id: string; semester: number; mdm_branch_id?: string | null; oe_id?: string | null }) => void;
 }
 
 interface UserProfileRow {
@@ -55,6 +55,7 @@ interface UserProfileRow {
   branch_id: string | null;
   semester: number | null;
   mdm_branch_id: string | null;
+  oe_id: string | null;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -121,7 +122,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [passwordRecovery, setPasswordRecovery] = useState(false);
   /* ── Academic Setup state ── */
   const [needsAcademicSetup, setNeedsAcademicSetup] = useState(false);
-  const [userAcademicProfile, setUserAcademicProfile] = useState<{ university_id: string; branch_id: string; semester: number; mdm_branch_id?: string | null } | null>(null);
+  const [userAcademicProfile, setUserAcademicProfile] = useState<{ university_id: string; branch_id: string; semester: number; mdm_branch_id?: string | null; oe_id?: string | null } | null>(null);
   // Track if we already confirmed setup is complete (avoids flash on refresh)
   const academicSetupDoneRef = useRef(
     typeof window !== "undefined" && localStorage.getItem("climbup_academic_done") === "1"
@@ -149,7 +150,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const { data, error } = await supabase
           .from("users")
-          .select("profile_image, university_id, branch_id, semester, mdm_branch_id")
+          .select("profile_image, university_id, branch_id, semester, mdm_branch_id, oe_id")
           .eq("user_id", user.id)
           .maybeSingle();
 
@@ -190,6 +191,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             branch_id: profile.branch_id!,
             semester: profile.semester!,
             mdm_branch_id: profile.mdm_branch_id,
+            oe_id: profile.oe_id,
           });
         } else {
           setUserAcademicProfile(null);
@@ -783,7 +785,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   /* ── Called after AcademicSetupModal saves successfully ── */
   const completeAcademicSetup = useCallback(
-    (data: { university_id: string; branch_id: string; semester: number; mdm_branch_id?: string | null }) => {
+    (data: { university_id: string; branch_id: string; semester: number; mdm_branch_id?: string | null; oe_id?: string | null }) => {
       setUserAcademicProfile(data);
       setNeedsAcademicSetup(false);
       // Persist completion so page refresh doesn't reopen modal

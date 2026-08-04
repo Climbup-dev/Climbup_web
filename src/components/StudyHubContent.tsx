@@ -160,6 +160,7 @@ export default function StudyHubContent() {
   const [isMobile, setIsMobile] = useState(false);
 
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [showProfileEditor, setShowProfileEditor] = useState(false);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 850);
@@ -368,8 +369,8 @@ export default function StudyHubContent() {
   useEffect(() => {
     if (!userAcademicProfile) return;
 
-    const { university_id, branch_id, semester, mdm_branch_id } = userAcademicProfile as any;
-    fetchSubjects(university_id, branch_id, semester, mdm_branch_id);
+    const { university_id, branch_id, semester, mdm_branch_id, oe_id } = userAcademicProfile as any;
+    fetchSubjects(university_id, branch_id, semester, mdm_branch_id, oe_id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userAcademicProfile]);
 
@@ -378,8 +379,8 @@ export default function StudyHubContent() {
   const closeAuth = () => { setAuthOpen(false); if (!currentUser) window.location.assign("/"); };
 
   /* ── Fetch subjects from DB1 (Supabase) ── */
-  const fetchSubjects = async (universityId: string, branchId: string, semester: number, mdmBranchId?: string | null) => {
-    const cacheKey = `subjects_${universityId}_${branchId}_${semester}_${mdmBranchId || ''}_${currentUser?.id || ''}`;
+  const fetchSubjects = async (universityId: string, branchId: string, semester: number, mdmBranchId?: string | null, oeId?: string | null) => {
+    const cacheKey = `subjects_v3_${universityId}_${branchId}_${semester}_${mdmBranchId || ''}_${oeId || ''}_${currentUser?.id || ''}`;
     const nameCacheKey = `profile_names_${universityId}_${branchId}`;
     const cachedSubjects = getCache(cacheKey);
     const cachedNames = getCache(nameCacheKey);
@@ -428,19 +429,15 @@ export default function StudyHubContent() {
         );
       }
 
-      // 3. OE Subjects
-      if (currentUser?.id) {
+      // 3. OE Subjects (now direct from users profile oe_id)
+      if (oeId) {
         fetchPromises.push(
           supabase
-            .from("student_open_electives")
+            .from("open_elective_baskets")
             .select(`
-              oe_id,
-              open_elective_baskets (
-                subjects (subject_id, subject_name, subject_code)
-              )
+              subjects (subject_id, subject_name, subject_code)
             `)
-            .eq("user_id", currentUser.id)
-            .eq("semester", semester)
+            .eq("oe_id", oeId)
             .maybeSingle()
         );
       }
@@ -451,11 +448,13 @@ export default function StudyHubContent() {
       const mdmSubjects = (mdmBranchId && results[1]?.data) ? results[1].data : [];
       
       const oeIndex = mdmBranchId ? 2 : 1;
-      const oeData = (currentUser?.id && results[oeIndex]?.data) ? results[oeIndex].data : null;
-      // Handle the nested structure from student_open_electives -> open_elective_baskets -> subjects
-      const oeSubjectRaw = oeData?.open_elective_baskets?.subjects;
-      // Sometimes it might return an array if the relation is many-to-many, but it should be a single object here.
-      // If it is an array, we take the first element, otherwise just use it.
+      const oeData = (oeId && results[oeIndex]?.data) ? results[oeIndex].data : null;
+      
+      let oeSubjectRaw = null;
+      if (oeData) {
+        oeSubjectRaw = oeData.subjects;
+      }
+      
       const actualOeSubject = Array.isArray(oeSubjectRaw) ? oeSubjectRaw[0] : oeSubjectRaw;
       const oeSubject = actualOeSubject ? [actualOeSubject] : [];
 
@@ -857,6 +856,7 @@ export default function StudyHubContent() {
                 setPdfLoading(true);
                 setPdfError(false);
               }}
+              onEditSubjects={() => setShowProfileEditor(true)}
               onBackFromPdf={() => {
                 setActiveClassroomId("");
                 setActivePdfUrl("");
@@ -1447,6 +1447,46 @@ export default function StudyHubContent() {
           themeColor={shareTheme}
         />
       )}
+      {/* ─── Profile Editor Modal ─── */}
+      {showProfileEditor && currentUser && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 9999,
+          background: "rgba(2,12,27,0.85)", backdropFilter: "blur(4px)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          padding: 16
+        }}>
+          <div style={{
+            position: "relative",
+            width: "100%", maxWidth: 600,
+            background: "#020c18", borderRadius: 16,
+            border: "1px solid rgba(56,211,153,0.2)",
+            boxShadow: "0 20px 40px rgba(0,0,0,0.5)"
+          }}>
+            <button
+              onClick={() => setShowProfileEditor(false)}
+              style={{
+                position: "absolute", top: 12, right: 12,
+                background: "rgba(255,255,255,0.1)", border: "none",
+                color: "#fff", width: 28, height: 28, borderRadius: "50%",
+                cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                zIndex: 10
+              }}
+            >
+              <X size={16} />
+            </button>
+            <div style={{ maxHeight: "85vh", overflowY: "auto", padding: "10px" }}>
+              <AcademicProfileEditor 
+                userId={currentUser.id} 
+                onProfileUpdated={() => {
+                  refreshProfile();
+                  setShowProfileEditor(false);
+                }} 
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
     </>
   );
 }
