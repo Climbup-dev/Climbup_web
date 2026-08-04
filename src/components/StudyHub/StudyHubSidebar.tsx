@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { X, ChevronRight, MessageSquare } from "lucide-react";
-import { Subject } from "./types";
+import { X, ChevronRight, ArrowLeft, FileText, CheckCircle } from "lucide-react";
+import { Subject, Topic } from "./types";
 
 interface StudyHubSidebarProps {
   isMobile: boolean;
@@ -14,6 +14,12 @@ interface StudyHubSidebarProps {
   handleSubjectClick: (id: string) => void;
   setShowWhatsappModal: (show: boolean) => void;
   whatsappNumber?: string;
+  isPdfOpen?: boolean;
+  activeSubjectName?: string;
+  pdfTopicsList?: Topic[];
+  activeClassroomId?: string;
+  onSelectTopic?: (topic: Topic) => void;
+  onBackFromPdf?: () => void;
 }
 
 export const StudyHubSidebar: React.FC<StudyHubSidebarProps> = ({
@@ -27,6 +33,12 @@ export const StudyHubSidebar: React.FC<StudyHubSidebarProps> = ({
   handleSubjectClick,
   setShowWhatsappModal,
   whatsappNumber,
+  isPdfOpen = false,
+  activeSubjectName = "",
+  pdfTopicsList = [],
+  activeClassroomId = "",
+  onSelectTopic,
+  onBackFromPdf
 }) => {
   return (
     <>
@@ -57,71 +69,145 @@ export const StudyHubSidebar: React.FC<StudyHubSidebarProps> = ({
           top: 0
         }}
       >
+        {/* Sidebar Header */}
         <div className="sidebar-header">
           {isMobile && (
             <button onClick={() => setIsMobileSidebarOpen(false)} style={{ position: "absolute", right: 16, top: 22, background: "none", border: "none", color: "#fff", cursor: "pointer" }}>
               <X size={18} />
             </button>
           )}
-          <div className="sidebar-brand">
-            <h2>Subjects</h2>
-          </div>
-        </div>
 
-        <nav className="sidebar-nav">
-          {filteredSubjects.length === 0 ? (
-            <div style={{ padding: "20px 8px", color: "#475569", fontSize: "0.8rem", textAlign: "center", lineHeight: 1.6 }}>
-              {subjectSearch ? `No subjects matching "${subjectSearch}"` : "No subjects found."}
+          {isPdfOpen ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px", width: "100%" }}>
+              <button
+                onClick={onBackFromPdf}
+                style={{
+                  background: "rgba(255, 255, 255, 0.06)",
+                  border: "1px solid rgba(255, 255, 255, 0.12)",
+                  color: "#38d399",
+                  borderRadius: "8px",
+                  padding: "5px 10px",
+                  fontSize: "0.78rem",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  alignSelf: "flex-start"
+                }}
+              >
+                <ArrowLeft size={13} /> All Subjects
+              </button>
+              <div>
+                <h2 style={{ margin: 0, fontSize: "0.95rem", fontWeight: 700, color: "#ffffff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {activeSubjectName}
+                </h2>
+                <span style={{ fontSize: "0.72rem", color: "#94a3b8", fontWeight: 600 }}>
+                  📚 {pdfTopicsList.length} Notes Index
+                </span>
+              </div>
             </div>
           ) : (
-            filteredSubjects.map((subject, idx) => (
-              <button
-                key={subject.id}
-                className={`subject-btn ${activeSubject === subject.id ? "active" : ""}`}
-                onClick={() => handleSubjectClick(subject.id)}
-              >
-                <div className="subject-icon">{idx + 1}</div>
-                <span style={{ flex: 1, textAlign: "left" }}>{subject.subject_name}</span>
-                {activeSubject === subject.id && <ChevronRight size={14} />}
-              </button>
-            ))
+            <div className="sidebar-brand">
+              <h2 style={{ margin: 0, fontSize: "1rem", fontWeight: 700, color: "#ffffff" }}>Subjects</h2>
+            </div>
+          )}
+        </div>
+
+        {/* Sidebar Nav Items */}
+        <nav className="sidebar-nav">
+          {isPdfOpen ? (
+            /* Mode 2: Reuse subject-btn styling for PDF Notes Index */
+            pdfTopicsList.length === 0 ? (
+              <div style={{ padding: "20px 8px", color: "#475569", fontSize: "0.8rem", textAlign: "center" }}>
+                No notes found.
+              </div>
+            ) : (
+              pdfTopicsList.map((topic, idx) => {
+                const isActiveNote = topic.classroom_id === activeClassroomId;
+                const cleanTitle = topic.topic_name.replace(/\s*\(Shared by .*\)$/, '');
+
+                return (
+                  <button
+                    key={topic.classroom_id}
+                    className={`subject-btn ${isActiveNote ? "active" : ""}`}
+                    onClick={() => {
+                      if (onSelectTopic) onSelectTopic(topic);
+                      if (isMobile) setIsMobileSidebarOpen(false);
+                    }}
+                  >
+                    <div className="subject-icon">{idx + 1}</div>
+                    <span style={{ flex: 1, textAlign: "left", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {cleanTitle}
+                    </span>
+                    {isActiveNote ? <CheckCircle size={14} color="#38d399" /> : <FileText size={13} style={{ opacity: 0.5 }} />}
+                  </button>
+                );
+              })
+            )
+          ) : (
+            /* Mode 1: Standard Subjects List */
+            filteredSubjects.length === 0 ? (
+              <div style={{ padding: "20px 8px", color: "#475569", fontSize: "0.8rem", textAlign: "center", lineHeight: 1.6 }}>
+                {subjectSearch ? `No subjects matching "${subjectSearch}"` : "No subjects found."}
+              </div>
+            ) : (
+              filteredSubjects.map((subject, idx) => (
+                <button
+                  key={subject.id}
+                  className={`subject-btn ${activeSubject === subject.id ? "active" : ""}`}
+                  onClick={() => handleSubjectClick(subject.id)}
+                >
+                  <div className="subject-icon">{idx + 1}</div>
+                  <span style={{ flex: 1, textAlign: "left" }}>{subject.subject_name}</span>
+                  {activeSubject === subject.id && <ChevronRight size={14} />}
+                </button>
+              ))
+            )
           )}
         </nav>
 
-        <div style={{ padding: "16px", borderTop: "1px solid rgba(255,255,255,0.05)", marginTop: "auto" }}>
-          <button 
+        {/* WhatsApp Linking Bottom Button */}
+        <div style={{ padding: "14px", borderTop: "1px solid rgba(255,255,255,0.05)", marginTop: "auto" }}>
+          <motion.button 
+            whileHover={whatsappNumber ? {} : { scale: 1.02 }}
+            whileTap={whatsappNumber ? {} : { scale: 0.98 }}
             onClick={() => {
               if (!whatsappNumber) {
                 setShowWhatsappModal(true);
               }
             }}
-            className="read-btn" 
             style={{ 
               width: "100%", 
-              background: whatsappNumber ? "linear-gradient(135deg, rgba(37, 211, 102, 0.1), rgba(18, 140, 126, 0.1))" : "linear-gradient(135deg, #25D366, #128C7E)", 
-              color: whatsappNumber ? "#25D366" : "#fff", 
+              background: whatsappNumber 
+                ? "rgba(37, 211, 102, 0.08)" 
+                : "linear-gradient(135deg, #091c28 0%, #030d15 100%)", 
+              color: "#ffffff", 
               fontWeight: 700, 
-              padding: "12px", 
-              borderRadius: "10px", 
+              padding: "10px 14px", 
+              borderRadius: "12px", 
               display: "flex", 
               gap: "8px", 
               justifyContent: "center", 
               alignItems: "center", 
-              boxShadow: whatsappNumber ? "none" : "0 4px 12px rgba(37, 211, 102, 0.2)", 
-              border: whatsappNumber ? "1px solid rgba(37, 211, 102, 0.2)" : "none", 
-              cursor: whatsappNumber ? "default" : "pointer" 
+              boxShadow: whatsappNumber 
+                ? "none" 
+                : "0 4px 14px rgba(0, 0, 0, 0.3), 0 0 12px rgba(37, 211, 102, 0.12)", 
+              border: whatsappNumber 
+                ? "1px solid rgba(37, 211, 102, 0.3)" 
+                : "1px solid rgba(37, 211, 102, 0.35)", 
+              cursor: whatsappNumber ? "default" : "pointer"
             }}
           >
-            {whatsappNumber ? (
-              <>
-                <MessageSquare size={18} /> Connected: {whatsappNumber}
-              </>
-            ) : (
-              <>
-                <MessageSquare size={18} /> Connect WhatsApp
-              </>
-            )}
-          </button>
+            <img 
+              src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" 
+              alt="WhatsApp" 
+              style={{ width: "22px", height: "22px", flexShrink: 0 }} 
+            />
+            <span style={{ fontSize: "0.88rem", fontWeight: 700, color: "#ffffff", whiteSpace: "nowrap" }}>
+              {whatsappNumber ? `Connected: ${whatsappNumber}` : "Connect WhatsApp"}
+            </span>
+          </motion.button>
         </div>
       </motion.aside>
     </>

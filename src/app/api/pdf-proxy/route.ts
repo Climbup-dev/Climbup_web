@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 
-export const runtime = 'edge';
-
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const fileUrl = searchParams.get("url");
+    const isDownload = searchParams.get("download") === "true";
+    const isThumb = searchParams.get("thumb") === "true";
+    const customFilename = searchParams.get("filename") || "ClimbUP_Note.pdf";
 
     if (!fileUrl) {
       return new NextResponse("Missing PDF URL", { status: 400 });
@@ -13,11 +14,15 @@ export async function GET(req: NextRequest) {
 
     // Extract Google Drive File ID if applicable
     let fetchUrl = fileUrl;
-    const driveMatch = fileUrl.match(/\/file\/d\/([^\/]+)/) || fileUrl.match(/id=([^&]+)/);
+    const driveMatch = fileUrl.match(/\/file\/d\/([^\/]+)/) || fileUrl.match(/id=([^&]+)/) || fileUrl.match(/\/d\/([^\/]+)/);
     
     if (driveMatch && driveMatch[1]) {
       const fileId = driveMatch[1];
-      fetchUrl = `https://drive.google.com/uc?export=download&id=${fileId}&confirm=t`;
+      if (isThumb) {
+        fetchUrl = `https://drive.google.com/thumbnail?id=${fileId}&sz=w600`;
+      } else {
+        fetchUrl = `https://drive.google.com/uc?export=download&id=${fileId}&confirm=t`;
+      }
     }
 
     const res = await fetch(fetchUrl, {
@@ -27,23 +32,25 @@ export async function GET(req: NextRequest) {
     });
 
     if (!res.ok) {
-      // Fallback: Redirect directly to fileUrl
-      return NextResponse.redirect(fileUrl);
+      return new NextResponse("Failed to fetch file stream", { status: res.status });
     }
 
-    const contentType = res.headers.get("content-type") || "application/pdf";
+    const arrayBuffer = await res.arrayBuffer();
+    const contentType = isThumb ? (res.headers.get("content-type") || "image/jpeg") : "application/pdf";
+    const dispositionHeader = isDownload 
+      ? `attachment; filename="${encodeURIComponent(customFilename)}"` 
+      : `inline; filename="${encodeURIComponent(customFilename)}"`;
 
-    // Pass the stream directly for 0MB memory footprint and instant TTFB
-    return new NextResponse(res.body, {
+    return new NextResponse(Buffer.from(arrayBuffer), {
       status: 200,
       headers: {
-        "Content-Type": contentType.includes("pdf") ? "application/pdf" : contentType,
-        "Content-Disposition": "inline; filename=\"document.pdf\"",
+        "Content-Type": contentType,
+        "Content-Disposition": dispositionHeader,
         "Cache-Control": "public, max-age=86400, s-maxage=86400",
       },
     });
   } catch (err) {
     console.error("PDF Proxy Error:", err);
-    return new NextResponse("Failed to load PDF", { status: 500 });
+    return new NextResponse("Failed to process request", { status: 500 });
   }
 }

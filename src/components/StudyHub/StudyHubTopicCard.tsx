@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { CheckCircle, FileText, Trash2, Share2, ChevronRight } from "lucide-react";
+import { CheckCircle, FileText, Trash2, Share2, Eye, ArrowUpRight } from "lucide-react";
 import { Topic } from "./types";
 
 interface StudyHubTopicCardProps {
@@ -18,7 +18,7 @@ interface StudyHubTopicCardProps {
   setShareTheme: (theme: string) => void;
 }
 
-export const StudyHubTopicCard: React.FC<StudyHubTopicCardProps> = ({
+export const StudyHubTopicCard: React.FC<StudyHubTopicCardProps> = React.memo(({
   topic,
   index,
   themeColor,
@@ -34,14 +34,15 @@ export const StudyHubTopicCard: React.FC<StudyHubTopicCardProps> = ({
 }) => {
   const isActive = activeClassroomId === topic.classroom_id;
   const cleanTitle = topic.topic_name.replace(/\s*\(Shared by .*\)$/, '');
-  const sharedByMatch = topic.topic_name.match(/\(Shared by (.*?)\)$/);
+  const sharedByMatch = topic.topic_name.match(/\((Shared by .*?)\)$/);
 
   return (
     <motion.div
       key={topic.classroom_id}
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: index * 0.05 }}
+      transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1], delay: Math.min(index * 0.03, 0.15) }}
+      whileHover={{ y: -4, boxShadow: `0 12px 28px rgba(0,0,0,0.4), 0 0 20px ${themeColor}25` }}
       className={`note-card ${isActive ? "active-topic" : ""}`}
       onMouseEnter={() => handlePreloadPdf(topic.pdf_url)}
       onTouchStart={() => handlePreloadPdf(topic.pdf_url)}
@@ -49,54 +50,139 @@ export const StudyHubTopicCard: React.FC<StudyHubTopicCardProps> = ({
       style={{
         padding: 0,
         overflow: "hidden",
-        borderRadius: "18px",
-        border: `1.5px solid ${isActive ? themeColor : "rgba(255,255,255,0.08)"}`,
-        background: "linear-gradient(160deg, rgba(15, 23, 42, 0.9) 0%, rgba(7, 15, 30, 0.95) 100%)",
-        boxShadow: isActive ? `0 0 24px ${themeColor}30` : "0 8px 32px rgba(0,0,0,0.3)",
+        borderRadius: "16px",
+        border: `1px solid ${isActive ? themeColor : "rgba(255,255,255,0.09)"}`,
+        background: "linear-gradient(160deg, rgba(15, 23, 42, 0.85) 0%, rgba(6, 13, 25, 0.95) 100%)",
+        boxShadow: isActive ? `0 0 24px ${themeColor}35` : "0 6px 20px rgba(0,0,0,0.3)",
         display: "flex",
         flexDirection: "column",
+        cursor: "pointer",
+        position: "relative",
+        transition: "all 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
+        willChange: "transform, opacity"
       }}
     >
+      {/* Top Preview Header Area */}
       <div style={{
-        height: "105px",
+        height: "115px",
         width: "100%",
-        background: "#070f1e",
-        borderBottom: "1px solid rgba(255,255,255,0.08)",
+        background: "linear-gradient(180deg, #091726 0%, #050d18 100%)",
+        borderBottom: "1px solid rgba(255,255,255,0.06)",
         position: "relative",
         overflow: "hidden",
       }}>
-        {topic.is_personal && topic.status !== "pending" && (
-          <div
-            onClick={(e) => {
-              e.stopPropagation();
-              setSelectedResourceIds(prev =>
-                prev.includes(topic.classroom_id)
-                  ? prev.filter(id => id !== topic.classroom_id)
-                  : [...prev, topic.classroom_id]
-              );
-            }}
-            style={{
-              position: "absolute",
-              top: 8,
-              right: 8,
-              zIndex: 10,
-              width: 24,
-              height: 24,
-              borderRadius: 6,
-              background: selectedResourceIds.includes(topic.classroom_id) ? themeColor : "rgba(0,0,0,0.4)",
-              border: `1.5px solid ${selectedResourceIds.includes(topic.classroom_id) ? themeColor : "rgba(255,255,255,0.3)"}`,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              cursor: "pointer",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
-            }}
-          >
-            {selectedResourceIds.includes(topic.classroom_id) && <CheckCircle size={16} color="#000" />}
-          </div>
-        )}
+        {/* PDF Badge Top Left */}
+        <div style={{
+          position: "absolute",
+          top: 10,
+          left: 10,
+          zIndex: 10,
+          background: "rgba(239, 68, 68, 0.15)",
+          border: "1px solid rgba(239, 68, 68, 0.3)",
+          color: "#f87171",
+          fontSize: "10px",
+          fontWeight: 800,
+          padding: "3px 8px",
+          borderRadius: "6px",
+          display: "flex",
+          alignItems: "center",
+          gap: "4px",
+          backdropFilter: "blur(4px)"
+        }}>
+          <FileText size={11} /> PDF
+        </div>
+
+        {/* Action Icon Buttons Top Right (Share & Delete) */}
+        <div style={{
+          position: "absolute",
+          top: 8,
+          right: 8,
+          zIndex: 10,
+          display: "flex",
+          gap: "6px",
+          alignItems: "center"
+        }}>
+          {topic.is_personal && (
+            <>
+              <button
+                onClick={(e) => { e.stopPropagation(); setShareResourceIds([topic.classroom_id]); setShareTheme(themeColor); }}
+                title="Share PDF"
+                style={{
+                  background: "rgba(15, 23, 42, 0.75)",
+                  border: "1px solid rgba(255, 255, 255, 0.15)",
+                  color: "#cbd5e1",
+                  width: 28,
+                  height: 28,
+                  borderRadius: "8px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
+                  backdropFilter: "blur(4px)",
+                  transition: "all 0.15s"
+                }}
+              >
+                <Share2 size={13} />
+              </button>
+
+              <button
+                onClick={(e) => handleDeleteResource(topic, e)}
+                title="Delete PDF"
+                style={{
+                  background: "rgba(239, 68, 68, 0.2)",
+                  border: "1px solid rgba(239, 68, 68, 0.35)",
+                  color: "#f87171",
+                  width: 28,
+                  height: 28,
+                  borderRadius: "8px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
+                  backdropFilter: "blur(4px)"
+                }}
+              >
+                <Trash2 size={13} />
+              </button>
+            </>
+          )}
+
+          {/* Selection Checkbox */}
+          {topic.is_personal && topic.status !== "pending" && (
+            <div
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedResourceIds(prev =>
+                  prev.includes(topic.classroom_id)
+                    ? prev.filter(id => id !== topic.classroom_id)
+                    : [...prev, topic.classroom_id]
+                );
+              }}
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: 8,
+                background: selectedResourceIds.includes(topic.classroom_id) ? themeColor : "rgba(15, 23, 42, 0.75)",
+                border: `1px solid ${selectedResourceIds.includes(topic.classroom_id) ? themeColor : "rgba(255,255,255,0.2)"}`,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+                backdropFilter: "blur(4px)"
+              }}
+            >
+              {selectedResourceIds.includes(topic.classroom_id) && <CheckCircle size={15} color="#000" />}
+            </div>
+          )}
+        </div>
+
+        {/* Thumbnail Preview rendering */}
         {(() => {
-          if (!topic.pdf_url) return <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "#64748b" }}><FileText size={24} /></div>;
+          if (!topic.pdf_url) return (
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "#475569" }}>
+              <FileText size={36} opacity={0.4} />
+            </div>
+          );
 
           const isDrive = topic.pdf_url.includes("drive.google.com");
           const match = isDrive ? topic.pdf_url.match(/\/d\/([a-zA-Z0-9_-]+)/) : null;
@@ -104,8 +190,8 @@ export const StudyHubTopicCard: React.FC<StudyHubTopicCardProps> = ({
 
           return (
             <div style={{ position: "relative", width: "100%", height: "100%" }}>
-              <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", color: themeColor, opacity: 0.3 }}>
-                <FileText size={32} />
+              <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", color: themeColor, opacity: 0.25 }}>
+                <FileText size={40} />
               </div>
 
               {isDrive && driveFileId ? (
@@ -126,7 +212,7 @@ export const StudyHubTopicCard: React.FC<StudyHubTopicCardProps> = ({
                 />
               ) : (
                 <iframe
-                  src={topic.pdf_url.includes("supabase.co") ? `${topic.pdf_url}#page=1&toolbar=0&navpanes=0&scrollbar=0` : topic.pdf_url}
+                  src={topic.pdf_url.includes("drive.google.com") ? topic.pdf_url.replace(/\/view.*$/, "/preview") : topic.pdf_url}
                   title={cleanTitle}
                   style={{
                     position: "absolute",
@@ -150,57 +236,52 @@ export const StudyHubTopicCard: React.FC<StudyHubTopicCardProps> = ({
         <div style={{
           position: "absolute",
           inset: 0,
-          background: "linear-gradient(180deg, rgba(15,23,42,0.05) 0%, rgba(15,23,42,0.6) 100%)",
+          background: "linear-gradient(180deg, rgba(15,23,42,0.1) 0%, rgba(6,13,25,0.85) 100%)",
           pointerEvents: "none",
         }} />
       </div>
 
-      <div style={{ padding: "12px 14px", display: "flex", flexDirection: "column", gap: "8px" }}>
+      {/* Card Content & Action Button */}
+      <div style={{ padding: "14px", display: "flex", flexDirection: "column", gap: "10px", flex: 1, justifyContent: "space-between" }}>
         <div>
-          <h3 className="note-title" style={{ fontSize: "0.92rem", fontWeight: 700, color: "#f8fafc", margin: "0 0 2px", lineHeight: "1.3" }}>
+          <h3 style={{ fontSize: "0.92rem", fontWeight: 700, color: "#f8fafc", margin: "0 0 4px", lineHeight: "1.35", overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>
             {cleanTitle}
           </h3>
-          <p className="note-desc" style={{ margin: 0, fontSize: "0.78rem", color: "#94a3b8" }}>
+          <p style={{ margin: 0, fontSize: "0.76rem", color: "#94a3b8" }}>
             {sharedByMatch ? (
               <span style={{ color: themeColor, fontWeight: 600 }}>✨ Shared by {sharedByMatch[1]}</span>
             ) : topic.created_at ? (
               `📅 ${new Date(topic.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}`
             ) : (
-              `Click to open ${categoryLabel.toLowerCase()}.`
+              `PDF Note Document`
             )}
           </p>
         </div>
 
-        <div className="note-footer" style={{ marginTop: "2px", paddingTop: "8px", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
-          <div className="note-meta" style={{ color: themeColor, fontSize: "0.75rem" }}>
-            <FileText size={12} />
-            <span>PDF Ready</span>
-          </div>
-          <div style={{ display: "flex", gap: "8px" }}>
-            {topic.is_personal && (
-              <>
-                <button
-                  className="read-btn"
-                  style={{ background: "rgba(239,68,68,0.15)", color: "#ef4444", padding: "6px 10px" }}
-                  onClick={(e) => handleDeleteResource(topic, e)}
-                >
-                  <Trash2 size={14} />
-                </button>
-                <button
-                  className="read-btn"
-                  style={{ background: `${themeColor}20`, color: themeColor }}
-                  onClick={(e) => { e.stopPropagation(); setShareResourceIds([topic.classroom_id]); setShareTheme(themeColor); }}
-                >
-                  <Share2 size={13} /> Share
-                </button>
-              </>
-            )}
-            <button className="read-btn" style={{ background: themeColor, color: "#020c1b", fontWeight: 700 }}>
-              Open <ChevronRight size={13} />
-            </button>
-          </div>
+        {/* Clean Full-Width Open Button */}
+        <div style={{ paddingTop: "6px" }}>
+          <button 
+            style={{ 
+              width: "100%", 
+              background: `linear-gradient(135deg, ${themeColor} 0%, #0d9488 100%)`, 
+              color: "#02131d", 
+              fontWeight: 800, 
+              fontSize: "0.82rem",
+              padding: "8px 12px", 
+              borderRadius: "10px", 
+              border: "none", 
+              display: "flex", 
+              alignItems: "center", 
+              justifyContent: "center", 
+              gap: "6px",
+              cursor: "pointer",
+              boxShadow: `0 4px 12px ${themeColor}30`
+            }}
+          >
+            <Eye size={14} /> Open Note <ArrowUpRight size={14} />
+          </button>
         </div>
       </div>
     </motion.div>
   );
-};
+});

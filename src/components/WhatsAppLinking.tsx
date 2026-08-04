@@ -2,9 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageCircle, ArrowRight, Loader2, AlertCircle, CheckCircle2, QrCode, Phone } from "lucide-react";
+import { ArrowRight, Loader2, AlertCircle, CheckCircle2, QrCode, Phone, ShieldCheck, Lock, FileText } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { QRCodeSVG } from "qrcode.react";
+
+// Official Real WhatsApp Logo Image URL from Wikimedia CDN
+const WHATSAPP_LOGO_URL = "https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg";
+// Official Real Adobe PDF File Icon URL
+const PDF_ICON_URL = "https://upload.wikimedia.org/wikipedia/commons/8/87/PDF_file_icon.svg";
 
 export default function WhatsAppLinking() {
   const [flowType, setFlowType] = useState<"direct" | "otp">("direct");
@@ -142,7 +147,6 @@ export default function WhatsAppLinking() {
         throw new Error(text || `Server returned status ${res.status}`);
       }
 
-      // Check if it's either status === "otp_sent" OR success === true
       if (!res.ok || !(data.status === "otp_sent" || data.success === true)) {
         throw new Error(data.message || data.error || "Failed to request OTP");
       }
@@ -188,7 +192,6 @@ export default function WhatsAppLinking() {
         throw new Error(text || `Server returned status ${res.status}`);
       }
 
-      // Check if it's either status === "verified" OR success === true
       if (!res.ok || !(data.status === "verified" || data.success === true)) {
         throw new Error(data.message || data.error || "Invalid or Expired OTP");
       }
@@ -202,16 +205,102 @@ export default function WhatsAppLinking() {
   };
 
   return (
-    <div className="wa-linking-container">
-      <div className="profileSectionHeading">
-        <div>
-          <span>Integrations</span>
-          <h2>Connect WhatsApp</h2>
+    <div style={{ width: "100%", padding: "24px 20px", boxSizing: "border-box", display: "flex", flexDirection: "column", alignItems: "center" }}>
+      
+      {/* ══ DUAL BRAND CONNECTED INTEGRATION HEADER (WhatsApp ⇄ Curved Dotted Arc ⇄ Actual ClimbUP Logo) ══ */}
+      <div style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        marginBottom: "20px",
+        width: "100%",
+        padding: "16px 20px 14px",
+        background: "linear-gradient(160deg, rgba(37, 211, 102, 0.08) 0%, rgba(15, 23, 42, 0.8) 100%)",
+        border: "1px solid rgba(37, 211, 102, 0.3)",
+        borderRadius: "24px",
+        boxShadow: "0 12px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1)",
+        position: "relative",
+        boxSizing: "border-box"
+      }}>
+        {/* Full-width SVG Overlay: Static Dotted Line + 100% Accurate Moving White PDF Icon */}
+        <svg 
+          width="100%" 
+          height="100%" 
+          style={{ position: "absolute", inset: 0, pointerEvents: "none", overflow: "visible", zIndex: 1 }}
+        >
+          {/* STATIC STILL DOTTED LINE (No movement!) */}
+          <path
+            d="M 50 42 Q 170 5 290 42"
+            fill="none"
+            stroke="#25D366"
+            strokeWidth="2.5"
+            strokeDasharray="6,6"
+            opacity={0.85}
+          />
+
+          {/* WHITE PDF ICON MOVING DIRECTLY ALONG THE EXACT CURVE WITH MATHEMATICAL PRECISION */}
+          <g filter="drop-shadow(0 0 10px rgba(255, 255, 255, 0.95)) drop-shadow(0 0 16px rgba(56, 211, 153, 0.7))">
+            <animateMotion
+              path="M 50 42 Q 170 5 290 42"
+              dur="2.4s"
+              repeatCount="indefinite"
+            />
+            {/* White PDF Document Icon centered at (0,0) */}
+            <g transform="translate(-13, -13)">
+              <path
+                d="M14 2H6C4.89 2 4 2.89 4 4V20C4 21.11 4.89 22 6 22H18C19.11 22 20 21.11 20 20V8L14 2Z"
+                fill="#ffffff"
+              />
+              <path
+                d="M14 2V8H20"
+                fill="#cbd5e1"
+              />
+              <path
+                d="M16 13H8M16 17H8M10 9H8"
+                stroke="#10b981"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+              />
+            </g>
+          </g>
+        </svg>
+
+        {/* Left: Official WhatsApp Logo (Direct Large 58px without circle box) */}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", zIndex: 2 }}>
+          <img 
+            src={WHATSAPP_LOGO_URL} 
+            alt="WhatsApp" 
+            style={{ width: "58px", height: "58px", filter: "drop-shadow(0 6px 18px rgba(37, 211, 102, 0.5))" }} 
+          />
+          <span style={{ fontSize: "11px", fontWeight: 800, color: "#25D366" }}>WhatsApp</span>
         </div>
-        <MessageCircle className="wa-icon-title" size={24} />
+
+        {/* Center: Spacer for animation */}
+        <div style={{ flex: 1, position: "relative", height: "58px" }} />
+
+        {/* Right: Actual ClimbUP Brand Logo (/logo.png) (Direct Large 58px without circle box) */}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", zIndex: 2 }}>
+          <img 
+            src="/logo.png" 
+            alt="ClimbUP Logo" 
+            style={{ width: "58px", height: "58px", objectFit: "contain", borderRadius: "50%", filter: "drop-shadow(0 6px 18px rgba(56, 211, 153, 0.4))" }} 
+          />
+          <span style={{ fontSize: "11px", fontWeight: 800, color: "#38d399" }}>ClimbUP</span>
+        </div>
       </div>
 
-      <div className="wa-linking-card">
+      {/* Title */}
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", marginBottom: "16px", width: "100%" }}>
+        <h2 style={{ margin: 0, fontSize: "1.3rem", fontWeight: 800, color: "#ffffff", letterSpacing: "-0.01em" }}>
+          Sync WhatsApp to ClimbUP
+        </h2>
+        <span style={{ color: "#94a3b8", fontSize: "0.8rem", marginTop: "4px" }}>
+          Send notes on WhatsApp & view them instantly on ClimbUP
+        </span>
+      </div>
+
+      {/* Main Form Content Card */}
+      <div style={{ background: "rgba(255, 255, 255, 0.03)", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "20px", padding: "20px", width: "100%", boxSizing: "border-box" }}>
         <AnimatePresence mode="wait">
           {flowType === "direct" && (
             <motion.div
@@ -219,52 +308,82 @@ export default function WhatsAppLinking() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="wa-action-area"
-              style={{ display: "flex", flexDirection: "column", alignItems: "center" }}
+              style={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100%" }}
             >
               {loading && !linkData ? (
-                 <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "16px", padding: "40px 0" }}>
-                   <Loader2 size={32} color="#25D366" className="spin" />
-                   <span style={{ color: "#94a3b8" }}>Generating secure connection link...</span>
+                 <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "14px", padding: "28px 0" }}>
+                   <Loader2 size={34} color="#25D366" className="spin" />
+                   <span style={{ color: "#94a3b8", fontSize: "13px", fontWeight: 500 }}>Generating secure WhatsApp link...</span>
                  </div>
               ) : error ? (
-                 <div className="wa-error" style={{ marginBottom: "20px" }}>
-                   <AlertCircle size={18} />
-                   <span>{error}</span>
-                   <button onClick={handleGenerateLink} style={{ marginLeft: "10px", background: "transparent", color: "#fff", border: "1px solid #fff", borderRadius: "4px", padding: "2px 8px", cursor: "pointer" }}>Retry</button>
+                 <div style={{ marginBottom: "16px", background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.25)", borderRadius: "12px", padding: "12px 14px", color: "#f87171", width: "100%", boxSizing: "border-box", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                   <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                     <AlertCircle size={16} />
+                     <span style={{ fontSize: "12px" }}>{error}</span>
+                   </div>
+                   <button onClick={handleGenerateLink} style={{ background: "rgba(255,255,255,0.1)", color: "#fff", border: "none", borderRadius: "6px", padding: "4px 10px", cursor: "pointer", fontSize: "11px", fontWeight: 600 }}>Retry</button>
                  </div>
               ) : linkData ? (
                  <>
-                    <div style={{ background: "#fff", padding: "16px", borderRadius: "16px", marginBottom: "20px" }}>
+                    {/* Security Guarantee Banner */}
+                    <div style={{ width: "100%", background: "rgba(37, 211, 102, 0.05)", border: "1px solid rgba(37, 211, 102, 0.15)", borderRadius: "12px", padding: "10px 12px", marginBottom: "16px", display: "flex", alignItems: "center", gap: "8px", boxSizing: "border-box" }}>
+                      <Lock size={15} color="#25D366" style={{ flexShrink: 0 }} />
+                      <p style={{ margin: 0, fontSize: "11px", color: "#cbd5e1", lineHeight: 1.4 }}>
+                        Scan or click below to sync notes automatically to your ClimbUP dashboard.
+                      </p>
+                    </div>
+
+                    {/* QR Code */}
+                    <div style={{ background: "#ffffff", padding: "14px", borderRadius: "16px", marginBottom: "14px", boxShadow: "0 8px 24px rgba(0, 0, 0, 0.3)", border: "2px solid rgba(37, 211, 102, 0.4)" }}>
                       <QRCodeSVG 
                         value={linkData.link}
-                        size={160}
+                        size={150}
                         level="H"
                         includeMargin={false}
-                        fgColor="#020c1b"
+                        fgColor="#0b141a"
                       />
                     </div>
-                    <p style={{ color: "#e2e8f0", fontSize: "0.95rem", fontWeight: 500, margin: "0 0 16px 0", textAlign: "center" }}>
-                      Scan QR code with phone<br/>
-                      <span style={{ color: "#64748b", fontSize: "0.8rem", fontWeight: 400 }}>or click below if on mobile</span>
+
+                    <p style={{ color: "#94a3b8", fontSize: "0.82rem", margin: "0 0 16px 0", textAlign: "center", lineHeight: 1.4 }}>
+                      Scan with phone camera<br/>
+                      <span style={{ color: "#64748b", fontSize: "0.75rem" }}>or tap button below if on mobile</span>
                     </p>
+
+                    {/* Button with Real WhatsApp Logo */}
                     <a
                       href={linkData.link}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="wa-connect-btn"
-                      style={{ textDecoration: "none", width: "100%", maxWidth: "300px" }}
+                      style={{ 
+                        textDecoration: "none", 
+                        width: "100%", 
+                        background: "linear-gradient(135deg, #25D366 0%, #128C7E 100%)",
+                        color: "#ffffff",
+                        padding: "13px 16px",
+                        borderRadius: "12px",
+                        fontWeight: 700,
+                        fontSize: "14px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: "10px",
+                        boxShadow: "0 4px 18px rgba(37, 211, 102, 0.35)",
+                        boxSizing: "border-box",
+                        cursor: "pointer",
+                        transition: "transform 0.15s ease"
+                      }}
                     >
-                      <MessageCircle size={18} /> Open WhatsApp
+                      <img src={WHATSAPP_LOGO_URL} alt="WhatsApp" style={{ width: "28px", height: "28px" }} />
+                      Open WhatsApp
                     </a>
                  </>
               ) : null}
               
               <button 
                 onClick={() => setFlowType("otp")}
-                style={{ background: "transparent", border: "none", color: "rgba(158, 248, 220, 0.7)", cursor: "pointer", fontSize: "14px", marginTop: "24px", display: "flex", alignItems: "center", gap: "6px" }}
+                style={{ background: "transparent", border: "none", color: "rgba(158, 248, 220, 0.7)", cursor: "pointer", fontSize: "12px", marginTop: "16px", display: "flex", alignItems: "center", gap: "6px" }}
               >
-                <Phone size={14} /> Link with Phone Number instead
+                <Phone size={12} /> Link with Phone Number OTP
               </button>
             </motion.div>
           )}
@@ -275,47 +394,59 @@ export default function WhatsAppLinking() {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="wa-action-area"
+              style={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100%" }}
             >
               <button 
                 onClick={() => setFlowType("direct")}
-                style={{ background: "transparent", border: "none", color: "rgba(158, 248, 220, 0.7)", cursor: "pointer", fontSize: "14px", marginBottom: "16px", display: "flex", alignItems: "center", gap: "6px" }}
+                style={{ background: "transparent", border: "none", color: "rgba(158, 248, 220, 0.7)", cursor: "pointer", fontSize: "12px", marginBottom: "14px", display: "flex", alignItems: "center", gap: "6px", alignSelf: "flex-start" }}
               >
-                <QrCode size={14} /> Back to QR Scanner
+                <QrCode size={12} /> Back to QR Scanner
               </button>
               
-              <p className="wa-description">
-                Enter your phone number to get started.
+              <p style={{ color: "#94a3b8", fontSize: "13px", margin: "0 0 16px 0", textAlign: "center" }}>
+                Enter your WhatsApp number to receive an OTP code.
               </p>
               
               {error && (
-                <div className="wa-error">
-                  <AlertCircle size={18} />
-                  <span>{error}</span>
+                <div style={{ marginBottom: "14px", background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.25)", borderRadius: "10px", padding: "10px 14px", color: "#f87171", fontSize: "12px", width: "100%", boxSizing: "border-box" }}>
+                  {error}
                 </div>
               )}
               
-              <form onSubmit={handleRequestOtp} style={{ width: "100%", display: "flex", flexDirection: "column", gap: "16px", alignItems: "center" }}>
+              <form onSubmit={handleRequestOtp} style={{ width: "100%", display: "flex", flexDirection: "column", gap: "14px", alignItems: "center" }}>
                 <input 
                   type="tel"
                   placeholder="e.g. +91 9876543210"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="profileInput"
                   required
                   disabled={loading}
-                  style={{ width: "100%", maxWidth: "300px", padding: "14px 20px", borderRadius: "12px", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(158, 248, 220, 0.2)", color: "#fff", outline: "none" }}
+                  style={{ width: "100%", padding: "12px 16px", borderRadius: "10px", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255, 255, 255, 0.15)", color: "#fff", outline: "none", fontSize: "14px", boxSizing: "border-box" }}
                 />
                 
                 <button 
                   type="submit"
                   disabled={loading || !phone} 
-                  className="wa-connect-btn"
+                  style={{ 
+                    width: "100%", 
+                    background: "linear-gradient(135deg, #10b981 0%, #059669 100%)", 
+                    color: "#fff", 
+                    border: "none", 
+                    borderRadius: "10px", 
+                    padding: "12px", 
+                    fontWeight: 700, 
+                    fontSize: "14px", 
+                    cursor: "pointer", 
+                    display: "flex", 
+                    alignItems: "center", 
+                    justifyContent: "center", 
+                    gap: "8px" 
+                  }}
                 >
                   {loading ? (
-                    <><Loader2 size={18} className="spin" /> Sending...</>
+                    <><Loader2 size={16} className="spin" /> Sending...</>
                   ) : (
-                    <>Send OTP <ArrowRight size={18} /></>
+                    <>Send OTP <ArrowRight size={16} /></>
                   )}
                 </button>
               </form>
@@ -328,39 +459,50 @@ export default function WhatsAppLinking() {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="wa-action-area"
+              style={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100%" }}
             >
-              <p className="wa-description">
-                We've sent a 6-digit code to <strong>{phone}</strong>. Enter it below to verify your account.
+              <p style={{ color: "#94a3b8", fontSize: "13px", margin: "0 0 16px 0", textAlign: "center" }}>
+                We've sent a verification code to <strong>{phone}</strong>.
               </p>
               
               {error && (
-                <div className="wa-error">
-                  <AlertCircle size={18} />
-                  <span>{error}</span>
+                <div style={{ marginBottom: "14px", background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.25)", borderRadius: "10px", padding: "10px 14px", color: "#f87171", fontSize: "12px", width: "100%", boxSizing: "border-box" }}>
+                  {error}
                 </div>
               )}
               
-              <form onSubmit={handleVerifyOtp} style={{ width: "100%", display: "flex", flexDirection: "column", gap: "16px", alignItems: "center" }}>
+              <form onSubmit={handleVerifyOtp} style={{ width: "100%", display: "flex", flexDirection: "column", gap: "14px", alignItems: "center" }}>
                 <input 
                   type="text"
                   placeholder="••••••"
                   value={otp}
                   onChange={(e) => setOtp(e.target.value)}
-                  className="profileInput"
                   maxLength={6}
                   required
                   disabled={loading}
-                  style={{ width: "100%", maxWidth: "200px", padding: "14px 20px", borderRadius: "12px", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(158, 248, 220, 0.2)", color: "#fff", outline: "none", textAlign: "center", fontSize: "20px", letterSpacing: "8px" }}
+                  style={{ width: "180px", padding: "12px 16px", borderRadius: "10px", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255, 255, 255, 0.15)", color: "#fff", outline: "none", textAlign: "center", fontSize: "18px", letterSpacing: "6px" }}
                 />
                 
                 <button 
                   type="submit"
                   disabled={loading || otp.length < 4} 
-                  className="wa-connect-btn"
+                  style={{ 
+                    width: "100%", 
+                    background: "linear-gradient(135deg, #10b981 0%, #059669 100%)", 
+                    color: "#fff", 
+                    border: "none", 
+                    borderRadius: "10px", 
+                    padding: "12px", 
+                    fontWeight: 700, 
+                    fontSize: "14px", 
+                    cursor: "pointer", 
+                    display: "flex", 
+                    alignItems: "center", 
+                    justifyContent: "center" 
+                  }}
                 >
                   {loading ? (
-                    <><Loader2 size={18} className="spin" /> Verifying...</>
+                    <><Loader2 size={16} className="spin" /> Verifying...</>
                   ) : (
                     <>Verify Account</>
                   )}
@@ -368,7 +510,7 @@ export default function WhatsAppLinking() {
                 <button 
                   type="button" 
                   onClick={() => setStep("request")}
-                  style={{ background: "transparent", border: "none", color: "rgba(158, 248, 220, 0.7)", cursor: "pointer", fontSize: "14px", marginTop: "8px" }}
+                  style={{ background: "transparent", border: "none", color: "rgba(158, 248, 220, 0.7)", cursor: "pointer", fontSize: "12px", marginTop: "4px" }}
                 >
                   Change phone number
                 </button>
@@ -381,20 +523,19 @@ export default function WhatsAppLinking() {
               key="success"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="wa-success-area"
-              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}
+              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px', padding: '10px 0', width: "100%" }}
             >
-              <div style={{ color: '#25D366', background: 'rgba(37, 211, 102, 0.1)', padding: '20px', borderRadius: '50%' }}>
-                <CheckCircle2 size={48} />
+              <div style={{ color: '#25D366', background: 'rgba(37, 211, 102, 0.12)', padding: '16px', borderRadius: '50%', border: '1px solid rgba(37, 211, 102, 0.3)' }}>
+                <CheckCircle2 size={40} />
               </div>
-              <h3 style={{ margin: 0, fontSize: '24px', color: '#fff' }}>WhatsApp Connected! ✅</h3>
+              <h3 style={{ margin: 0, fontSize: '20px', color: '#fff', fontWeight: 800 }}>WhatsApp Connected! ✅</h3>
               {connectedNumber && (
-                <div style={{ background: 'rgba(37, 211, 102, 0.15)', border: '1px solid rgba(37, 211, 102, 0.3)', padding: '8px 16px', borderRadius: '20px', color: '#38d399', fontSize: '14px', fontWeight: 600 }}>
+                <div style={{ background: 'rgba(37, 211, 102, 0.12)', border: '1px solid rgba(37, 211, 102, 0.25)', padding: '6px 14px', borderRadius: '20px', color: '#38d399', fontSize: '13px', fontWeight: 600 }}>
                   Linked Number: {connectedNumber}
                 </div>
               )}
-              <p className="wa-instruction" style={{ textAlign: 'center' }}>
-                Your WhatsApp account is linked directly in Supabase. You can now send notes and PDFs directly via WhatsApp to upload them instantly!
+              <p style={{ textAlign: 'center', color: '#94a3b8', fontSize: '13px', lineHeight: 1.5, margin: 0 }}>
+                Your WhatsApp account is linked directly to your <strong>ClimbUP Study Hub</strong>. You can now send notes and PDFs directly via WhatsApp to upload them instantly!
               </p>
             </motion.div>
           )}

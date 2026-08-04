@@ -204,14 +204,40 @@ export default function StudyHubContent() {
 
   const pdfFastStreamUrl = useMemo(() => {
     if (!activePdfUrl) return "";
-    if (activePdfUrl.includes("supabase.co")) {
-      return `${activePdfUrl}#toolbar=0&navpanes=0&scrollbar=1`;
-    }
     if (activePdfUrl.includes("drive.google.com")) {
+      const match = activePdfUrl.match(/\/file\/d\/([^\/]+)/) || activePdfUrl.match(/id=([^&]+)/) || activePdfUrl.match(/\/d\/([^\/]+)/);
+      if (match && match[1]) {
+        return `https://drive.google.com/file/d/${match[1]}/preview`;
+      }
       return activePdfUrl.replace(/\/view.*$/, "/preview");
     }
     return activePdfUrl;
   }, [activePdfUrl]);
+
+  // Disable Right-Click Inspect & DevTools Shortcuts for maximum security
+  useEffect(() => {
+    const handleContextMenu = (e: MouseEvent) => {
+      e.preventDefault();
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (
+        e.key === "F12" ||
+        (e.ctrlKey && e.shiftKey && (e.key === "I" || e.key === "i" || e.key === "J" || e.key === "j" || e.key === "C" || e.key === "c")) ||
+        (e.ctrlKey && (e.key === "U" || e.key === "u"))
+      ) {
+        e.preventDefault();
+      }
+    };
+
+    document.addEventListener("contextmenu", handleContextMenu);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("contextmenu", handleContextMenu);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
 
   const [warmupUrl, setWarmupUrl] = useState<string>("");
 
@@ -784,9 +810,9 @@ export default function StudyHubContent() {
 
   return (
     <>
-      <Navbar onLogin={() => openAuth("login")} onSignUp={() => openAuth("register")} />
+      {!isPdfOpen && <Navbar onLogin={() => openAuth("login")} onSignUp={() => openAuth("register")} />}
 
-      <div className="study-hub-container">
+      <div className="study-hub-container" style={isPdfOpen ? { paddingTop: 0, height: "100vh" } : {}}>
 
         {/* ─── WELCOME SCREEN ─── */}
         {hubState === "welcome" && (
@@ -807,7 +833,7 @@ export default function StudyHubContent() {
           return (
             <div className="study-hub-main-fade-in" style={{ display: "flex", width: "100%", height: "100%" }}>
 
-            {/* ══ LEFT SIDEBAR — Subjects ══ */}
+            {/* ══ LEFT SIDEBAR — Dynamic Subjects / Notes Index ══ */}
             <StudyHubSidebar
               isMobile={isMobile}
               isMobileSidebarOpen={isMobileSidebarOpen}
@@ -819,6 +845,27 @@ export default function StudyHubContent() {
               handleSubjectClick={handleSubjectClick}
               setShowWhatsappModal={setShowWhatsappModal}
               whatsappNumber={(currentUser as any)?.whatsapp_number}
+              isPdfOpen={isPdfOpen}
+              activeSubjectName={currentSubjectName}
+              pdfTopicsList={topicsList.filter(t => t.pdf_url && t.status !== "pending")}
+              activeClassroomId={activeClassroomId}
+              onSelectTopic={(topic) => {
+                setActiveClassroomId(topic.classroom_id);
+                setActivePdfUrl(topic.pdf_url || "");
+                setActiveTopicName(topic.topic_name || "");
+                setActiveCategory(topic.category || "");
+                setPdfLoading(true);
+                setPdfError(false);
+              }}
+              onBackFromPdf={() => {
+                setActiveClassroomId("");
+                setActivePdfUrl("");
+                setActiveTopicName("");
+                setActiveCategory("");
+                setPdfLoading(false);
+                setPdfError(false);
+                setIsFocusMode(false);
+              }}
             />
 
             {/* ══ CENTER — Topics Grid / PDF Viewer ══ */}
@@ -827,9 +874,24 @@ export default function StudyHubContent() {
               transition={{ type: "spring", stiffness: 350, damping: 35 }}
               className="study-hub-center"
             >
-              {activeSubject && (
-                <div className={`center-header${isPdfOpen ? " header-hidden" : ""}`}>
-                  <div className="header-title" style={{ display: "flex", gap: 12, alignItems: "center", width: "100%", justifyContent: isMobile ? "flex-start" : "center" }}>
+              {activeSubject && !isPdfOpen && (
+                <div 
+                  className={`center-header${isPdfOpen ? " header-hidden" : ""}`}
+                  style={{
+                    background: "linear-gradient(135deg, rgba(15, 23, 42, 0.85) 0%, rgba(6, 15, 28, 0.95) 100%)",
+                    border: "1px solid rgba(45, 212, 191, 0.25)",
+                    borderRadius: "18px",
+                    padding: isMobile ? "14px 16px" : "16px 22px",
+                    marginBottom: "20px",
+                    boxShadow: "0 8px 32px rgba(0,0,0,0.35)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: "16px",
+                    flexWrap: "wrap"
+                  }}
+                >
+                  <div style={{ display: "flex", gap: "14px", alignItems: "center" }}>
                     {isMobile && (
                       <button 
                         onClick={() => setIsMobileSidebarOpen(true)}
@@ -838,318 +900,434 @@ export default function StudyHubContent() {
                         <Menu size={18} />
                       </button>
                     )}
-                    <h1 style={{ margin: 0, fontSize: "clamp(1.4rem, 4vw, 2rem)", letterSpacing: "-0.02em", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{currentSubjectName}</h1>
+                    <div style={{ background: "rgba(45, 212, 191, 0.15)", border: "1px solid rgba(45, 212, 191, 0.3)", padding: "10px", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 0 14px rgba(45, 212, 191, 0.2)" }}>
+                      <BookOpen size={24} color="#2dd4bf" />
+                    </div>
+                    <div>
+                      <h1 style={{ margin: 0, fontSize: "clamp(1.2rem, 3.5vw, 1.6rem)", fontWeight: 800, color: "#ffffff", letterSpacing: "-0.01em" }}>
+                        {currentSubjectName}
+                      </h1>
+                      <p style={{ margin: "2px 0 0", fontSize: "0.78rem", color: "#94a3b8", display: "flex", alignItems: "center", gap: "6px" }}>
+                        <span style={{ color: "#2dd4bf", fontWeight: 600 }}>Subject Repository</span> • 
+                        <span>{topicsList.filter(t => t.status !== "pending").length} PDF Notes</span>
+                      </p>
+                    </div>
                   </div>
+
+                  <button
+                    onClick={() => setAddCategory("personal_document")}
+                    style={{
+                      background: "linear-gradient(135deg, #2dd4bf 0%, #0d9488 100%)",
+                      color: "#02131d",
+                      border: "none",
+                      borderRadius: "10px",
+                      padding: "8px 14px",
+                      fontWeight: 800,
+                      fontSize: "0.82rem",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      boxShadow: "0 4px 14px rgba(45, 212, 191, 0.3)"
+                    }}
+                  >
+                    <PlusCircle size={15} /> Upload PDF
+                  </button>
                 </div>
               )}
 
               <div className={`center-scroll${isPdfOpen ? " pdf-mode" : ""}`}>
-
-                {isPdfOpen ? (
-                  <StudyHubPdfViewer
-                    isFocusMode={isFocusMode}
-                    pdfLoading={pdfLoading}
-                    pdfError={pdfError}
-                    isTransitioning={isTransitioning}
-                    activePdfUrl={activePdfUrl}
-                    pdfFastStreamUrl={pdfFastStreamUrl}
-                    warmupUrl={warmupUrl}
-                    resetHideTimer={resetHideTimer}
-                    handleFocusToggle={handleFocusToggle}
-                    onBack={() => {
-                      setActiveClassroomId("");
-                      setActivePdfUrl("");
-                      setActiveTopicName("");
-                      setActiveCategory("");
-                      setPdfLoading(false);
-                      setPdfError(false);
-                      setIsFocusMode(false);
-                      if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
-                    }}
-                    onPdfLoad={() => {
-                      if (activePdfUrl) {
-                        loadedPdfCacheRef.current.add(activePdfUrl);
-                      }
-                      setPdfLoading(false);
-                    }}
-                    onPdfError={() => { setPdfLoading(false); setPdfError(true); }}
-                    onRetry={() => { setPdfError(false); setPdfLoading(true); }}
-                  />
-                ) : (
-
-                  <div className="center-topics-area">
-                    <AnimatePresence mode="wait">
-                      {!activeSubject ? (
-                        <motion.div
-                          key="hero"
-                          initial={{ opacity: 0, y: 15 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -15 }}
-                          transition={{ duration: 0.3 }}
-                          style={{ width: "100%", height: "100%" }}
-                        >
-                          {currentUser && (!userAcademicProfile || !userAcademicProfile.semester) ? (
-                            <div style={{ padding: isMobile ? "20px 12px" : "40px 20px", maxWidth: "800px", margin: "0 auto", height: "100%", overflowY: "auto", display: "flex", flexDirection: "column", alignItems: "center", boxSizing: "border-box", width: "100%" }}>
-                              <div style={{ textAlign: "center", marginBottom: isMobile ? "20px" : "32px", marginTop: isMobile ? "10px" : "20px" }}>
-                                <h2 style={{ fontSize: isMobile ? "1.5rem" : "2rem", fontWeight: 800, color: "#fff", marginBottom: "12px", letterSpacing: "-0.02em" }}>Set up your Academic Profile</h2>
-                                <p style={{ color: "#94a3b8", fontSize: isMobile ? "0.9rem" : "1.05rem", lineHeight: 1.5, maxWidth: "600px", margin: "0 auto" }}>
-                                  Please complete your profile to unlock personalized subjects, assignments, and AI study materials tailored specifically to your branch and semester.
-                                </p>
-                              </div>
-                              <div style={{ width: "100%", maxWidth: "600px", background: "rgba(255,255,255,0.02)", padding: isMobile ? "16px 12px" : "30px", borderRadius: "16px", border: "1px solid rgba(255,255,255,0.05)", boxSizing: "border-box" }}>
-                                <AcademicProfileEditor 
-                                  userId={currentUser.id} 
-                                  onProfileUpdated={() => {
-                                    refreshProfile();
-                                  }} 
-                                />
-                              </div>
-                            </div>
-                          ) : (
-                            <StudyHubHero isMobile={isMobile} onOpenSidebar={() => setIsMobileSidebarOpen(true)} />
-                          )}
-                        </motion.div>
-                      ) : (
-                        <motion.div
-                          key="topics"
-                          initial={{ opacity: 0, y: 15 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -15 }}
-                          transition={{ duration: 0.3 }}
-                          style={{ width: "100%", display: "flex", flexDirection: "column", height: "100%" }}
-                        >
-                          {isFetchingTopics ? (
-                            <TopicSkeletons />
-                          ) : (
-                            <div style={{ display: "flex", flexDirection: "column", gap: "32px", paddingBottom: "40px" }}>
-                              {/* SHARED REQUESTS SECTION (PENDING INCOMING SHARES) */}
-                              {topicsList.filter(t => t.status === "pending").length > 0 && (
-                                <div style={{ marginTop: "24px" }}>
-                                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
-                                    <p className="section-label" style={{ color: "#38d399", marginBottom: 0, display: "flex", alignItems: "center", gap: 6 }}>
-                                      <span>📥 Shared Requests ({topicsList.filter(t => t.status === "pending").length})</span>
+                <AnimatePresence mode="wait">
+                  {isPdfOpen ? (
+                    <motion.div
+                      key="pdf-viewer-view"
+                      initial={{ opacity: 0, scale: 0.985, y: 6 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.985, y: -6 }}
+                      transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+                      style={{ width: "100%", height: "100%", position: "relative", zIndex: 5 }}
+                    >
+                      <StudyHubPdfViewer
+                        isFocusMode={isFocusMode}
+                        pdfLoading={pdfLoading}
+                        pdfError={pdfError}
+                        isTransitioning={isTransitioning}
+                        activePdfUrl={activePdfUrl}
+                        pdfFastStreamUrl={pdfFastStreamUrl}
+                        warmupUrl={warmupUrl}
+                        resetHideTimer={resetHideTimer}
+                        handleFocusToggle={handleFocusToggle}
+                        availableTopics={topicsList.filter(t => t.pdf_url && t.status !== "pending")}
+                        activeClassroomId={activeClassroomId}
+                        onSelectTopic={(topic) => {
+                          setActiveClassroomId(topic.classroom_id);
+                          setActivePdfUrl(topic.pdf_url || "");
+                          setActiveTopicName(topic.topic_name || "");
+                          setActiveCategory(topic.category || "");
+                          setPdfLoading(true);
+                          setPdfError(false);
+                        }}
+                        onBack={() => {
+                          setActiveClassroomId("");
+                          setActivePdfUrl("");
+                          setActiveTopicName("");
+                          setActiveCategory("");
+                          setPdfLoading(false);
+                          setPdfError(false);
+                          setIsFocusMode(false);
+                          if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+                        }}
+                        onPdfLoad={() => {
+                          if (activePdfUrl) {
+                            loadedPdfCacheRef.current.add(activePdfUrl);
+                          }
+                          setPdfLoading(false);
+                        }}
+                        onPdfError={() => { setPdfLoading(false); setPdfError(true); }}
+                        onRetry={() => { setPdfError(false); setPdfLoading(true); }}
+                      />
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="center-topics-view"
+                      initial={{ opacity: 0, scale: 0.985, y: 6 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.985, y: -6 }}
+                      transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+                      style={{ width: "100%", height: "100%", position: "relative", zIndex: 5 }}
+                    >
+                      <div className="center-topics-area">
+                        <AnimatePresence mode="wait">
+                          {!activeSubject ? (
+                            <motion.div
+                              key="hero"
+                              initial={{ opacity: 0, y: 15 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -15 }}
+                              transition={{ duration: 0.3 }}
+                              style={{ width: "100%", height: "100%" }}
+                            >
+                              {currentUser && (!userAcademicProfile || !userAcademicProfile.semester) ? (
+                                <div style={{ padding: isMobile ? "20px 12px" : "40px 20px", maxWidth: "800px", margin: "0 auto", height: "100%", overflowY: "auto", display: "flex", flexDirection: "column", alignItems: "center", boxSizing: "border-box", width: "100%" }}>
+                                  <div style={{ textAlign: "center", marginBottom: isMobile ? "20px" : "32px", marginTop: isMobile ? "10px" : "20px" }}>
+                                    <h2 style={{ fontSize: isMobile ? "1.5rem" : "2rem", fontWeight: 800, color: "#fff", marginBottom: "12px", letterSpacing: "-0.02em" }}>Set up your Academic Profile</h2>
+                                    <p style={{ color: "#94a3b8", fontSize: isMobile ? "0.9rem" : "1.05rem", lineHeight: 1.5, maxWidth: "600px", margin: "0 auto" }}>
+                                      Please complete your profile to unlock personalized subjects, assignments, and AI study materials tailored specifically to your branch and semester.
                                     </p>
-                                    {topicsList.filter(t => t.status === "pending").length > 1 && (
-                                      <button
-                                        onClick={handleAcceptAllSharedRequests}
-                                        disabled={isAcceptingAll}
+                                  </div>
+                                  <div style={{ width: "100%", maxWidth: "600px", background: "rgba(255,255,255,0.02)", padding: isMobile ? "16px 12px" : "30px", borderRadius: "16px", border: "1px solid rgba(255,255,255,0.05)", boxSizing: "border-box" }}>
+                                    <AcademicProfileEditor 
+                                      userId={currentUser.id} 
+                                      onProfileUpdated={() => {
+                                        refreshProfile();
+                                      }} 
+                                    />
+                                  </div>
+                                </div>
+                              ) : (
+                                <StudyHubHero isMobile={isMobile} onOpenSidebar={() => setIsMobileSidebarOpen(true)} />
+                              )}
+                            </motion.div>
+                          ) : (
+                            <motion.div
+                              key="topics"
+                              initial={{ opacity: 0, y: 15 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -15 }}
+                              transition={{ duration: 0.3 }}
+                              style={{ width: "100%", display: "flex", flexDirection: "column", height: "100%" }}
+                            >
+                              {isFetchingTopics ? (
+                                <TopicSkeletons />
+                              ) : (
+                                <div style={{ display: "flex", flexDirection: "column", gap: "32px", paddingBottom: "40px" }}>
+                                  {/* SHARED REQUESTS SECTION (PENDING INCOMING SHARES) */}
+                                  {topicsList.filter(t => t.status === "pending").length > 0 && (
+                                    <div style={{ marginTop: "24px" }}>
+                                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
+                                        <p className="section-label" style={{ color: "#38d399", marginBottom: 0, display: "flex", alignItems: "center", gap: 6 }}>
+                                          <span>📥 Shared Requests ({topicsList.filter(t => t.status === "pending").length})</span>
+                                        </p>
+                                        {topicsList.filter(t => t.status === "pending").length > 1 && (
+                                          <button
+                                            onClick={handleAcceptAllSharedRequests}
+                                            disabled={isAcceptingAll}
+                                            style={{
+                                              background: "linear-gradient(135deg, #10b981, #059669)",
+                                              color: "#fff",
+                                              border: "none",
+                                              borderRadius: "8px",
+                                              padding: "6px 12px",
+                                              fontSize: "0.82rem",
+                                              fontWeight: 700,
+                                              cursor: isAcceptingAll ? "not-allowed" : "pointer",
+                                              display: "flex",
+                                              alignItems: "center",
+                                              gap: "6px",
+                                              opacity: isAcceptingAll ? 0.7 : 1,
+                                              boxShadow: "0 4px 12px rgba(16,185,129,0.2)"
+                                            }}
+                                          >
+                                            <CheckCircle size={14} />
+                                            {isAcceptingAll ? "Accepting..." : "Accept All"}
+                                          </button>
+                                        )}
+                                      </div>
+                                      <div className="notes-grid">
+                                        {topicsList.filter(t => t.status === "pending").map((topic, index) => {
+                                          const isAccepting = acceptingId === topic.classroom_id;
+                                          const isDeclining = decliningId === topic.classroom_id;
+
+                                          return (
+                                            <motion.div
+                                              key={topic.classroom_id}
+                                              initial={{ opacity: 0, y: 20 }}
+                                              animate={{ opacity: 1, y: 0 }}
+                                              transition={{ duration: 0.4, delay: index * 0.05 }}
+                                              className="note-card"
+                                              onClick={() => handleTopicClick(topic)}
+                                              style={{ border: "1.5px solid rgba(56,211,153,0.35)", background: "rgba(56,211,153,0.04)", boxShadow: "0 8px 24px rgba(56,211,153,0.1)", cursor: "pointer" }}
+                                            >
+                                              <div className="note-header">
+                                                <div className="note-icon" style={{ background: "rgba(56,211,153,0.15)", color: "#38d399", borderColor: "rgba(56,211,153,0.25)", boxShadow: "0 4px 12px rgba(56,211,153,0.15)" }}>
+                                                  <Share2 size={18} />
+                                                </div>
+                                                <div style={{ flex: 1 }}>
+                                                  <h3 className="note-title" style={{ marginBottom: "0px" }}>
+                                                    {topic.topic_name}
+                                                  </h3>
+                                                </div>
+                                                <span className="note-badge" style={{ background: "rgba(56,211,153,0.15)", color: "#38d399", fontWeight: 700 }}>
+                                                  Pending
+                                                </span>
+                                              </div>
+                                              <p className="note-desc">
+                                                <span style={{ color: "#38d399", fontWeight: 600 }}>
+                                                  ✨ Shared by {topic.sender_name || "a classmate"}
+                                                </span>
+                                                <span style={{ display: "block", marginTop: "4px", fontSize: "0.75rem", color: "#64748b", fontWeight: 500 }}>
+                                                  👆 Click to preview before accepting
+                                                </span>
+                                              </p>
+                                              <div className="note-footer" style={{ marginTop: "14px" }}>
+                                                <div style={{ display: "flex", gap: "8px", width: "100%" }}>
+                                                  <button
+                                                    className="read-btn"
+                                                    style={{ flex: 1, background: "rgba(239,68,68,0.15)", color: "#ef4444", padding: "8px", justifyContent: "center", fontWeight: 600 }}
+                                                    disabled={isAccepting || isDeclining}
+                                                    onClick={(e) => handleDeclineSharedRequest(topic, e)}
+                                                  >
+                                                    {isDeclining ? "Ignoring..." : "Ignore"}
+                                                  </button>
+                                                  <button
+                                                    className="read-btn"
+                                                    style={{ flex: 2, background: "linear-gradient(135deg,#10b981,#059669)", color: "#fff", padding: "8px", justifyContent: "center", fontWeight: 700, boxShadow: "0 4px 14px rgba(16,185,129,0.3)" }}
+                                                    disabled={isAccepting || isDeclining}
+                                                    onClick={(e) => handleAcceptSharedRequest(topic, e)}
+                                                  >
+                                                    {isAccepting ? "Saving..." : "Accept & Save to My Drive"}
+                                                  </button>
+                                                </div>
+                                              </div>
+                                            </motion.div>
+                                          );
+                                        })}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* PERSONAL DOCUMENTS SECTION */}
+                                  <div style={{ marginTop: "24px" }}>
+                                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
+                                      <p className="section-label" style={{ color: "#2dd4bf", marginBottom: 0 }}>My Notes</p>
+                                    </div>
+                                    <div className="notes-grid">
+                                      {topicsList.filter(t => t.category === "personal_document" && t.status !== "pending").map((topic, index) => 
+                                        <StudyHubTopicCard
+                                          key={topic.classroom_id}
+                                          topic={topic}
+                                          index={index}
+                                          themeColor="#2dd4bf"
+                                          categoryLabel="Note"
+                                          activeClassroomId={activeClassroomId}
+                                          selectedResourceIds={selectedResourceIds}
+                                          setSelectedResourceIds={setSelectedResourceIds}
+                                          handlePreloadPdf={handlePreloadPdf}
+                                          handleTopicClick={handleTopicClick}
+                                          handleDeleteResource={handleDeleteResource}
+                                          setShareResourceIds={setShareResourceIds}
+                                          setShareTheme={setShareTheme}
+                                        />
+                                      )}
+                                      <motion.div
+                                         initial={{ opacity: 0, scale: 0.95 }}
+                                         animate={{ opacity: 1, scale: 1 }}
+                                         onClick={() => setAddCategory("personal_document")}
+                                         whileHover={{ y: -4, boxShadow: "0 12px 28px rgba(0,0,0,0.4), 0 0 20px rgba(45,212,191,0.2)", borderColor: "rgba(45, 212, 191, 0.6)" }}
+                                         style={{
+                                           display: "flex", 
+                                           flexDirection: "column", 
+                                           alignItems: "center", 
+                                           justifyContent: "center",
+                                           border: "1px solid rgba(45, 212, 191, 0.3)", 
+                                           background: "linear-gradient(160deg, rgba(45, 212, 191, 0.08) 0%, rgba(15, 23, 42, 0.75) 100%)", 
+                                           cursor: "pointer",
+                                           minHeight: "210px", 
+                                           padding: "20px 16px",
+                                           gap: "12px", 
+                                           transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)", 
+                                           borderRadius: "16px",
+                                           boxSizing: "border-box",
+                                           position: "relative",
+                                           overflow: "hidden"
+                                         }}
+                                       >
+                                         <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "3px", background: "linear-gradient(90deg, #2dd4bf, #0d9488)" }} />
+                                         <div style={{ width: 46, height: 46, borderRadius: "50%", background: "rgba(45, 212, 191, 0.15)", border: "1px solid rgba(45, 212, 191, 0.35)", color: "#2dd4bf", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 0 14px rgba(45, 212, 191, 0.25)" }}>
+                                           <PlusCircle size={24} />
+                                         </div>
+                                         <div style={{ textAlign: "center" }}>
+                                           <span style={{ color: "#ffffff", fontWeight: 800, fontSize: "0.92rem", display: "block" }}>Upload New Note</span>
+                                           <span style={{ color: "#94a3b8", fontSize: "0.74rem", display: "block", marginTop: "4px" }}>Click to add PDF document</span>
+                                         </div>
+                                         <span style={{ background: "rgba(45, 212, 191, 0.18)", border: "1px solid rgba(45, 212, 191, 0.35)", color: "#2dd4bf", padding: "5px 14px", borderRadius: "20px", fontWeight: 700, fontSize: "0.75rem", marginTop: "2px" }}>
+                                           + Add Note
+                                         </span>
+                                       </motion.div>
+                                    </div>
+                                  </div>
+
+                                  {/* ASSIGNMENTS SECTION */}
+                                  <div style={{ marginTop: "24px" }}>
+                                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
+                                      <p className="section-label" style={{ color: "#fb923c", marginBottom: 0 }}>Assignments</p>
+                                    </div>
+                                    <div className="notes-grid">
+                                      {topicsList.filter(t => t.category === "assignment" && t.status !== "pending").map((topic, index) => 
+                                        <StudyHubTopicCard
+                                          key={topic.classroom_id}
+                                          topic={topic}
+                                          index={index}
+                                          themeColor="#fb923c"
+                                          categoryLabel="Assignment"
+                                          activeClassroomId={activeClassroomId}
+                                          selectedResourceIds={selectedResourceIds}
+                                          setSelectedResourceIds={setSelectedResourceIds}
+                                          handlePreloadPdf={handlePreloadPdf}
+                                          handleTopicClick={handleTopicClick}
+                                          handleDeleteResource={handleDeleteResource}
+                                          setShareResourceIds={setShareResourceIds}
+                                          setShareTheme={setShareTheme}
+                                        />
+                                      )}
+                                      <motion.div
+                                        initial={{ opacity: 0, scale: 0.95 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        onClick={() => setAddCategory("assignment")}
+                                        whileHover={{ y: -4, boxShadow: "0 12px 28px rgba(0,0,0,0.4), 0 0 20px rgba(251,146,60,0.2)", borderColor: "rgba(251, 146, 60, 0.6)" }}
                                         style={{
-                                          background: "linear-gradient(135deg, #10b981, #059669)",
-                                          color: "#fff",
-                                          border: "none",
-                                          borderRadius: "8px",
-                                          padding: "6px 12px",
-                                          fontSize: "0.82rem",
-                                          fontWeight: 700,
-                                          cursor: isAcceptingAll ? "not-allowed" : "pointer",
-                                          display: "flex",
-                                          alignItems: "center",
-                                          gap: "6px",
-                                          opacity: isAcceptingAll ? 0.7 : 1,
-                                          boxShadow: "0 4px 12px rgba(16,185,129,0.2)"
+                                          display: "flex", 
+                                          flexDirection: "column", 
+                                          alignItems: "center", 
+                                          justifyContent: "center",
+                                          border: "1.5px solid rgba(251, 146, 60, 0.3)", 
+                                          background: "linear-gradient(160deg, rgba(251, 146, 60, 0.08) 0%, rgba(15, 23, 42, 0.75) 100%)", 
+                                          cursor: "pointer",
+                                          minHeight: "210px", 
+                                          padding: "20px 16px",
+                                          gap: "12px", 
+                                          transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)", 
+                                          borderRadius: "16px",
+                                          boxSizing: "border-box",
+                                          position: "relative",
+                                          overflow: "hidden"
                                         }}
                                       >
-                                        <CheckCircle size={14} />
-                                        {isAcceptingAll ? "Accepting..." : "Accept All"}
-                                      </button>
-                                    )}
+                                        <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "3px", background: "linear-gradient(90deg, #fb923c, #ea580c)" }} />
+                                        <div style={{ width: 46, height: 46, borderRadius: "50%", background: "rgba(251, 146, 60, 0.15)", border: "1px solid rgba(251, 146, 60, 0.35)", color: "#fb923c", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 0 14px rgba(251, 146, 60, 0.25)" }}>
+                                          <PlusCircle size={24} />
+                                        </div>
+                                        <div style={{ textAlign: "center" }}>
+                                          <span style={{ color: "#ffffff", fontWeight: 800, fontSize: "0.92rem", display: "block" }}>Upload Assignment</span>
+                                          <span style={{ color: "#94a3b8", fontSize: "0.74rem", display: "block", marginTop: "4px" }}>Click to add assignment PDF</span>
+                                        </div>
+                                        <span style={{ background: "rgba(251, 146, 60, 0.18)", border: "1px solid rgba(251, 146, 60, 0.35)", color: "#fb923c", padding: "5px 14px", borderRadius: "20px", fontWeight: 700, fontSize: "0.75rem", marginTop: "2px" }}>
+                                          + Add Assignment
+                                        </span>
+                                      </motion.div>
+                                    </div>
                                   </div>
-                                  <div className="notes-grid">
-                                    {topicsList.filter(t => t.status === "pending").map((topic, index) => {
-                                      const isAccepting = acceptingId === topic.classroom_id;
-                                      const isDeclining = decliningId === topic.classroom_id;
 
-                                      return (
-                                        <motion.div
+                                  {/* PRACTICALS SECTION */}
+                                  <div>
+                                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
+                                      <p className="section-label" style={{ color: "#818cf8", marginBottom: 0 }}>Practicals</p>
+                                    </div>
+                                    <div className="notes-grid">
+                                      {topicsList.filter(t => t.category === "practical" && t.status !== "pending").map((topic, index) => 
+                                        <StudyHubTopicCard
                                           key={topic.classroom_id}
-                                          initial={{ opacity: 0, y: 20 }}
-                                          animate={{ opacity: 1, y: 0 }}
-                                          transition={{ duration: 0.4, delay: index * 0.05 }}
-                                          className="note-card"
-                                          onClick={() => handleTopicClick(topic)}
-                                          style={{ border: "1.5px solid rgba(56,211,153,0.35)", background: "rgba(56,211,153,0.04)", boxShadow: "0 8px 24px rgba(56,211,153,0.1)", cursor: "pointer" }}
-                                        >
-                                          <div className="note-header">
-                                            <div className="note-icon" style={{ background: "rgba(56,211,153,0.15)", color: "#38d399", borderColor: "rgba(56,211,153,0.25)", boxShadow: "0 4px 12px rgba(56,211,153,0.15)" }}>
-                                              <Share2 size={18} />
-                                            </div>
-                                            <div style={{ flex: 1 }}>
-                                              <h3 className="note-title" style={{ marginBottom: "0px" }}>
-                                                {topic.topic_name}
-                                              </h3>
-                                            </div>
-                                            <span className="note-badge" style={{ background: "rgba(56,211,153,0.15)", color: "#38d399", fontWeight: 700 }}>
-                                              Pending
-                                            </span>
-                                          </div>
-                                          <p className="note-desc">
-                                            <span style={{ color: "#38d399", fontWeight: 600 }}>
-                                              ✨ Shared by {topic.sender_name || "a classmate"}
-                                            </span>
-                                            <span style={{ display: "block", marginTop: "4px", fontSize: "0.75rem", color: "#64748b", fontWeight: 500 }}>
-                                              👆 Click to preview before accepting
-                                            </span>
-                                          </p>
-                                          <div className="note-footer" style={{ marginTop: "14px" }}>
-                                            <div style={{ display: "flex", gap: "8px", width: "100%" }}>
-                                              <button
-                                                className="read-btn"
-                                                style={{ flex: 1, background: "rgba(239,68,68,0.15)", color: "#ef4444", padding: "8px", justifyContent: "center", fontWeight: 600 }}
-                                                disabled={isAccepting || isDeclining}
-                                                onClick={(e) => handleDeclineSharedRequest(topic, e)}
-                                              >
-                                                {isDeclining ? "Ignoring..." : "Ignore"}
-                                              </button>
-                                              <button
-                                                className="read-btn"
-                                                style={{ flex: 2, background: "linear-gradient(135deg,#10b981,#059669)", color: "#fff", padding: "8px", justifyContent: "center", fontWeight: 700, boxShadow: "0 4px 14px rgba(16,185,129,0.3)" }}
-                                                disabled={isAccepting || isDeclining}
-                                                onClick={(e) => handleAcceptSharedRequest(topic, e)}
-                                              >
-                                                {isAccepting ? "Saving..." : "Accept & Save to My Drive"}
-                                              </button>
-                                            </div>
-                                          </div>
-                                        </motion.div>
-                                      );
-                                    })}
+                                          topic={topic}
+                                          index={index}
+                                          themeColor="#818cf8"
+                                          categoryLabel="Practical"
+                                          activeClassroomId={activeClassroomId}
+                                          selectedResourceIds={selectedResourceIds}
+                                          setSelectedResourceIds={setSelectedResourceIds}
+                                          handlePreloadPdf={handlePreloadPdf}
+                                          handleTopicClick={handleTopicClick}
+                                          handleDeleteResource={handleDeleteResource}
+                                          setShareResourceIds={setShareResourceIds}
+                                          setShareTheme={setShareTheme}
+                                        />
+                                      )}
+                                      <motion.div
+                                        initial={{ opacity: 0, scale: 0.95 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        onClick={() => setAddCategory("practical")}
+                                        whileHover={{ y: -4, boxShadow: "0 12px 28px rgba(0,0,0,0.4), 0 0 20px rgba(129,140,248,0.2)", borderColor: "rgba(129, 140, 248, 0.6)" }}
+                                        style={{
+                                          display: "flex", 
+                                          flexDirection: "column", 
+                                          alignItems: "center", 
+                                          justifyContent: "center",
+                                          border: "1px solid rgba(129, 140, 248, 0.3)", 
+                                          background: "linear-gradient(160deg, rgba(129, 140, 248, 0.08) 0%, rgba(15, 23, 42, 0.75) 100%)", 
+                                          cursor: "pointer",
+                                          minHeight: "210px", 
+                                          padding: "20px 16px",
+                                          gap: "12px", 
+                                          transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)", 
+                                          borderRadius: "16px",
+                                          boxSizing: "border-box",
+                                          position: "relative",
+                                          overflow: "hidden"
+                                        }}
+                                      >
+                                        <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "3px", background: "linear-gradient(90deg, #818cf8, #4f46e5)" }} />
+                                        <div style={{ width: 46, height: 46, borderRadius: "50%", background: "rgba(129, 140, 248, 0.15)", border: "1px solid rgba(129, 140, 248, 0.35)", color: "#818cf8", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 0 14px rgba(129, 140, 248, 0.25)" }}>
+                                          <PlusCircle size={24} />
+                                        </div>
+                                        <div style={{ textAlign: "center" }}>
+                                          <span style={{ color: "#ffffff", fontWeight: 800, fontSize: "0.92rem", display: "block" }}>Upload Practical</span>
+                                          <span style={{ color: "#94a3b8", fontSize: "0.74rem", display: "block", marginTop: "4px" }}>Click to add practical PDF</span>
+                                        </div>
+                                        <span style={{ background: "rgba(129, 140, 248, 0.18)", border: "1px solid rgba(129, 140, 248, 0.35)", color: "#818cf8", padding: "5px 14px", borderRadius: "20px", fontWeight: 700, fontSize: "0.75rem", marginTop: "2px" }}>
+                                          + Add Practical
+                                        </span>
+                                      </motion.div>
+                                    </div>
                                   </div>
+
                                 </div>
                               )}
-
-                              {/* PERSONAL DOCUMENTS SECTION */}
-                              <div style={{ marginTop: "24px" }}>
-                                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
-                                  <p className="section-label" style={{ color: "#2dd4bf", marginBottom: 0 }}>My Notes</p>
-                                </div>
-                                <div className="notes-grid">
-                                  {topicsList.filter(t => t.category === "personal_document" && t.status !== "pending").map((topic, index) => 
-                                    <StudyHubTopicCard
-                                      key={topic.classroom_id}
-                                      topic={topic}
-                                      index={index}
-                                      themeColor="#2dd4bf"
-                                      categoryLabel="Note"
-                                      activeClassroomId={activeClassroomId}
-                                      selectedResourceIds={selectedResourceIds}
-                                      setSelectedResourceIds={setSelectedResourceIds}
-                                      handlePreloadPdf={handlePreloadPdf}
-                                      handleTopicClick={handleTopicClick}
-                                      handleDeleteResource={handleDeleteResource}
-                                      setShareResourceIds={setShareResourceIds}
-                                      setShareTheme={setShareTheme}
-                                    />
-                                  )}
-                                  <motion.div
-                                    initial={{ opacity: 0, scale: 0.95 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    onClick={() => setAddCategory("personal_document")}
-                                    style={{
-                                      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-                                      border: "2px dashed rgba(45,212,191,0.3)", background: "rgba(45,212,191,0.05)", cursor: "pointer",
-                                      minHeight: "180px", gap: "10px", transition: "all 0.2s", borderRadius: "18px"
-                                    }}
-                                    whileHover={{ scale: 1.02, background: "rgba(45,212,191,0.1)", border: "2px dashed rgba(45,212,191,0.5)" }}
-                                  >
-                                    <div style={{ width: 48, height: 48, borderRadius: "50%", background: "rgba(45,212,191,0.15)", color: "#2dd4bf", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                                      <PlusCircle size={24} />
-                                    </div>
-                                    <span style={{ color: "#2dd4bf", fontWeight: 600 }}>Add Note</span>
-                                  </motion.div>
-                                </div>
-                              </div>
-
-                              {/* ASSIGNMENTS SECTION */}
-                              <div style={{ marginTop: "24px" }}>
-                                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
-                                  <p className="section-label" style={{ color: "#fb923c", marginBottom: 0 }}>Assignments</p>
-                                </div>
-                                <div className="notes-grid">
-                                  {topicsList.filter(t => t.category === "assignment" && t.status !== "pending").map((topic, index) => 
-                                    <StudyHubTopicCard
-                                      key={topic.classroom_id}
-                                      topic={topic}
-                                      index={index}
-                                      themeColor="#fb923c"
-                                      categoryLabel="Assignment"
-                                      activeClassroomId={activeClassroomId}
-                                      selectedResourceIds={selectedResourceIds}
-                                      setSelectedResourceIds={setSelectedResourceIds}
-                                      handlePreloadPdf={handlePreloadPdf}
-                                      handleTopicClick={handleTopicClick}
-                                      handleDeleteResource={handleDeleteResource}
-                                      setShareResourceIds={setShareResourceIds}
-                                      setShareTheme={setShareTheme}
-                                    />
-                                  )}
-                                  <motion.div
-                                    initial={{ opacity: 0, scale: 0.95 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    onClick={() => setAddCategory("assignment")}
-                                    style={{
-                                      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-                                      border: "2px dashed rgba(251,146,60,0.3)", background: "rgba(251,146,60,0.05)", cursor: "pointer",
-                                      minHeight: "180px", gap: "10px", transition: "all 0.2s", borderRadius: "18px"
-                                    }}
-                                    whileHover={{ scale: 1.02, background: "rgba(251,146,60,0.1)", border: "2px dashed rgba(251,146,60,0.5)" }}
-                                  >
-                                    <div style={{ width: 48, height: 48, borderRadius: "50%", background: "rgba(251,146,60,0.15)", color: "#fb923c", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                                      <PlusCircle size={24} />
-                                    </div>
-                                    <span style={{ color: "#fb923c", fontWeight: 600 }}>Add Assignment</span>
-                                  </motion.div>
-                                </div>
-                              </div>
-
-                              {/* PRACTICALS SECTION */}
-                              <div>
-                                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
-                                  <p className="section-label" style={{ color: "#818cf8", marginBottom: 0 }}>Practicals</p>
-                                </div>
-                                <div className="notes-grid">
-                                  {topicsList.filter(t => t.category === "practical" && t.status !== "pending").map((topic, index) => 
-                                    <StudyHubTopicCard
-                                      key={topic.classroom_id}
-                                      topic={topic}
-                                      index={index}
-                                      themeColor="#818cf8"
-                                      categoryLabel="Practical"
-                                      activeClassroomId={activeClassroomId}
-                                      selectedResourceIds={selectedResourceIds}
-                                      setSelectedResourceIds={setSelectedResourceIds}
-                                      handlePreloadPdf={handlePreloadPdf}
-                                      handleTopicClick={handleTopicClick}
-                                      handleDeleteResource={handleDeleteResource}
-                                      setShareResourceIds={setShareResourceIds}
-                                      setShareTheme={setShareTheme}
-                                    />
-                                  )}
-                                  <motion.div
-                                    initial={{ opacity: 0, scale: 0.95 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    onClick={() => setAddCategory("practical")}
-                                    style={{
-                                      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-                                      border: "2px dashed rgba(129,140,248,0.3)", background: "rgba(129,140,248,0.05)", cursor: "pointer",
-                                      minHeight: "180px", gap: "10px", transition: "all 0.2s", borderRadius: "18px"
-                                    }}
-                                    whileHover={{ scale: 1.02, background: "rgba(129,140,248,0.1)", border: "2px dashed rgba(129,140,248,0.5)" }}
-                                  >
-                                    <div style={{ width: 48, height: 48, borderRadius: "50%", background: "rgba(129,140,248,0.15)", color: "#818cf8", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                                      <PlusCircle size={24} />
-                                    </div>
-                                    <span style={{ color: "#818cf8", fontWeight: 600 }}>Add Practical</span>
-                                  </motion.div>
-                                </div>
-                              </div>
-
-                            </div>
+                            </motion.div>
                           )}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                )}
+                        </AnimatePresence>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </motion.main>
 
