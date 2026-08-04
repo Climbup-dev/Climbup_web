@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, Loader2, AlertCircle, CheckCircle2, QrCode, Phone, ShieldCheck, Lock, FileText } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -23,43 +23,71 @@ export default function WhatsAppLinking() {
   const [error, setError] = useState<string | null>(null);
   const [linkData, setLinkData] = useState<{ link: string; code: string } | null>(null);
 
-  // Check Supabase directly on mount for existing WhatsApp connection
-  useEffect(() => {
-    let intervalId: any;
+  const stepRef = useRef(step);
+  useEffect(() => { stepRef.current = step; }, [step]);
 
-    async function checkStatus() {
+  // Check Supabase directly on mount for existing WhatsApp connection + auto-detect polling
+  useEffect(() => {
+    const supabase = createClient();
+    let intervalId: ReturnType<typeof setInterval>;
+    let userId: string | null = null;
+    let stopped = false;
+
+    async function initAndPoll() {
       try {
-        const supabase = createClient();
         const { data: { session } } = await supabase.auth.getSession();
         if (!session?.user?.id) {
           setStep("request");
           return;
         }
+        userId = session.user.id;
 
+        // First check
+        const found = await checkWhatsApp(userId!);
+        if (found || stopped) return;
+
+        // Start polling every 3 seconds
+        intervalId = setInterval(async () => {
+          if (stopped || stepRef.current === "success") {
+            clearInterval(intervalId);
+            return;
+          }
+          await checkWhatsApp(userId!);
+        }, 3000);
+      } catch {
+        if (stepRef.current === "checking") setStep("request");
+      }
+    }
+
+    async function checkWhatsApp(uid: string): Promise<boolean> {
+      try {
         const { data: userData } = await supabase
           .from("users")
           .select("whatsapp_number")
-          .eq("user_id", session.user.id)
+          .eq("user_id", uid)
           .maybeSingle();
 
         if (userData && userData.whatsapp_number) {
           setConnectedNumber(userData.whatsapp_number);
           setStep("success");
           if (intervalId) clearInterval(intervalId);
-        } else if (step === "checking") {
+          return true;
+        } else if (stepRef.current === "checking") {
           setStep("request");
         }
-      } catch (err) {
-        if (step === "checking") setStep("request");
+        return false;
+      } catch {
+        if (stepRef.current === "checking") setStep("request");
+        return false;
       }
     }
 
-    checkStatus();
+    initAndPoll();
 
-    // Poll every 3 seconds to auto-detect when Render saves the number in Supabase
-    intervalId = setInterval(checkStatus, 3000);
-
-    return () => clearInterval(intervalId);
+    return () => {
+      stopped = true;
+      if (intervalId!) clearInterval(intervalId!);
+    };
   }, []);
 
   useEffect(() => {
@@ -207,97 +235,101 @@ export default function WhatsAppLinking() {
   return (
     <div style={{ width: "100%", padding: "24px 20px", boxSizing: "border-box", display: "flex", flexDirection: "column", alignItems: "center" }}>
       
-      {/* ══ DUAL BRAND CONNECTED INTEGRATION HEADER (WhatsApp ⇄ Curved Dotted Arc ⇄ Actual ClimbUP Logo) ══ */}
-      <div style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        marginBottom: "20px",
-        width: "100%",
-        padding: "16px 20px 14px",
-        background: "linear-gradient(160deg, rgba(37, 211, 102, 0.08) 0%, rgba(15, 23, 42, 0.8) 100%)",
-        border: "1px solid rgba(37, 211, 102, 0.3)",
-        borderRadius: "24px",
-        boxShadow: "0 12px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1)",
-        position: "relative",
-        boxSizing: "border-box"
-      }}>
-        {/* Full-width SVG Overlay: Static Dotted Line + 100% Accurate Moving White PDF Icon */}
-        <svg 
-          width="100%" 
-          height="100%" 
-          style={{ position: "absolute", inset: 0, pointerEvents: "none", overflow: "visible", zIndex: 1 }}
-        >
-          {/* STATIC STILL DOTTED LINE (No movement!) */}
-          <path
-            d="M 50 42 Q 170 5 290 42"
-            fill="none"
-            stroke="#25D366"
-            strokeWidth="2.5"
-            strokeDasharray="6,6"
-            opacity={0.85}
-          />
-
-          {/* WHITE PDF ICON MOVING DIRECTLY ALONG THE EXACT CURVE WITH MATHEMATICAL PRECISION */}
-          <g filter="drop-shadow(0 0 10px rgba(255, 255, 255, 0.95)) drop-shadow(0 0 16px rgba(56, 211, 153, 0.7))">
-            <animateMotion
-              path="M 50 42 Q 170 5 290 42"
-              dur="2.4s"
-              repeatCount="indefinite"
+      {step !== "success" && (
+        <>
+        {/* ══ DUAL BRAND CONNECTED INTEGRATION HEADER (WhatsApp ⇄ Curved Dotted Arc ⇄ Actual ClimbUP Logo) ══ */}
+        <div style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          marginBottom: "20px",
+          width: "100%",
+          padding: "16px 20px 14px",
+          background: "linear-gradient(160deg, rgba(37, 211, 102, 0.08) 0%, rgba(15, 23, 42, 0.8) 100%)",
+          border: "1px solid rgba(37, 211, 102, 0.3)",
+          borderRadius: "24px",
+          boxShadow: "0 12px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1)",
+          position: "relative",
+          boxSizing: "border-box"
+        }}>
+          {/* Full-width SVG Overlay: Static Dotted Line + 100% Accurate Moving White PDF Icon */}
+          <svg 
+            width="100%" 
+            height="100%" 
+            style={{ position: "absolute", inset: 0, pointerEvents: "none", overflow: "visible", zIndex: 1 }}
+          >
+            {/* STATIC STILL DOTTED LINE (No movement!) */}
+            <path
+              d="M 50 42 Q 170 5 290 42"
+              fill="none"
+              stroke="#25D366"
+              strokeWidth="2.5"
+              strokeDasharray="6,6"
+              opacity={0.85}
             />
-            {/* White PDF Document Icon centered at (0,0) */}
-            <g transform="translate(-13, -13)">
-              <path
-                d="M14 2H6C4.89 2 4 2.89 4 4V20C4 21.11 4.89 22 6 22H18C19.11 22 20 21.11 20 20V8L14 2Z"
-                fill="#ffffff"
+
+            {/* WHITE PDF ICON MOVING DIRECTLY ALONG THE EXACT CURVE WITH MATHEMATICAL PRECISION */}
+            <g filter="drop-shadow(0 0 10px rgba(255, 255, 255, 0.95)) drop-shadow(0 0 16px rgba(56, 211, 153, 0.7))">
+              <animateMotion
+                path="M 50 42 Q 170 5 290 42"
+                dur="2.4s"
+                repeatCount="indefinite"
               />
-              <path
-                d="M14 2V8H20"
-                fill="#cbd5e1"
-              />
-              <path
-                d="M16 13H8M16 17H8M10 9H8"
-                stroke="#10b981"
-                strokeWidth="1.6"
-                strokeLinecap="round"
-              />
+              {/* White PDF Document Icon centered at (0,0) */}
+              <g transform="translate(-13, -13)">
+                <path
+                  d="M14 2H6C4.89 2 4 2.89 4 4V20C4 21.11 4.89 22 6 22H18C19.11 22 20 21.11 20 20V8L14 2Z"
+                  fill="#ffffff"
+                />
+                <path
+                  d="M14 2V8H20"
+                  fill="#cbd5e1"
+                />
+                <path
+                  d="M16 13H8M16 17H8M10 9H8"
+                  stroke="#10b981"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                />
+              </g>
             </g>
-          </g>
-        </svg>
+          </svg>
 
-        {/* Left: Official WhatsApp Logo (Direct Large 58px without circle box) */}
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", zIndex: 2 }}>
-          <img 
-            src={WHATSAPP_LOGO_URL} 
-            alt="WhatsApp" 
-            style={{ width: "58px", height: "58px", filter: "drop-shadow(0 6px 18px rgba(37, 211, 102, 0.5))" }} 
-          />
-          <span style={{ fontSize: "11px", fontWeight: 800, color: "#25D366" }}>WhatsApp</span>
+          {/* Left: Official WhatsApp Logo (Direct Large 58px without circle box) */}
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", zIndex: 2 }}>
+            <img 
+              src={WHATSAPP_LOGO_URL} 
+              alt="WhatsApp" 
+              style={{ width: "58px", height: "58px", filter: "drop-shadow(0 6px 18px rgba(37, 211, 102, 0.5))" }} 
+            />
+            <span style={{ fontSize: "11px", fontWeight: 800, color: "#25D366" }}>WhatsApp</span>
+          </div>
+
+          {/* Center: Spacer for animation */}
+          <div style={{ flex: 1, position: "relative", height: "58px" }} />
+
+          {/* Right: Actual ClimbUP Brand Logo (/logo.png) (Direct Large 58px without circle box) */}
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", zIndex: 2 }}>
+            <img 
+              src="/logo.png" 
+              alt="ClimbUP Logo" 
+              style={{ width: "58px", height: "58px", objectFit: "contain", borderRadius: "50%", filter: "drop-shadow(0 6px 18px rgba(56, 211, 153, 0.4))" }} 
+            />
+            <span style={{ fontSize: "11px", fontWeight: 800, color: "#38d399" }}>ClimbUP</span>
+          </div>
         </div>
 
-        {/* Center: Spacer for animation */}
-        <div style={{ flex: 1, position: "relative", height: "58px" }} />
-
-        {/* Right: Actual ClimbUP Brand Logo (/logo.png) (Direct Large 58px without circle box) */}
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", zIndex: 2 }}>
-          <img 
-            src="/logo.png" 
-            alt="ClimbUP Logo" 
-            style={{ width: "58px", height: "58px", objectFit: "contain", borderRadius: "50%", filter: "drop-shadow(0 6px 18px rgba(56, 211, 153, 0.4))" }} 
-          />
-          <span style={{ fontSize: "11px", fontWeight: 800, color: "#38d399" }}>ClimbUP</span>
+        {/* Title */}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", marginBottom: "16px", width: "100%" }}>
+          <h2 style={{ margin: 0, fontSize: "1.3rem", fontWeight: 800, color: "#ffffff", letterSpacing: "-0.01em" }}>
+            Sync WhatsApp to ClimbUP
+          </h2>
+          <span style={{ color: "#94a3b8", fontSize: "0.8rem", marginTop: "4px" }}>
+            Send notes on WhatsApp & view them instantly on ClimbUP
+          </span>
         </div>
-      </div>
-
-      {/* Title */}
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", marginBottom: "16px", width: "100%" }}>
-        <h2 style={{ margin: 0, fontSize: "1.3rem", fontWeight: 800, color: "#ffffff", letterSpacing: "-0.01em" }}>
-          Sync WhatsApp to ClimbUP
-        </h2>
-        <span style={{ color: "#94a3b8", fontSize: "0.8rem", marginTop: "4px" }}>
-          Send notes on WhatsApp & view them instantly on ClimbUP
-        </span>
-      </div>
+        </>
+      )}
 
       {/* Main Form Content Card */}
       <div style={{ background: "rgba(255, 255, 255, 0.03)", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "20px", padding: "20px", width: "100%", boxSizing: "border-box" }}>
@@ -378,13 +410,6 @@ export default function WhatsAppLinking() {
                     </a>
                  </>
               ) : null}
-              
-              <button 
-                onClick={() => setFlowType("otp")}
-                style={{ background: "transparent", border: "none", color: "rgba(158, 248, 220, 0.7)", cursor: "pointer", fontSize: "12px", marginTop: "16px", display: "flex", alignItems: "center", gap: "6px" }}
-              >
-                <Phone size={12} /> Link with Phone Number OTP
-              </button>
             </motion.div>
           )}
 
@@ -525,8 +550,46 @@ export default function WhatsAppLinking() {
               animate={{ opacity: 1, scale: 1 }}
               style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px', padding: '10px 0', width: "100%" }}
             >
-              <div style={{ color: '#25D366', background: 'rgba(37, 211, 102, 0.12)', padding: '16px', borderRadius: '50%', border: '1px solid rgba(37, 211, 102, 0.3)' }}>
-                <CheckCircle2 size={40} />
+              {/* Connected Dual Logos Connectivity Badge */}
+              <div style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "14px",
+                position: "relative",
+                padding: "14px 22px",
+                background: "linear-gradient(135deg, rgba(37, 211, 102, 0.12) 0%, rgba(15, 23, 42, 0.8) 100%)",
+                border: "1.5px solid rgba(37, 211, 102, 0.4)",
+                borderRadius: "100px",
+                boxShadow: "0 8px 28px rgba(37, 211, 102, 0.25)"
+              }}>
+                {/* WhatsApp Logo */}
+                <img 
+                  src={WHATSAPP_LOGO_URL} 
+                  alt="WhatsApp" 
+                  style={{ width: "42px", height: "42px", filter: "drop-shadow(0 4px 12px rgba(37, 211, 102, 0.5))" }} 
+                />
+
+                {/* Glowing Green Success Check Badge */}
+                <div style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: "28px",
+                  height: "28px",
+                  borderRadius: "50%",
+                  background: "#25D366",
+                  boxShadow: "0 0 14px #25D366"
+                }}>
+                  <CheckCircle2 size={18} color="#020c1b" />
+                </div>
+
+                {/* ClimbUP Logo */}
+                <img 
+                  src="/logo.png" 
+                  alt="ClimbUP" 
+                  style={{ width: "42px", height: "42px", objectFit: "contain", borderRadius: "50%", filter: "drop-shadow(0 4px 12px rgba(56, 211, 153, 0.5))" }} 
+                />
               </div>
               <h3 style={{ margin: 0, fontSize: '20px', color: '#fff', fontWeight: 800 }}>WhatsApp Connected! ✅</h3>
               {connectedNumber && (
@@ -534,9 +597,32 @@ export default function WhatsAppLinking() {
                   Linked Number: {connectedNumber}
                 </div>
               )}
-              <p style={{ textAlign: 'center', color: '#94a3b8', fontSize: '13px', lineHeight: 1.5, margin: 0 }}>
-                Your WhatsApp account is linked directly to your <strong>ClimbUP Study Hub</strong>. You can now send notes and PDFs directly via WhatsApp to upload them instantly!
-              </p>
+              <button
+                onClick={() => {
+                  setStep("request");
+                  setFlowType("otp");
+                  setConnectedNumber("");
+                  setPhone("");
+                  setOtp("");
+                  setError("");
+                }}
+                style={{
+                  background: "transparent",
+                  border: "1px solid rgba(255,255,255,0.15)",
+                  color: "#94a3b8",
+                  cursor: "pointer",
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  padding: "6px 14px",
+                  borderRadius: "20px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  transition: "all 0.2s ease"
+                }}
+              >
+                <Phone size={12} /> Change Number
+              </button>
             </motion.div>
           )}
         </AnimatePresence>
