@@ -818,7 +818,7 @@ export default function StudyHubContent() {
               activeSubject={activeSubject}
               handleSubjectClick={handleSubjectClick}
               setShowWhatsappModal={setShowWhatsappModal}
-              whatsappNumber={currentUser?.whatsapp_number}
+              whatsappNumber={(currentUser as any)?.whatsapp_number}
             />
 
             {/* ══ CENTER — Topics Grid / PDF Viewer ══ */}
