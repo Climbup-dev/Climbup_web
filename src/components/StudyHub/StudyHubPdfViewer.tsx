@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Maximize, Minimize, Download, ChevronLeft, ChevronRight, FileText, ChevronDown, CheckCircle, ZoomIn, ZoomOut, RotateCw } from "lucide-react";
+import { ArrowLeft, Maximize, Minimize, Download, ChevronLeft, ChevronRight, FileText, ChevronDown, CheckCircle, ZoomIn, ZoomOut, RotateCw, Share2, Trash2 } from "lucide-react";
 import { Topic } from "./types";
 
 interface StudyHubPdfViewerProps {
@@ -21,6 +21,8 @@ interface StudyHubPdfViewerProps {
   availableTopics?: Topic[];
   activeClassroomId?: string;
   onSelectTopic?: (topic: Topic) => void;
+  onDeleteResource?: (e: React.MouseEvent) => void;
+  onShareResource?: () => void;
 }
 
 export const StudyHubPdfViewer: React.FC<StudyHubPdfViewerProps> = ({
@@ -40,7 +42,9 @@ export const StudyHubPdfViewer: React.FC<StudyHubPdfViewerProps> = ({
   onRetry,
   availableTopics = [],
   activeClassroomId = "",
-  onSelectTopic
+  onSelectTopic,
+  onDeleteResource,
+  onShareResource
 }) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [downloadState, setDownloadState] = useState<"idle" | "downloading" | "done">("idle");

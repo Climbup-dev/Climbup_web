@@ -988,6 +988,16 @@ export default function StudyHubContent() {
                           setPdfLoading(true);
                           setPdfError(false);
                         }}
+                        onDeleteResource={
+                          topicsList.find(t => t.classroom_id === activeClassroomId)?.is_personal
+                            ? (e) => handleDeleteResource(topicsList.find(t => t.classroom_id === activeClassroomId)!, e)
+                            : undefined
+                        }
+                        onShareResource={
+                          topicsList.find(t => t.classroom_id === activeClassroomId)?.is_personal
+                            ? () => { setShareResourceIds([activeClassroomId]); setShareTheme("#38d399"); }
+                            : undefined
+                        }
                         onBack={() => {
                           setActiveClassroomId("");
                           setActivePdfUrl("");

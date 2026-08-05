@@ -207,7 +207,7 @@ export const StudyHubTopicCard: React.FC<StudyHubTopicCardProps> = React.memo(({
         </div>
 
         {/* Clean Action Footer for Mobile */}
-        {topic.is_personal && isActive && (
+        {topic.is_personal && (
           <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", paddingTop: "4px", borderTop: "1px solid rgba(255,255,255,0.05)", marginTop: "auto" }}>
             <button
               onClick={(e) => { e.stopPropagation(); setShareResourceIds([topic.classroom_id]); setShareTheme(themeColor); }}
@@ -230,27 +230,29 @@ export const StudyHubTopicCard: React.FC<StudyHubTopicCardProps> = React.memo(({
             >
               <Share2 size={16} />
             </button>
-            <button
-              onClick={(e) => handleDeleteResource(topic, e)}
-              title="Delete PDF"
-              style={{
-                background: "rgba(239, 68, 68, 0.05)",
-                border: "none",
-                color: "#ef4444",
-                width: 36,
-                height: 36,
-                borderRadius: "50%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                cursor: "pointer",
-                transition: "all 0.2s"
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(239, 68, 68, 0.15)"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(239, 68, 68, 0.05)"; }}
-            >
-              <Trash2 size={16} />
-            </button>
+            {isActive && (
+              <button
+                onClick={(e) => handleDeleteResource(topic, e)}
+                title="Delete PDF"
+                style={{
+                  background: "rgba(239, 68, 68, 0.05)",
+                  border: "none",
+                  color: "#ef4444",
+                  width: 36,
+                  height: 36,
+                  borderRadius: "50%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
+                  transition: "all 0.2s"
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(239, 68, 68, 0.15)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(239, 68, 68, 0.05)"; }}
+              >
+                <Trash2 size={16} />
+              </button>
+            )}
           </div>
         )}
       </div>
