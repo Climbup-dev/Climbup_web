@@ -1431,19 +1431,21 @@ export default function StudyHubContent() {
                 background: "rgba(15, 23, 42, 0.95)",
                 backdropFilter: "blur(10px)",
                 border: "1px solid rgba(56, 211, 153, 0.3)",
-                padding: "12px 24px",
+                padding: isMobile ? "12px 16px" : "12px 24px",
                 borderRadius: "100px",
                 display: "flex",
                 alignItems: "center",
-                gap: "20px",
+                gap: isMobile ? "8px" : "20px",
                 zIndex: 9999,
-                boxShadow: "0 10px 40px rgba(0,0,0,0.5), 0 0 20px rgba(56,211,153,0.15)"
+                boxShadow: "0 10px 40px rgba(0,0,0,0.5), 0 0 20px rgba(56,211,153,0.15)",
+                width: isMobile ? "92%" : "auto",
+                justifyContent: isMobile ? "space-between" : "center"
               }}
             >
-              <span style={{ color: "#fff", fontWeight: 600 }}>
-                {selectedResourceIds.length} item{selectedResourceIds.length > 1 ? "s" : ""} selected
+              <span style={{ color: "#fff", fontWeight: 600, fontSize: isMobile ? "0.85rem" : "1rem", whiteSpace: "nowrap" }}>
+                {selectedResourceIds.length} {isMobile ? "sel." : `item${selectedResourceIds.length > 1 ? "s" : ""} selected`}
               </span>
-              <div style={{ display: "flex", gap: "10px" }}>
+              <div style={{ display: "flex", gap: isMobile ? "6px" : "10px" }}>
                 <button
                   onClick={() => {
                     setShareResourceIds(selectedResourceIds);
@@ -1455,15 +1457,16 @@ export default function StudyHubContent() {
                     color: "#020c1b",
                     border: "none",
                     borderRadius: "100px",
-                    padding: "8px 16px",
+                    padding: isMobile ? "8px 12px" : "8px 16px",
                     fontWeight: 700,
+                    fontSize: isMobile ? "0.85rem" : "1rem",
                     cursor: "pointer",
                     display: "flex",
                     alignItems: "center",
                     gap: "6px"
                   }}
                 >
-                  <Share2 size={14} /> Share All
+                  <Share2 size={14} /> {!isMobile && "Share All"}
                 </button>
                 <button
                   onClick={handleDeleteMultipleResources}
@@ -1472,15 +1475,16 @@ export default function StudyHubContent() {
                     color: "#ef4444",
                     border: "none",
                     borderRadius: "100px",
-                    padding: "8px 16px",
+                    padding: isMobile ? "8px 12px" : "8px 16px",
                     fontWeight: 700,
+                    fontSize: isMobile ? "0.85rem" : "1rem",
                     cursor: "pointer",
                     display: "flex",
                     alignItems: "center",
                     gap: "6px"
                   }}
                 >
-                  <Trash2 size={14} /> Delete All
+                  <Trash2 size={14} /> {!isMobile && "Delete All"}
                 </button>
                 <button
                   onClick={() => setSelectedResourceIds([])}
@@ -1489,7 +1493,8 @@ export default function StudyHubContent() {
                     color: "#fff",
                     border: "none",
                     borderRadius: "100px",
-                    padding: "8px 16px",
+                    padding: isMobile ? "8px 12px" : "8px 16px",
+                    fontSize: isMobile ? "0.85rem" : "1rem",
                     fontWeight: 600,
                     cursor: "pointer"
                   }}
