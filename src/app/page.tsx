@@ -28,8 +28,8 @@ export default function Page() {
 
   useEffect(() => {
     if (currentUser) {
-      // Redirect to academic page instantly after login
-      router.push("/academic");
+      // Prefetch academic page for instant navigation after login
+      router.prefetch("/academic");
     }
   }, [currentUser, router]);
 

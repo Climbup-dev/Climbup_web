@@ -360,6 +360,7 @@ export default function AuthModal({
       !closingRef.current
     ) {
       router.refresh(); // Invalidate client-side router cache so middleware sees new cookies
+      router.push("/academic"); // Navigate to academic page
       startSmoothClose();
     }
   }, [
