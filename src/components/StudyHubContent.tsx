@@ -206,6 +206,12 @@ export default function StudyHubContent() {
 
   const pdfFastStreamUrl = useMemo(() => {
     if (!activePdfUrl) return "";
+    
+    // For Desktop users, we route through our Proxy to trigger the incredibly fast Native PDF Viewer.
+    if (!isMobile) {
+      return `/api/pdf-proxy?url=${encodeURIComponent(activePdfUrl)}&view=native`;
+    }
+
     if (activePdfUrl.includes("drive.google.com")) {
       const match = activePdfUrl.match(/\/file\/d\/([^\/]+)/) || activePdfUrl.match(/id=([^&]+)/) || activePdfUrl.match(/\/d\/([^\/]+)/);
       if (match && match[1]) {
@@ -214,7 +220,7 @@ export default function StudyHubContent() {
       return activePdfUrl.replace(/\/view.*$/, "/preview");
     }
     return activePdfUrl;
-  }, [activePdfUrl]);
+  }, [activePdfUrl, isMobile]);
 
   // Disable Right-Click Inspect & DevTools Shortcuts for maximum security
   useEffect(() => {
@@ -959,6 +965,7 @@ export default function StudyHubContent() {
                     >
                       <StudyHubPdfViewer
                         isFocusMode={isFocusMode}
+                        isMobile={isMobile}
                         pdfLoading={pdfLoading}
                         pdfError={pdfError}
                         isTransitioning={isTransitioning}

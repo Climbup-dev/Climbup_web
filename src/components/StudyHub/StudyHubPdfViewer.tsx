@@ -5,6 +5,7 @@ import { Topic } from "./types";
 
 interface StudyHubPdfViewerProps {
   isFocusMode: boolean;
+  isMobile: boolean;
   pdfLoading: boolean;
   pdfError: boolean;
   isTransitioning: boolean;
@@ -24,6 +25,7 @@ interface StudyHubPdfViewerProps {
 
 export const StudyHubPdfViewer: React.FC<StudyHubPdfViewerProps> = ({
   isFocusMode,
+  isMobile,
   pdfLoading,
   pdfError,
   isTransitioning,
@@ -133,6 +135,7 @@ export const StudyHubPdfViewer: React.FC<StudyHubPdfViewerProps> = ({
             <span>{isFocusMode ? "Exit Focus" : "Focus"}</span>
           </button>
           
+          {isMobile && (
           <div className="mobile-zoom-controls" style={{ 
             display: "flex", 
             background: "rgba(6, 15, 28, 0.9)", 
@@ -168,6 +171,7 @@ export const StudyHubPdfViewer: React.FC<StudyHubPdfViewerProps> = ({
               <RotateCw size={16} />
             </button>
           </div>
+          )}
         </div>
 
         {/* Top Center — Clean Document Title & Selector Pill */}
@@ -262,7 +266,8 @@ export const StudyHubPdfViewer: React.FC<StudyHubPdfViewerProps> = ({
           </div>
         )}
 
-        {/* Right Side Actions (Interactive Instant In-Page Download) */}
+        {/* Right Side Action (Download) */}
+        {isMobile && (
         <div style={{ pointerEvents: "auto" }}>
           <button
             className="pdf-back-btn"
@@ -298,6 +303,7 @@ export const StudyHubPdfViewer: React.FC<StudyHubPdfViewerProps> = ({
             )}
           </button>
         </div>
+        )}
       </div>
 
       {/* Floating Download Toast Feedback */}
@@ -515,18 +521,17 @@ export const StudyHubPdfViewer: React.FC<StudyHubPdfViewerProps> = ({
               transform: `translate(-50%, -50%) scale(${zoom}) rotate(${rotation}deg)`,
               transformOrigin: "center center"
             }}>
-            <iframe
-              key={pdfFastStreamUrl}
+            <iframe 
               src={pdfFastStreamUrl}
-              width="100%"
-              height="100%"
-              loading="eager"
               style={{
+                width: "100%", 
+                height: "100%", 
                 border: "none",
-                background: "transparent",
+                transform: isMobile ? `scale(${zoom}) rotate(${rotation}deg)` : "none",
+                transformOrigin: "center center",
+                transition: "transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
                 opacity: pdfLoading || pdfError || isTransitioning ? 0 : 1,
                 visibility: isTransitioning ? "hidden" : "visible",
-                transition: "opacity 0.15s ease",
               }}
               title="Classroom Material"
               onLoad={onPdfLoad}
