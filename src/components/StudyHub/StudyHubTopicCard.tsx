@@ -206,55 +206,7 @@ export const StudyHubTopicCard: React.FC<StudyHubTopicCardProps> = React.memo(({
           </p>
         </div>
 
-        {/* Clean Action Footer for Mobile */}
-        {topic.is_personal && (
-          <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", paddingTop: "4px", borderTop: "1px solid rgba(255,255,255,0.05)", marginTop: "auto" }}>
-            <button
-              onClick={(e) => { e.stopPropagation(); setShareResourceIds([topic.classroom_id]); setShareTheme(themeColor); }}
-              title="Share PDF"
-              style={{
-                background: "rgba(255,255,255,0.05)",
-                border: "none",
-                color: "#94a3b8",
-                width: 36,
-                height: 36,
-                borderRadius: "50%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                cursor: "pointer",
-                transition: "all 0.2s"
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.color = themeColor; e.currentTarget.style.background = `${themeColor}15`; }}
-              onMouseLeave={(e) => { e.currentTarget.style.color = "#94a3b8"; e.currentTarget.style.background = "rgba(255,255,255,0.05)"; }}
-            >
-              <Share2 size={16} />
-            </button>
-            {isActive && (
-              <button
-                onClick={(e) => handleDeleteResource(topic, e)}
-                title="Delete PDF"
-                style={{
-                  background: "rgba(239, 68, 68, 0.05)",
-                  border: "none",
-                  color: "#ef4444",
-                  width: 36,
-                  height: 36,
-                  borderRadius: "50%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  cursor: "pointer",
-                  transition: "all 0.2s"
-                }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(239, 68, 68, 0.15)"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(239, 68, 68, 0.05)"; }}
-              >
-                <Trash2 size={16} />
-              </button>
-            )}
-          </div>
-        )}
+        {/* Action Footer completely removed per user request */}
       </div>
     </motion.div>
   );

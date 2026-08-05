@@ -588,6 +588,37 @@ export default function StudyHubContent() {
     }
   };
 
+  const handleDeleteMultipleResources = async () => {
+    if (!confirm(`Are you sure you want to delete ${selectedResourceIds.length} notes?`)) return;
+
+    try {
+      const topicsToDelete = topicsList.filter(t => selectedResourceIds.includes(t.classroom_id));
+      
+      // Delete from storage
+      const storagePaths = topicsToDelete
+        .filter(t => t.pdf_url && t.pdf_url.includes('/student_files/'))
+        .map(t => t.pdf_url!.split('/student_files/')[1])
+        .filter(Boolean);
+        
+      if (storagePaths.length > 0) {
+        await supabaseClient.storage.from('student_files').remove(storagePaths);
+      }
+
+      // Delete from database
+      await supabaseClient.from('student_resources').delete().in('id', selectedResourceIds);
+
+      // Purge from all caches
+      topicsToDelete.forEach(topic => {
+        purgeTopicFromAllCaches(topic.classroom_id, topic.pdf_url);
+      });
+      
+      setSelectedResourceIds([]);
+      showToast("Notes deleted successfully", "success");
+    } catch (error) {
+      showToast("Failed to delete selected notes.", "error");
+    }
+  };
+
   const purgeTopicFromAllCaches = (topicId: string, pdfUrl?: string) => {
     // 1. Remove from active topicsList state
     setTopicsList(prev => prev.filter(t => t.classroom_id !== topicId));
@@ -1433,6 +1464,23 @@ export default function StudyHubContent() {
                   }}
                 >
                   <Share2 size={14} /> Share All
+                </button>
+                <button
+                  onClick={handleDeleteMultipleResources}
+                  style={{
+                    background: "rgba(239, 68, 68, 0.15)",
+                    color: "#ef4444",
+                    border: "none",
+                    borderRadius: "100px",
+                    padding: "8px 16px",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px"
+                  }}
+                >
+                  <Trash2 size={14} /> Delete All
                 </button>
                 <button
                   onClick={() => setSelectedResourceIds([])}
