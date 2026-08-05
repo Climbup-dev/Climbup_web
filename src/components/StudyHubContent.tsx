@@ -1035,7 +1035,7 @@ export default function StudyHubContent() {
                                   </div>
                                 </div>
                               ) : (
-                                <StudyHubHero isMobile={isMobile} onOpenSidebar={() => setIsMobileSidebarOpen(true)} />
+                                <StudyHubHero />
                               )}
                             </motion.div>
                           ) : (
