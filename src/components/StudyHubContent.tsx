@@ -903,11 +903,10 @@ export default function StudyHubContent() {
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "space-between",
-                    gap: "16px",
-                    flexWrap: "wrap"
+                    gap: isMobile ? "8px" : "16px",
                   }}
                 >
-                  <div style={{ display: "flex", gap: "14px", alignItems: "center" }}>
+                  <div style={{ display: "flex", gap: isMobile ? "8px" : "14px", alignItems: "center", minWidth: 0, flex: 1 }}>
                     {isMobile && (
                       <button 
                         onClick={() => setIsMobileSidebarOpen(true)}
@@ -916,14 +915,23 @@ export default function StudyHubContent() {
                         <Menu size={18} />
                       </button>
                     )}
-                    <div style={{ background: "rgba(45, 212, 191, 0.15)", border: "1px solid rgba(45, 212, 191, 0.3)", padding: "10px", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 0 14px rgba(45, 212, 191, 0.2)" }}>
-                      <BookOpen size={24} color="#2dd4bf" />
+                    <div style={{ background: "rgba(45, 212, 191, 0.15)", border: "1px solid rgba(45, 212, 191, 0.3)", padding: isMobile ? "8px" : "10px", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 0 14px rgba(45, 212, 191, 0.2)", flexShrink: 0 }}>
+                      <BookOpen size={isMobile ? 20 : 24} color="#2dd4bf" />
                     </div>
-                    <div>
-                      <h1 style={{ margin: 0, fontSize: "clamp(1.2rem, 3.5vw, 1.6rem)", fontWeight: 800, color: "#ffffff", letterSpacing: "-0.01em" }}>
+                    <div style={{ minWidth: 0 }}>
+                      <h1 style={{ 
+                        margin: 0, 
+                        fontSize: isMobile ? "1.1rem" : "1.6rem", 
+                        fontWeight: 800, 
+                        color: "#ffffff", 
+                        letterSpacing: "-0.01em",
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis"
+                      }}>
                         {currentSubjectName}
                       </h1>
-                      <p style={{ margin: "2px 0 0", fontSize: "0.78rem", color: "#94a3b8", display: "flex", alignItems: "center", gap: "6px" }}>
+                      <p style={{ margin: "2px 0 0", fontSize: isMobile ? "0.7rem" : "0.78rem", color: "#94a3b8", display: "flex", alignItems: "center", gap: "6px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                         <span style={{ color: "#2dd4bf", fontWeight: 600 }}>Subject Repository</span> • 
                         <span>{topicsList.filter(t => t.status !== "pending").length} PDF Notes</span>
                       </p>
@@ -937,17 +945,18 @@ export default function StudyHubContent() {
                       color: "#02131d",
                       border: "none",
                       borderRadius: "10px",
-                      padding: "8px 14px",
+                      padding: isMobile ? "8px 10px" : "8px 14px",
                       fontWeight: 800,
                       fontSize: "0.82rem",
                       cursor: "pointer",
                       display: "flex",
                       alignItems: "center",
                       gap: "6px",
-                      boxShadow: "0 4px 14px rgba(45, 212, 191, 0.3)"
+                      boxShadow: "0 4px 14px rgba(45, 212, 191, 0.3)",
+                      flexShrink: 0
                     }}
                   >
-                    <PlusCircle size={15} /> Upload PDF
+                    {isMobile ? <PlusCircle size={18} /> : <><PlusCircle size={15} /> Upload PDF</>}
                   </button>
                 </div>
               )}

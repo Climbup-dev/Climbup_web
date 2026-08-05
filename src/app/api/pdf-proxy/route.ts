@@ -46,7 +46,8 @@ export async function GET(req: NextRequest) {
       headers: {
         "Content-Type": contentType,
         "Content-Disposition": dispositionHeader,
-        "Cache-Control": "public, max-age=86400, s-maxage=86400",
+        "Cache-Control": "public, max-age=31536000, s-maxage=31536000, stale-while-revalidate=86400, immutable",
+        "ETag": `W/"${Buffer.from(fetchUrl).toString('base64').substring(0, 20)}"`,
       },
     });
   } catch (err) {
