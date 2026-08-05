@@ -547,13 +547,13 @@ export default function StudyHubContent() {
     setIsFocusMode(false);
     setIsTransitioning(false);
   };
-  /* ── Auto-select first subject ── */
+  /* ── Auto-select first subject (Only on Mobile) ── */
   useEffect(() => {
-    if (subjectsList.length > 0 && !activeSubject) {
+    if (subjectsList.length > 0 && !activeSubject && isMobile) {
       handleSubjectClick(subjectsList[0].id);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [subjectsList]);
+  }, [subjectsList, isMobile]);
 
   const handleDeleteResource = async (topic: Topic, e: React.MouseEvent) => {
     e.stopPropagation();

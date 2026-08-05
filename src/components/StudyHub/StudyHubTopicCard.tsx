@@ -52,16 +52,14 @@ export const StudyHubTopicCard: React.FC<StudyHubTopicCardProps> = React.memo(({
         padding: 0,
         overflow: "hidden",
         borderRadius: "14px",
-        border: `1px solid ${isActive ? themeColor : "rgba(255,255,255,0.08)"}`,
-        background: "rgba(10, 17, 30, 0.6)",
-        backdropFilter: "blur(12px)",
-        boxShadow: isActive ? `0 0 24px ${themeColor}35` : "0 4px 16px rgba(0,0,0,0.25)",
+        border: `1px solid ${isActive ? themeColor : "rgba(255,255,255,0.06)"}`,
+        background: "#0f172a", // Solid slate-900 background instead of blur
+        boxShadow: isActive ? `0 0 0 1px ${themeColor}` : "0 4px 12px rgba(0,0,0,0.15)",
         display: "flex",
         flexDirection: "column",
         cursor: "pointer",
         position: "relative",
-        transition: "all 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
-        willChange: "transform, opacity"
+        transition: "transform 0.2s ease, border-color 0.2s ease", // Optimized transitions
       }}
     >
       {/* Top Preview Header Area */}
@@ -88,8 +86,7 @@ export const StudyHubTopicCard: React.FC<StudyHubTopicCardProps> = React.memo(({
           borderRadius: "6px",
           display: "flex",
           alignItems: "center",
-          gap: "4px",
-          backdropFilter: "blur(4px)"
+          gap: "4px"
         }}>
           <FileText size={12} color={themeColor} /> PDF
         </div>
@@ -119,7 +116,6 @@ export const StudyHubTopicCard: React.FC<StudyHubTopicCardProps> = React.memo(({
               alignItems: "center",
               justifyContent: "center",
               cursor: "pointer",
-              backdropFilter: "blur(4px)",
               transition: "all 0.2s ease"
             }}
           >
