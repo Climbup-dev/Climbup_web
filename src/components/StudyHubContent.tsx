@@ -135,7 +135,7 @@ const statusBadge = (status?: string) => {
 export default function StudyHubContent() {
   const { currentUser, userAcademicProfile, refreshProfile } = useAuth();
   const { showToast } = useToast();
-  const [hubState, setHubState] = useState<"welcome" | "hub">("welcome");
+  const [hubState, setHubState] = useState<"welcome" | "hub">("hub");
   const [authOpen, setAuthOpen] = useState(false);
   const [entryMode, setEntryMode] = useState<"login" | "register">("login");
 
