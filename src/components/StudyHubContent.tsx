@@ -1435,11 +1435,12 @@ export default function StudyHubContent() {
                 borderRadius: "100px",
                 display: "flex",
                 alignItems: "center",
-                gap: isMobile ? "8px" : "20px",
+                gap: isMobile ? "10px" : "20px",
                 zIndex: 9999,
                 boxShadow: "0 10px 40px rgba(0,0,0,0.5), 0 0 20px rgba(56,211,153,0.15)",
-                width: isMobile ? "92%" : "auto",
-                justifyContent: isMobile ? "space-between" : "center"
+                width: "max-content",
+                maxWidth: "95vw",
+                justifyContent: "center"
               }}
             >
               <span style={{ color: "#fff", fontWeight: 600, fontSize: isMobile ? "0.85rem" : "1rem", whiteSpace: "nowrap" }}>
@@ -1499,7 +1500,7 @@ export default function StudyHubContent() {
                     cursor: "pointer"
                   }}
                 >
-                  Cancel
+                  {isMobile ? "Close" : "Cancel"}
                 </button>
               </div>
             </motion.div>
