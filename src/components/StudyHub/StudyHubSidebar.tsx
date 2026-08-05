@@ -1,4 +1,4 @@
-import React from "react";
+import React, { startTransition } from "react";
 import { motion } from "framer-motion";
 import { X, ChevronRight, ArrowLeft, FileText, CheckCircle } from "lucide-react";
 import { Subject, Topic } from "./types";
@@ -47,7 +47,7 @@ export const StudyHubSidebar: React.FC<StudyHubSidebarProps> = ({
       {isMobile && isMobileSidebarOpen && (
         <div 
           style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 90 }}
-          onClick={() => setIsMobileSidebarOpen(false)}
+          onClick={() => startTransition(() => setIsMobileSidebarOpen(false))}
         />
       )}
       <motion.aside 
@@ -74,7 +74,7 @@ export const StudyHubSidebar: React.FC<StudyHubSidebarProps> = ({
         {/* Sidebar Header */}
         <div className="sidebar-header">
           {isMobile && (
-            <button onClick={() => setIsMobileSidebarOpen(false)} style={{ position: "absolute", right: 16, top: 22, background: "none", border: "none", color: "#fff", cursor: "pointer" }}>
+            <button onClick={() => startTransition(() => setIsMobileSidebarOpen(false))} style={{ position: "absolute", right: 16, top: 22, background: "none", border: "none", color: "#fff", cursor: "pointer" }}>
               <X size={18} />
             </button>
           )}
@@ -134,8 +134,10 @@ export const StudyHubSidebar: React.FC<StudyHubSidebarProps> = ({
                     key={topic.classroom_id}
                     className={`subject-btn ${isActiveNote ? "active" : ""}`}
                     onClick={() => {
-                      if (onSelectTopic) onSelectTopic(topic);
-                      if (isMobile) setIsMobileSidebarOpen(false);
+                      startTransition(() => {
+                        if (onSelectTopic) onSelectTopic(topic);
+                        if (isMobile) setIsMobileSidebarOpen(false);
+                      });
                     }}
                   >
                     <div className="subject-icon">{idx + 1}</div>

@@ -1,6 +1,6 @@
-import React from "react";
-import { motion } from "framer-motion";
-import { CheckCircle, FileText, Trash2, Share2, Eye, ArrowUpRight } from "lucide-react";
+import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { CheckCircle, FileText, Trash2, Share2, Eye, ArrowUpRight, MoreVertical } from "lucide-react";
 import { Topic } from "./types";
 
 interface StudyHubTopicCardProps {
