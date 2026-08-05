@@ -117,23 +117,23 @@ export const StudyHubPdfViewer: React.FC<StudyHubPdfViewerProps> = ({
         {/* Left Side Actions (Back & Focus) */}
         <div style={{ display: "flex", gap: 8, alignItems: "center", pointerEvents: "auto" }}>
           <button
-            className="pdf-back-btn"
+            className="pdf-back-btn hide-text-mobile"
             onClick={onBack}
             title="Exit PDF & return to Subject"
             style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: 700 }}
           >
-            <ArrowLeft size={14} /> Back
+            <ArrowLeft size={14} /> <span>Back</span>
           </button>
 
           <button
-            className="pdf-back-btn"
+            className="pdf-back-btn hide-text-mobile"
             onClick={handleFocusToggle}
           >
             {isFocusMode ? <Minimize size={14} /> : <Maximize size={14} />}
-            {isFocusMode ? "Exit Focus" : "Focus"}
+            <span>{isFocusMode ? "Exit Focus" : "Focus"}</span>
           </button>
           
-          <div style={{ 
+          <div className="mobile-zoom-controls" style={{ 
             display: "flex", 
             background: "rgba(6, 15, 28, 0.9)", 
             borderRadius: 12, 

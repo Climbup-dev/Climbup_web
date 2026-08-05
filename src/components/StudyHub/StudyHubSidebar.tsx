@@ -50,25 +50,27 @@ export const StudyHubSidebar: React.FC<StudyHubSidebarProps> = ({
           onClick={() => startTransition(() => setIsMobileSidebarOpen(false))}
         />
       )}
-      <motion.aside 
-        initial={false}
-        animate={{ 
-          marginLeft: (isFocusMode && !isMobile) ? -240 : 0,
-          opacity: (isFocusMode && !isMobile) ? 0 : 1,
-          x: isMobile ? (isMobileSidebarOpen ? 0 : -280) : 0
-        }}
-        transition={{ duration: 0.25, ease: "easeInOut" }}
+      <aside 
         className="study-hub-sidebar"
         style={{
           flex: isMobile ? "none" : "0 0 240px",
           width: 240,
-          visibility: (isFocusMode && !isMobile) ? "hidden" : "visible",
-          transform: "translateZ(0)",
           position: isMobile ? "absolute" : "relative",
           zIndex: isMobile ? 100 : 20,
           height: "100%",
           left: 0,
-          top: 0
+          top: 0,
+          // CSS Hardware Accelerated Transform
+          transform: isMobile 
+            ? (isMobileSidebarOpen ? "translate3d(0, 0, 0)" : "translate3d(-280px, 0, 0)")
+            : "translate3d(0, 0, 0)",
+          // Margin for Desktop Focus Mode
+          marginLeft: (isFocusMode && !isMobile) ? -240 : 0,
+          opacity: (isFocusMode && !isMobile) ? 0 : 1,
+          visibility: (isFocusMode && !isMobile) ? "hidden" : "visible",
+          // Pure CSS Transition (Bypasses React Thread)
+          transition: "transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), margin-left 0.3s ease, opacity 0.3s ease",
+          willChange: "transform"
         }}
       >
         {/* Sidebar Header */}
@@ -244,7 +246,7 @@ export const StudyHubSidebar: React.FC<StudyHubSidebarProps> = ({
             </span>
           </motion.button>
         </div>
-      </motion.aside>
+      </aside>
     </>
   );
 };
