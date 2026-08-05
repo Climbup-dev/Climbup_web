@@ -770,7 +770,6 @@ body.reading-mode .study-hub-container {
 /* Focus Mode Auto-Hide Controls */
 .pdf-floating-controls {
   transition: opacity 0.3s ease;
-  flex-wrap: wrap;
 }
 .pdf-floating-controls.focus-mode-active {
   opacity: 0;
@@ -780,18 +779,12 @@ body.reading-mode .study-hub-container {
 }
 
 @media (max-width: 850px) {
-  .pdf-floating-controls {
-    justify-content: center !important;
-  }
-  .hide-text-mobile span,
-  .hide-text-mobile {
-    font-size: 0 !important;
-  }
-  .hide-text-mobile svg {
-    margin: 0 !important;
+  .hide-text-mobile span {
+    display: none !important;
   }
   .pdf-floating-controls .pdf-back-btn {
     padding: 8px !important;
+    gap: 0 !important;
   }
   .mobile-zoom-controls {
     position: fixed !important;
