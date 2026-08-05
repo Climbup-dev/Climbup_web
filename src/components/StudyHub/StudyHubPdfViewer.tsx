@@ -127,6 +127,7 @@ export const StudyHubPdfViewer: React.FC<StudyHubPdfViewerProps> = ({
             <ArrowLeft size={14} /> <span>Back</span>
           </button>
 
+          {!isMobile && (
           <button
             className="pdf-back-btn hide-text-mobile"
             onClick={handleFocusToggle}
@@ -134,6 +135,7 @@ export const StudyHubPdfViewer: React.FC<StudyHubPdfViewerProps> = ({
             {isFocusMode ? <Minimize size={14} /> : <Maximize size={14} />}
             <span>{isFocusMode ? "Exit Focus" : "Focus"}</span>
           </button>
+          )}
           
           {isMobile && (
           <div className="mobile-zoom-controls" style={{ 
@@ -175,7 +177,7 @@ export const StudyHubPdfViewer: React.FC<StudyHubPdfViewerProps> = ({
         </div>
 
         {/* Top Center — Clean Document Title & Selector Pill */}
-        {availableTopics.length > 0 && (
+        {!isMobile && availableTopics.length > 0 && (
           <div style={{ position: "relative", pointerEvents: "auto" }}>
             <button
               onClick={() => setShowDropdown(!showDropdown)}

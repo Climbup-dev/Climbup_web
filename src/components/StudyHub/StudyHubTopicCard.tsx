@@ -207,7 +207,7 @@ export const StudyHubTopicCard: React.FC<StudyHubTopicCardProps> = React.memo(({
         </div>
 
         {/* Clean Action Footer for Mobile */}
-        {topic.is_personal && (
+        {topic.is_personal && isActive && (
           <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", paddingTop: "4px", borderTop: "1px solid rgba(255,255,255,0.05)", marginTop: "auto" }}>
             <button
               onClick={(e) => { e.stopPropagation(); setShareResourceIds([topic.classroom_id]); setShareTheme(themeColor); }}
