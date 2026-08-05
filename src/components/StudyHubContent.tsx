@@ -9,6 +9,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/useToast";
 import { getOrCreateClimbUPFolder } from "@/lib/googleDriveHelper";
 import { AddResourceModal, ShareResourceModal } from "@/components/StudentResourceModals";
 import { StudyHubHero } from "./StudyHub/StudyHubHero";
@@ -133,10 +134,10 @@ const statusBadge = (status?: string) => {
 ═══════════════════════════════════════════════════════ */
 export default function StudyHubContent() {
   const { currentUser, userAcademicProfile, refreshProfile } = useAuth();
+  const { showToast } = useToast();
+  const [hubState, setHubState] = useState<"welcome" | "hub">("welcome");
   const [authOpen, setAuthOpen] = useState(false);
   const [entryMode, setEntryMode] = useState<"login" | "register">("login");
-
-  const [hubState, setHubState] = useState<"welcome" | "hub">("hub");
 
   const [activeClassroomId, setActiveClassroomId] = useState("");
   const [activePdfUrl, setActivePdfUrl] = useState("");
@@ -474,7 +475,7 @@ export default function StudyHubContent() {
       setSubjectsList(combined);
       setCache(cacheKey, combined);
     } catch (error) {
-      console.error("Error fetching combined subjects:", error);
+      showToast("Failed to load your subjects. Please check your internet connection.", "error");
     }
   };
 
@@ -532,7 +533,7 @@ export default function StudyHubContent() {
         setCache(cacheKey, allTopics);
       }
     } catch (err: any) {
-      console.warn("Failed to fetch topics:", err);
+      showToast("Failed to load topics. Please check your internet connection.", "error");
     } finally {
       setIsFetchingTopics(false);
     }
@@ -583,8 +584,7 @@ export default function StudyHubContent() {
       // 3. Purge from ALL caches (UI state, in-memory topicsCache, localStorage, RAM PDF cache)
       purgeTopicFromAllCaches(topic.classroom_id, topic.pdf_url);
     } catch (error) {
-      console.error(error);
-      alert('Failed to delete resource');
+      showToast("Failed to delete resource.", "error");
     }
   };
 
@@ -686,7 +686,7 @@ export default function StudyHubContent() {
         }
       }
     } catch (e) {
-      console.warn("Drive sync failed", e);
+      showToast("Failed to upload file to Google Drive.", "error");
     }
     return finalFileUrl;
   };
@@ -709,8 +709,7 @@ export default function StudyHubContent() {
       // Update local state smoothly
       setTopicsList(prev => prev.map(t => t.classroom_id === topic.classroom_id ? { ...t, status: "accepted", pdf_url: finalFileUrl, category: selectedCat } : t));
     } catch (err) {
-      console.error("Accept Error:", err);
-      alert("Failed to accept request. Please try again.");
+      showToast("Failed to accept shared request. Please try again.", "error");
     } finally {
       setAcceptingId(null);
     }
@@ -731,8 +730,7 @@ export default function StudyHubContent() {
       // Purge from ALL caches instantly
       purgeTopicFromAllCaches(topic.classroom_id, topic.pdf_url);
     } catch (err) {
-      console.error("Decline Error:", err);
-      alert("Failed to ignore request. Please try again.");
+      showToast("Failed to ignore shared request. Please try again.", "error");
     } finally {
       setDecliningId(null);
     }

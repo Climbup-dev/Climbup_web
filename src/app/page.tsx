@@ -10,8 +10,7 @@ const HeroSection = dynamic(() => import("@/components/HeroSection"), {
   ssr: false,
   loading: () => (
     <div 
-      className="w-full flex items-center justify-center bg-[#021526]" 
-      style={{ minHeight: '100vh' }}
+      style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "100%", minHeight: '100vh', backgroundColor: "#021526" }}
     >
       <div style={{ width: "40px", height: "40px", border: "3px solid rgba(56, 211, 153, 0.1)", borderTopColor: "#38d399", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
     </div>
