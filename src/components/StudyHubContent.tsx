@@ -829,11 +829,8 @@ export default function StudyHubContent() {
 
         {/* ─── WELCOME SCREEN ─── */}
         {hubState === "welcome" && (
-          <div className="study-hub-welcome-screen">
-            <div className="welcome-logo">🎓</div>
-            <h1>Loading {welcomeTitle}…</h1>
-            <p>Fetching your subjects, hang tight!</p>
-            <div className="spinner" />
+          <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }}>
+            <div style={{ width: 36, height: 36, border: "3px solid rgba(56, 211, 153, 0.1)", borderTopColor: "#38d399", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
           </div>
         )}
 
