@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import StudyHubContent from "@/components/StudyHubContent";
 
 export const metadata: Metadata = {
-  title: "Study Hub | ClimbUP",
+  title: "Study Hub",
   description: "Subject-wise notes, resources, and discussion forums for students.",
 };
 

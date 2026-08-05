@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
-import { X, UploadCloud, Share2, CheckCircle, User, LogIn, Search, Plus, Check } from "lucide-react";
+import { X, UploadCloud, Share2, CheckCircle, User, LogIn, Search, Plus, Check, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { getOrCreateClimbUPFolder } from "@/lib/googleDriveHelper";
 
@@ -244,7 +244,15 @@ export function AddResourceModal({
               disabled={uploading}
               style={{ width: "100%", padding: "12px", borderRadius: "8px", background: themeColor, color: "#000", fontWeight: 700, border: "none", cursor: uploading ? "not-allowed" : "pointer", opacity: uploading ? 0.7 : 1, display: "flex", justifyContent: "center", alignItems: "center", gap: "8px" }}
             >
-              {uploading ? "Uploading to Google Drive..." : "Upload Resource"}
+              {uploading ? (
+                <>
+                  <Loader2 size={18} className="spin-animation" style={{ animation: "spin 1s linear infinite" }} />
+                  <span>Syncing to Drive...</span>
+                  <style>{`@keyframes spin { 100% { transform: rotate(360deg); } }`}</style>
+                </>
+              ) : (
+                "Upload Resource"
+              )}
             </button>
           </>
         )}

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Maximize, Minimize, Download, ChevronLeft, ChevronRight, FileText, ChevronDown, CheckCircle } from "lucide-react";
+import { ArrowLeft, Maximize, Minimize, Download, ChevronLeft, ChevronRight, FileText, ChevronDown, CheckCircle, ZoomIn, ZoomOut, RotateCw } from "lucide-react";
 import { Topic } from "./types";
 
 interface StudyHubPdfViewerProps {
@@ -42,6 +42,8 @@ export const StudyHubPdfViewer: React.FC<StudyHubPdfViewerProps> = ({
 }) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [downloadState, setDownloadState] = useState<"idle" | "downloading" | "done">("idle");
+  const [zoom, setZoom] = useState(1);
+  const [rotation, setRotation] = useState(0);
 
   // Compute current index in availableTopics
   const currentIndex = availableTopics.findIndex(t => t.classroom_id === activeClassroomId);
@@ -88,6 +90,14 @@ export const StudyHubPdfViewer: React.FC<StudyHubPdfViewerProps> = ({
       onTouchStart={resetHideTimer}
       style={{ position: "relative", width: "100%", height: "100%" }}
     >
+      {/* Invisible Hover Area to reveal header in Focus Mode */}
+      {isFocusMode && (
+        <div 
+          onMouseEnter={() => setShowDropdown(true)} // using showDropdown state loosely or add new state
+          style={{ position: "absolute", top: 0, left: 0, right: 0, height: 50, zIndex: 29 }}
+        />
+      )}
+
       {/* Floating Top Header Bar */}
       <div 
         className={`pdf-floating-controls ${isFocusMode ? 'focus-mode-active' : ''}`}
@@ -122,6 +132,42 @@ export const StudyHubPdfViewer: React.FC<StudyHubPdfViewerProps> = ({
             {isFocusMode ? <Minimize size={14} /> : <Maximize size={14} />}
             {isFocusMode ? "Exit Focus" : "Focus"}
           </button>
+          
+          <div style={{ 
+            display: "flex", 
+            background: "rgba(6, 15, 28, 0.9)", 
+            borderRadius: 12, 
+            overflow: "hidden", 
+            border: "1px solid rgba(45, 212, 191, 0.3)",
+            boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
+            backdropFilter: "blur(12px)",
+            pointerEvents: "auto"
+          }}>
+            <button
+              onClick={() => setZoom(z => Math.max(0.5, z - 0.25))}
+              style={{ padding: "8px 10px", background: "transparent", border: "none", color: "#2dd4bf", cursor: "pointer", borderRight: "1px solid rgba(45, 212, 191, 0.2)" }}
+              title="Zoom Out"
+            >
+              <ZoomOut size={16} />
+            </button>
+            <span style={{ padding: "8px 10px", fontSize: "0.8rem", color: "#ffffff", fontWeight: 700, display: "flex", alignItems: "center", borderRight: "1px solid rgba(45, 212, 191, 0.2)" }}>
+              {Math.round(zoom * 100)}%
+            </span>
+            <button
+              onClick={() => setZoom(z => Math.min(3, z + 0.25))}
+              style={{ padding: "8px 10px", background: "transparent", border: "none", color: "#2dd4bf", cursor: "pointer", borderRight: "1px solid rgba(45, 212, 191, 0.2)" }}
+              title="Zoom In"
+            >
+              <ZoomIn size={16} />
+            </button>
+            <button
+              onClick={() => setRotation(r => r + 90)}
+              style={{ padding: "8px 10px", background: "transparent", border: "none", color: "#2dd4bf", cursor: "pointer" }}
+              title="Rotate"
+            >
+              <RotateCw size={16} />
+            </button>
+          </div>
         </div>
 
         {/* Top Center — Clean Document Title & Selector Pill */}
@@ -446,23 +492,49 @@ export const StudyHubPdfViewer: React.FC<StudyHubPdfViewerProps> = ({
           </div>
         )}
 
-        <iframe
-          key={pdfFastStreamUrl}
-          src={pdfFastStreamUrl}
-          width="100%"
-          height="100%"
-          loading="eager"
-          style={{
-            border: "none",
-            background: "#ffffff",
-            opacity: pdfLoading || pdfError || isTransitioning ? 0 : 1,
-            visibility: isTransitioning ? "hidden" : "visible",
-            transition: "opacity 0.15s ease",
-          }}
-          title="Classroom Material"
-          onLoad={onPdfLoad}
-          onError={onPdfError}
-        />
+        <div style={{ 
+          width: "100%", 
+          height: "100%", 
+          overflow: "auto",
+          position: "relative"
+        }}>
+          <div style={{ 
+            width: `${zoom * 100}%`, 
+            height: `${zoom * 100}%`,
+            minWidth: "100%",
+            minHeight: "100%",
+            position: "relative"
+          }}>
+            <div style={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              width: `${(1 / zoom) * 100}%`,
+              height: `${(1 / zoom) * 100}%`,
+              transition: "transform 0.3s ease-out",
+              transform: `translate(-50%, -50%) scale(${zoom}) rotate(${rotation}deg)`,
+              transformOrigin: "center center"
+            }}>
+            <iframe
+              key={pdfFastStreamUrl}
+              src={pdfFastStreamUrl}
+              width="100%"
+              height="100%"
+              loading="eager"
+              style={{
+                border: "none",
+                background: "transparent",
+                opacity: pdfLoading || pdfError || isTransitioning ? 0 : 1,
+                visibility: isTransitioning ? "hidden" : "visible",
+                transition: "opacity 0.15s ease",
+              }}
+              title="Classroom Material"
+              onLoad={onPdfLoad}
+              onError={onPdfError}
+            />
+          </div>
+        </div>
+      </div>
 
         {warmupUrl && warmupUrl !== pdfFastStreamUrl && (
           <iframe

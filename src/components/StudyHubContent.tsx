@@ -200,6 +200,7 @@ export default function StudyHubContent() {
   const [subjectsList, setSubjectsList] = useState<Subject[]>([]);
   const [topicsList, setTopicsList] = useState<Topic[]>([]);
   const [topicsCache, setTopicsCache] = useState<Record<string, Topic[]>>({});
+  const [pendingCategories, setPendingCategories] = useState<Record<string, string>>({});
   const preloadedUrls = useRef<Set<string>>(new Set());
   const loadedPdfCacheRef = useRef<Set<string>>(new Set());
 
@@ -682,17 +683,18 @@ export default function StudyHubContent() {
     setAcceptingId(topic.classroom_id);
     try {
       const finalFileUrl = await cloneSharedFile(topic);
+      const selectedCat = pendingCategories[topic.classroom_id] || "personal_document";
 
       // Update DB status to 'accepted'
       const { error } = await supabaseClient
         .from("student_resources")
-        .update({ status: "accepted", file_url: finalFileUrl })
+        .update({ status: "accepted", file_url: finalFileUrl, type: selectedCat })
         .eq("id", topic.classroom_id);
 
       if (error) throw error;
 
       // Update local state smoothly
-      setTopicsList(prev => prev.map(t => t.classroom_id === topic.classroom_id ? { ...t, status: "accepted", pdf_url: finalFileUrl } : t));
+      setTopicsList(prev => prev.map(t => t.classroom_id === topic.classroom_id ? { ...t, status: "accepted", pdf_url: finalFileUrl, category: selectedCat } : t));
     } catch (err) {
       console.error("Accept Error:", err);
       alert("Failed to accept request. Please try again.");
@@ -734,13 +736,14 @@ export default function StudyHubContent() {
       for (const topic of pendingRequests) {
         const finalFileUrl = await cloneSharedFile(topic);
 
+        const selectedCat = pendingCategories[topic.classroom_id] || "personal_document";
         const { error } = await supabaseClient
           .from("student_resources")
-          .update({ status: "accepted", file_url: finalFileUrl })
+          .update({ status: "accepted", file_url: finalFileUrl, type: selectedCat })
           .eq("id", topic.classroom_id);
 
         if (!error) {
-          updatedTopics = updatedTopics.map(t => t.classroom_id === topic.classroom_id ? { ...t, status: "accepted", pdf_url: finalFileUrl } : t);
+          updatedTopics = updatedTopics.map(t => t.classroom_id === topic.classroom_id ? { ...t, status: "accepted", pdf_url: finalFileUrl, category: selectedCat } : t);
         }
       }
       
@@ -1109,7 +1112,24 @@ export default function StudyHubContent() {
                                                   👆 Click to preview before accepting
                                                 </span>
                                               </p>
-                                              <div className="note-footer" style={{ marginTop: "14px" }}>
+                                              
+                                              <div style={{ marginTop: "12px" }}>
+                                                <select
+                                                  value={pendingCategories[topic.classroom_id] || "personal_document"}
+                                                  onChange={(e) => setPendingCategories(prev => ({ ...prev, [topic.classroom_id]: e.target.value }))}
+                                                  style={{
+                                                    width: "100%", padding: "6px 8px", borderRadius: "6px", background: "rgba(255,255,255,0.05)", 
+                                                    border: "1px solid rgba(255,255,255,0.1)", color: "#fff", fontSize: "0.8rem", outline: "none", cursor: "pointer"
+                                                  }}
+                                                  onClick={(e) => e.stopPropagation()}
+                                                >
+                                                  <option value="personal_document">Notes (Default)</option>
+                                                  <option value="assignment">Assignment</option>
+                                                  <option value="practical">Practical</option>
+                                                </select>
+                                              </div>
+
+                                              <div className="note-footer" style={{ marginTop: "10px" }}>
                                                 <div style={{ display: "flex", gap: "8px", width: "100%" }}>
                                                   <button
                                                     className="read-btn"
@@ -1125,7 +1145,7 @@ export default function StudyHubContent() {
                                                     disabled={isAccepting || isDeclining}
                                                     onClick={(e) => handleAcceptSharedRequest(topic, e)}
                                                   >
-                                                    {isAccepting ? "Saving..." : "Accept & Save to My Drive"}
+                                                    {isAccepting ? "Saving..." : "Accept"}
                                                   </button>
                                                 </div>
                                               </div>

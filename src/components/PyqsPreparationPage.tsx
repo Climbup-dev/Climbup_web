@@ -533,32 +533,6 @@ export default function PyqsPreparationClient() {
                       </div>
                       <strong>{subjects.length + mdmSubjects.length + (selectedOeSubject ? 1 : 0)}</strong>
                     </div>
-                    
-                    <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                      <CustomSelect 
-                        label="MDM BRANCH (OPTIONAL)"
-                        value={selectedMdmBranchId}
-                        onChange={handleMdmBranchChange}
-                        placeholder="Select MDM branch..."
-                        options={mdmBranches.map(b => ({
-                          value: b.branch_id,
-                          label: `${b.branch_name} ${b.branch_code ? `(${b.branch_code})` : ''}`
-                        }))}
-                      />
-                      
-                      {availableOEs.length > 0 && (
-                        <CustomSelect 
-                          label="OPEN ELECTIVE (OPTIONAL)"
-                          value={selectedOeId}
-                          onChange={handleOeChange}
-                          placeholder="Select Open Elective..."
-                          options={availableOEs.map(oe => ({
-                            value: oe.oe_id,
-                            label: `${oe.subjects?.subject_name} (${oe.course_code || oe.subjects?.subject_code})`
-                          }))}
-                        />
-                      )}
-                    </div>
                   </div>
 
               {(subjects.length === 0 && mdmSubjects.length === 0 && !selectedOeSubject) ? (
