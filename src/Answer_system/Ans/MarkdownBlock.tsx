@@ -71,21 +71,13 @@ export function renderMarkdown(text: string) {
       return;
     }
 
-    if (trimmed.startsWith("### ")) {
+    const headingMatch = trimmed.match(/^(#{1,6})\s+(.+)$/);
+    if (headingMatch) {
       flushLists();
-      nodes.push(<h3 key={index}>{renderInline(trimmed.slice(4), mathBlocks)}</h3>);
-      return;
-    }
-
-    if (trimmed.startsWith("## ")) {
-      flushLists();
-      nodes.push(<h2 key={index}>{renderInline(trimmed.slice(3), mathBlocks)}</h2>);
-      return;
-    }
-
-    if (trimmed.startsWith("# ")) {
-      flushLists();
-      nodes.push(<h1 key={index}>{renderInline(trimmed.slice(2), mathBlocks)}</h1>);
+      const level = headingMatch[1].length;
+      const content = renderInline(headingMatch[2], mathBlocks);
+      const HeadingTag = `h${level}` as keyof JSX.IntrinsicElements;
+      nodes.push(<HeadingTag key={index}>{content}</HeadingTag>);
       return;
     }
 
@@ -206,6 +198,10 @@ function renderInline(text: string, mathBlocks: string[]) {
       );
     }
 
+    if (typeof part === "string") {
+      return part.replace(/<\/?mark[^>]*>/g, "");
+    }
+    
     return part;
   });
 }
