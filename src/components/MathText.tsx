@@ -10,8 +10,18 @@ interface MathTextProps {
 }
 
 const MathText: React.FC<MathTextProps> = ({ text }) => {
+  let processedText = text || '';
+  
+  // Remove backticks around math e.g., `$T(n)$` -> $T(n)$
+  processedText = processedText.replace(/`(\$[^`]+\$)`/g, '$1');
+  processedText = processedText.replace(/`(\$\$[^`]+\$\$)`/g, '$1');
+
+  // Convert standard LaTeX delimiters to $ and $$
+  processedText = processedText.replace(/\\\((.*?)\\\)/gs, '$$$1$$');
+  processedText = processedText.replace(/\\\[(.*?)\\\]/gs, '$$$$$1$$$$');
+
   // Yeh line table markdown ko fix karegi
-  const processedText = text ? text.replace(/([^\n])\n(\s*\|)/g, '$1\n\n$2') : '';
+  processedText = processedText.replace(/([^\n])\n(\s*\|)/g, '$1\n\n$2');
 
   return (
     <div className="math-text-container" style={{ fontSize: '1rem', lineHeight: '1.6' }}>
