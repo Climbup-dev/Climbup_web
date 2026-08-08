@@ -5,13 +5,15 @@
 import { renderMarkdown } from "./MarkdownBlock";
 
 export default function TableBlock({ block }: { block: any }) {
-  const title = block?.title || "Table";
+  const title = block?.title;
   const columns = Array.isArray(block?.columns) ? block.columns : [];
   const rows = Array.isArray(block?.rows) ? block.rows : [];
 
   return (
     <div className="block table-block">
-      <h2 className="block-title">{title}</h2>
+      {title && title !== "Table" && title !== "New Table" && (
+        <h2 className="block-title">{title}</h2>
+      )}
 
       <div className="table-scroll">
         <table className="answer-table">
