@@ -17,8 +17,8 @@ const MathText: React.FC<MathTextProps> = ({ text }) => {
   processedText = processedText.replace(/`(\$\$[^`]+\$\$)`/g, '$1');
 
   // Convert standard LaTeX delimiters to $ and $$
-  processedText = processedText.replace(/\\\((.*?)\\\)/gs, '$$$1$$');
-  processedText = processedText.replace(/\\\[(.*?)\\\]/gs, '$$$$$1$$$$');
+  processedText = processedText.replace(/\\\(([\s\S]*?)\\\)/g, '$$$1$$');
+  processedText = processedText.replace(/\\\[([\s\S]*?)\\\]/g, '$$$$$1$$$$');
 
   // Yeh line table markdown ko fix karegi
   processedText = processedText.replace(/([^\n])\n(\s*\|)/g, '$1\n\n$2');
