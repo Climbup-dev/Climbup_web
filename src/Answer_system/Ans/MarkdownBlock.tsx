@@ -3,6 +3,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import type { ReactNode } from "react";
+import katex from "katex";
+import "katex/dist/katex.min.css";
 
 export default function MarkdownBlock({ block, content, title }: any) {
   const finalTitle = block?.title || title || "";
@@ -28,7 +30,16 @@ export default function MarkdownBlock({ block, content, title }: any) {
 }
 
 export function renderMarkdown(text: string) {
-  const lines = normalizeMarkdownInput(text).split(/\r?\n/);
+  let processedText = normalizeMarkdownInput(text);
+  const mathBlocks: string[] = [];
+  
+  // Extract multiline $$ blocks first so they aren't split by \n
+  processedText = processedText.replace(/\$\$([\s\S]+?)\$\$/g, (match, math) => {
+    mathBlocks.push(math);
+    return `__MATH_BLOCK_${mathBlocks.length - 1}__`;
+  });
+
+  const lines = processedText.split(/\r?\n/);
   const nodes: ReactNode[] = [];
   let listItems: ReactNode[] = [];
   let orderedListItems: ReactNode[] = [];
@@ -55,6 +66,28 @@ export function renderMarkdown(text: string) {
           aria-hidden="true"
           className="markdown-line-break"
           key={`line-break-${index}`}
+        />
+      );
+      return;
+    }
+
+    const mathBlockMatch = trimmed.match(/^__MATH_BLOCK_(\d+)__$/);
+    if (mathBlockMatch) {
+      flushLists();
+      const indexMatch = parseInt(mathBlockMatch[1], 10);
+      const math = mathBlocks[indexMatch];
+      let html = "";
+      try {
+        html = katex.renderToString(math, { throwOnError: false, displayMode: true });
+      } catch (e) {
+        html = `<div style="color:red">Math error: ${String(e)}</div>`;
+      }
+      nodes.push(
+        <div 
+          key={`math-block-${index}`} 
+          className="math-block-container" 
+          style={{ margin: '16px 0', overflowX: 'auto' }} 
+          dangerouslySetInnerHTML={{ __html: html }} 
         />
       );
       return;
@@ -148,10 +181,15 @@ function renderInline(text: string) {
     }
 
     if (part.startsWith("$") && part.endsWith("$")) {
+      const math = part.slice(1, -1);
+      let html = "";
+      try {
+        html = katex.renderToString(math, { throwOnError: false, displayMode: false });
+      } catch (e) {
+        return <span className="inline-math" key={index}>{part}</span>;
+      }
       return (
-        <span className="inline-math" key={index}>
-          {part}
-        </span>
+        <span className="inline-math-rendered" key={index} dangerouslySetInnerHTML={{ __html: html }} />
       );
     }
 
@@ -177,7 +215,7 @@ function renderInline(text: string) {
 function fixMathSyntax(text: any) {
   if (typeof text !== "string") return "";
 
-  return normalizeMarkdownInput(text)
+  let cleaned = normalizeMarkdownInput(text)
     .replace(/[\u2018\u2019]/g, "'")
     .replace(/[\u201c\u201d]/g, '"')
     .replace(/\u2032/g, "'")
@@ -188,6 +226,12 @@ function fixMathSyntax(text: any) {
     .replace(/\\\]/g, "$$")
     .replace(/\$\s+/g, "$")
     .replace(/\s+\$/g, "$");
+
+  // Remove backticks around math e.g., `$T(n)$` -> $T(n)$
+  cleaned = cleaned.replace(/`(\$[^`]+\$)`/g, '$1');
+  cleaned = cleaned.replace(/`(\$\$[^`]+\$\$)`/g, '$1');
+
+  return cleaned;
 }
 
 function normalizeMarkdownInput(text: string) {
