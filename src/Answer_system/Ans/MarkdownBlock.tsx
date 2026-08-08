@@ -71,49 +71,27 @@ export function renderMarkdown(text: string) {
       return;
     }
 
-    const mathBlockMatch = trimmed.match(/^__MATH_BLOCK_(\d+)__$/);
-    if (mathBlockMatch) {
-      flushLists();
-      const indexMatch = parseInt(mathBlockMatch[1], 10);
-      const math = mathBlocks[indexMatch];
-      let html = "";
-      try {
-        html = katex.renderToString(math, { throwOnError: false, displayMode: true });
-      } catch (e) {
-        html = `<div style="color:red">Math error: ${String(e)}</div>`;
-      }
-      nodes.push(
-        <div 
-          key={`math-block-${index}`} 
-          className="math-block-container" 
-          style={{ margin: '16px 0', overflowX: 'auto' }} 
-          dangerouslySetInnerHTML={{ __html: html }} 
-        />
-      );
-      return;
-    }
-
     if (trimmed.startsWith("### ")) {
       flushLists();
-      nodes.push(<h3 key={index}>{renderInline(trimmed.slice(4))}</h3>);
+      nodes.push(<h3 key={index}>{renderInline(trimmed.slice(4), mathBlocks)}</h3>);
       return;
     }
 
     if (trimmed.startsWith("## ")) {
       flushLists();
-      nodes.push(<h2 key={index}>{renderInline(trimmed.slice(3))}</h2>);
+      nodes.push(<h2 key={index}>{renderInline(trimmed.slice(3), mathBlocks)}</h2>);
       return;
     }
 
     if (trimmed.startsWith("# ")) {
       flushLists();
-      nodes.push(<h1 key={index}>{renderInline(trimmed.slice(2))}</h1>);
+      nodes.push(<h1 key={index}>{renderInline(trimmed.slice(2), mathBlocks)}</h1>);
       return;
     }
 
     if (/^[-*]\s+/.test(trimmed)) {
       orderedListItems = [];
-      listItems.push(<li key={index}>{renderInline(trimmed.slice(2))}</li>);
+      listItems.push(<li key={index}>{renderInline(trimmed.slice(2), mathBlocks)}</li>);
       return;
     }
 
@@ -122,7 +100,7 @@ export function renderMarkdown(text: string) {
     if (orderedMatch) {
       listItems = [];
       orderedListItems.push(
-        <li key={index}>{renderInline(orderedMatch[1])}</li>
+        <li key={index}>{renderInline(orderedMatch[1], mathBlocks)}</li>
       );
       return;
     }
@@ -149,17 +127,37 @@ export function renderMarkdown(text: string) {
     }
 
     flushLists();
-    nodes.push(<p key={index}>{renderInline(trimmed)}</p>);
+    nodes.push(<p key={index}>{renderInline(trimmed, mathBlocks)}</p>);
   });
 
   flushLists();
   return nodes;
 }
 
-function renderInline(text: string) {
-  const parts = text.split(/(`[^`]+`|\*\*[^*]+\*\*|==[^=]+==|<mark[^>]*>.*?<\/mark>|\$[^$]+\$|\[[^\]]+\]\([^)]+\))/g);
+function renderInline(text: string, mathBlocks: string[]) {
+  const parts = text.split(/(__MATH_BLOCK_\d+__|`[^`]+`|\*\*[^*]+\*\*|==[^=]+==|<mark[^>]*>.*?<\/mark>|\$[^$]+\$|\[[^\]]+\]\([^)]+\))/g);
 
   return parts.map((part, index) => {
+    const mathBlockMatch = part.match(/^__MATH_BLOCK_(\d+)__$/);
+    if (mathBlockMatch) {
+      const idx = parseInt(mathBlockMatch[1], 10);
+      const math = mathBlocks[idx];
+      let html = "";
+      try {
+        html = katex.renderToString(math, { throwOnError: false, displayMode: true });
+      } catch (e) {
+        html = `<div style="color:red">Math error: ${String(e)}</div>`;
+      }
+      return (
+        <span 
+          key={index} 
+          className="math-block-container" 
+          style={{ margin: '16px 0', overflowX: 'auto', display: 'block' }} 
+          dangerouslySetInnerHTML={{ __html: html }} 
+        />
+      );
+    }
+
     if (part.startsWith("`") && part.endsWith("`")) {
       return <code key={index}>{part.slice(1, -1)}</code>;
     }
