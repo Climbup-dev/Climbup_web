@@ -3,6 +3,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import type { AnswerEditorSnapshot } from "./answerSnapshot";
+import katex from "katex";
 
 type PdfGenerationOptions = {
   targetWindow?: Window | null;
@@ -78,7 +79,7 @@ async function waitForPrintAssets(printDocument: Document) {
 }
 
 function buildPdfHtml(snapshot: AnswerEditorSnapshot, logoUrl: string) {
-  const safeQuestion = escapeHtml(
+  const safeQuestion = renderInline(
     snapshot.answer?.question || snapshot.question || "Question unavailable"
   );
   const blocks = Array.isArray(snapshot.answer?.blocks)
@@ -99,14 +100,15 @@ function buildPdfHtml(snapshot: AnswerEditorSnapshot, logoUrl: string) {
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>${safeQuestion}</title>
+    <title>Climbup Answer PDF</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" />
     <style>${pdfStyles()}</style>
   </head>
   <body>
     <div class="pdf-page-border"></div>
     <main class="pdf-page">
       <div class="pdf-watermark" aria-hidden="true">
-        <span>myclimbup.xyz</span>
+        <span>climbup - class agent</span>
       </div>
       <header class="pdf-header">
         <h1>${safeQuestion}</h1>
@@ -226,11 +228,30 @@ function renderMarkdown(text: string) {
 }
 
 function renderInline(text: string) {
-  return escapeHtml(stripLinks(text))
+  let processed = escapeHtml(stripLinks(text))
     .replace(/==([^=]+)==/g, "<mark>$1</mark>")
     .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
-    .replace(/`([^`]+)`/g, "<code>$1</code>")
-    .replace(/\$([^$]+)\$/g, '<span class="math">$1</span>');
+    .replace(/`([^`]+)`/g, "<code>$1</code>");
+
+  // Handle display math
+  processed = processed.replace(/\$\$([\s\S]+?)\$\$/g, (match, math) => {
+    try {
+      return katex.renderToString(math, { throwOnError: false, displayMode: true });
+    } catch (e) {
+      return `<div style="color:red; margin:10px 0;">Math error</div>`;
+    }
+  });
+
+  // Handle inline math
+  processed = processed.replace(/\$([^$]+)\$/g, (match, math) => {
+    try {
+      return katex.renderToString(math, { throwOnError: false, displayMode: false });
+    } catch (e) {
+      return `<span class="math">${escapeHtml(math)}</span>`;
+    }
+  });
+
+  return processed;
 }
 
 function renderSteps(items: any[]) {

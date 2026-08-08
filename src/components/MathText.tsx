@@ -11,6 +11,24 @@ interface MathTextProps {
 
 const MathText: React.FC<MathTextProps> = ({ text }) => {
   let processedText = text || '';
+
+  // Robustly normalize text from database that might have escaped characters or HTML
+  processedText = processedText
+    .replace(/&lt;br\s*\/?&gt;/gi, "\n")
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/p>\s*<p>/gi, "\n\n")
+    .replace(/<\/?p>/gi, "")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/\\n/g, "\n")
+    .replace(/\r\n/g, "\n");
+
+  // Fix flattened tables (where newlines were replaced by spaces)
+  // e.g. "Text | Header |" -> "Text \n\n| Header |"
+  processedText = processedText.replace(/([^\n|])\s+(\|.*\|.*\|)/g, '$1\n\n$2');
+  
+  // Fix flattened table rows (where "| |" indicates a lost newline between rows)
+  processedText = processedText.replace(/\|\s+\|\s*(?=:?-+:?)/g, '|\n| '); // Before alignment row
+  processedText = processedText.replace(/\|\s+\|\s*(?=[^|]+(?:\s*\|)+)/g, '|\n| '); // Between data rows
   
   // Remove backticks around math e.g., `$T(n)$` -> $T(n)$
   processedText = processedText.replace(/`(\$[^`]+\$)`/g, '$1');
@@ -20,7 +38,7 @@ const MathText: React.FC<MathTextProps> = ({ text }) => {
   processedText = processedText.replace(/\\\(([\s\S]*?)\\\)/g, '$$$1$$');
   processedText = processedText.replace(/\\\[([\s\S]*?)\\\]/g, '$$$$$1$$$$');
 
-  // Yeh line table markdown ko fix karegi
+  // Fix tables that are directly after a line of text (without an empty line)
   processedText = processedText.replace(/([^\n])\n(\s*\|)/g, '$1\n\n$2');
 
   return (
