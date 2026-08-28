@@ -2,7 +2,7 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { renderMarkdown } from "./MarkdownBlock";
+import MathText from "@/components/MathText";
 
 export default function StepsBlock({ block }: { block: any }) {
   const title = block?.title || "Steps";
@@ -16,19 +16,24 @@ export default function StepsBlock({ block }: { block: any }) {
         <p className="block-content-placeholder">No steps available.</p>
       ) : (
         <div className="steps-timeline">
-          {items.map((item: any, index: number) => (
-            <div className="step-card" key={index}>
-              <div className="step-badge">{index + 1}</div>
+          {items.map((item: any, index: number) => {
+            let rawContent = String(item.content || "");
+            rawContent = rawContent.replace(/<\/?mark[^>]*>/g, "**");
 
-              <div className="step-body">
-                {item.title && <h3 className="step-title">{item.title}</h3>}
+            return (
+              <div className="step-card" key={index}>
+                <div className="step-badge">{index + 1}</div>
 
-                <div className="step-content">
-                  {renderMarkdown(String(item.content || ""))}
+                <div className="step-body">
+                  {item.title && <h3 className="step-title">{item.title}</h3>}
+
+                  <div className="step-content">
+                    <MathText text={rawContent} />
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

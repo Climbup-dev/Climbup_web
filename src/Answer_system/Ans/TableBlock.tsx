@@ -2,7 +2,7 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { renderMarkdown } from "./MarkdownBlock";
+import MathText from "@/components/MathText";
 
 export default function TableBlock({ block }: { block: any }) {
   const title = block?.title;
@@ -28,13 +28,16 @@ export default function TableBlock({ block }: { block: any }) {
           <tbody>
             {rows.map((row: any, rowIndex: number) => (
               <tr key={rowIndex}>
-                {columns.map((_: any, colIndex: number) => (
-                  <td key={colIndex}>
-                    {Array.isArray(row)
-                      ? renderMarkdown(String(row[colIndex] || ""))
-                      : ""}
-                  </td>
-                ))}
+                {columns.map((_: any, colIndex: number) => {
+                  let rawContent = Array.isArray(row) ? String(row[colIndex] || "") : "";
+                  rawContent = rawContent.replace(/<\/?mark[^>]*>/g, "**");
+
+                  return (
+                    <td key={colIndex}>
+                      {rawContent ? <MathText text={rawContent} /> : ""}
+                    </td>
+                  );
+                })}
               </tr>
             ))}
           </tbody>
