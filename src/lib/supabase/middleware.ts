@@ -27,16 +27,34 @@ export async function updateSession(request: NextRequest) {
           );
         },
       },
+      global: {
+        fetch: (url, options) => {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 5000);
+          return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(timeoutId));
+        },
+      },
     }
   );
 
   try {
-    await supabase.auth.getUser();
+    // Add a 5 second timeout to prevent the Edge Function from hitting the 25s limit
+    // If Supabase API hangs, we gracefully fallback and allow the request to proceed.
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error("Supabase auth timeout")), 5000);
+    });
+    
+    await Promise.race([
+      supabase.auth.getUser(),
+      timeoutPromise
+    ]);
   } catch (error) {
     if (process.env.NODE_ENV !== "production") {
       const message =
         error instanceof Error ? error.message : "Unknown auth refresh error";
       console.warn(`Supabase session refresh skipped: ${message}`);
+    } else {
+      console.warn(`Supabase session refresh skipped due to timeout or error`);
     }
   }
 

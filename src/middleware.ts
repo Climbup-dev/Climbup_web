@@ -44,12 +44,26 @@ export async function middleware(request: NextRequest) {
           // Handled by updateSession
         },
       },
+      global: {
+        fetch: (url, options) => {
+          // Vercel Edge functions timeout after 25s. We timeout Supabase calls after 5s
+          // to ensure the middleware can still return a response and not crash the site.
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 5000);
+          return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(timeoutId));
+        },
+      },
     }
   );
 
-  // Use getSession to avoid Edge runtime network fetch issues on local Windows
-  const { data: { session } } = await supabase.auth.getSession();
-  const user = session?.user;
+  let user = null;
+  try {
+    // Use getSession to avoid Edge runtime network fetch issues on local Windows
+    const { data: { session } } = await supabase.auth.getSession();
+    user = session?.user;
+  } catch (error) {
+    console.warn("Middleware getSession error or timeout:", error);
+  }
 
   // 1. Enforce API Security
   if (isApiRoute) {
