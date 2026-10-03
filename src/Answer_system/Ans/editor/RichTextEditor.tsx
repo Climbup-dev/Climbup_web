@@ -65,6 +65,7 @@ export default function RichTextEditor({ value, onChange, placeholder, className
         codeBlock: false, // Disabling so it doesn't conflict with block-level code blocks
       }),
       Highlight.configure({
+        multicolor: true,
         HTMLAttributes: {
           class: 'highlight',
         },
