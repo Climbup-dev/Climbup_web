@@ -46,11 +46,9 @@ export async function middleware(request: NextRequest) {
       },
       global: {
         fetch: (url, options) => {
-          // Vercel Edge functions timeout after 25s. We timeout Supabase calls after 5s
+          // Vercel Edge functions timeout after 25s. We timeout Supabase calls after 3s
           // to ensure the middleware can still return a response and not crash the site.
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 5000);
-          return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(timeoutId));
+          return fetch(url, { ...options, signal: options?.signal || AbortSignal.timeout(3000) });
         },
       },
     }
