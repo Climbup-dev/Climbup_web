@@ -151,6 +151,27 @@ export default function EditableAnswerRenderer({
   const [clickedMarkText, setClickedMarkText] = useState("");
   const [clickedBlockIndex, setClickedBlockIndex] = useState<number | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+  
+  const [isAutoSaving, setIsAutoSaving] = useState(false);
+  const [autoSaveTime, setAutoSaveTime] = useState<string>("");
+
+  useEffect(() => {
+    if (!isEditing || !questionId || editableBlocks.length === 0) return;
+    
+    // Skip auto-save on initial load to avoid unnecessary requests
+    if (JSON.stringify(editableBlocks) === JSON.stringify(normalized.blocks)) return;
+
+    const timer = setTimeout(() => {
+      setIsAutoSaving(true);
+      silentSaveChanges(editableBlocks).finally(() => {
+        setIsAutoSaving(false);
+        const now = new Date();
+        setAutoSaveTime(`${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`);
+      });
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, [editableBlocks, isEditing, questionId, normalized.blocks]);
 
   useEffect(() => {
     if (!isGenerating) {
@@ -1034,6 +1055,8 @@ export default function EditableAnswerRenderer({
       feedback={feedback}
       theme={theme}
       onToggleTheme={toggleTheme}
+      isAutoSaving={isAutoSaving}
+      autoSaveTime={autoSaveTime}
     />
 
     {showImprovedPopup && typeof document !== "undefined" && createPortal(

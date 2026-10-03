@@ -3,6 +3,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import remarkGfm from 'remark-gfm';
 import rehypeKatex from 'rehype-katex';
+import rehypeRaw from 'rehype-raw';
 import 'katex/dist/katex.min.css';
 
 interface MathTextProps {
@@ -45,7 +46,7 @@ const MathText: React.FC<MathTextProps> = ({ text }) => {
     <div className="math-text-container" style={{ fontSize: '1rem', lineHeight: '1.6' }}>
       <ReactMarkdown
         remarkPlugins={[remarkMath, remarkGfm]}
-        rehypePlugins={[rehypeKatex]}
+        rehypePlugins={[rehypeRaw, rehypeKatex]}
         components={{
           table: ({ node, ...props }) => (
             <div style={{ overflowX: 'auto', margin: '16px 0' }}>

@@ -12,8 +12,8 @@ export default function MarkdownBlock({ block, content, title }: any) {
   const finalTitle = block?.title || title || "";
   let rawContent = block?.content || block?.text || block?.description || content || "";
   
-  // Clean up any stray mark tags before passing to MathText
-  rawContent = String(rawContent).replace(/<\/?mark[^>]*>/g, "**");
+  // Pass content as is
+  rawContent = String(rawContent);
 
   if (!rawContent) {
     return (

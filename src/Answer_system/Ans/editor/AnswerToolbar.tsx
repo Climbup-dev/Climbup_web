@@ -21,6 +21,8 @@ type AnswerToolbarProps = {
   isFocusMode?: boolean;
   feedback?: "like" | "dislike" | null;
   onClimbupAi?: () => void;
+  isAutoSaving?: boolean;
+  autoSaveTime?: string;
 };
 
 type AnswerFeedbackActionsProps = Pick<
@@ -169,6 +171,8 @@ export default function AnswerToolbar({
   onToggleTheme,
   onToggleFocus,
   isFocusMode = false,
+  isAutoSaving = false,
+  autoSaveTime = "",
 }: AnswerToolbarProps) {
   return (
     <div className="answer-toolbar">
@@ -231,6 +235,21 @@ export default function AnswerToolbar({
         </>
       ) : (
         <>
+          <div className="toolbar-spacer" />
+          <div style={{ display: 'flex', alignItems: 'center', fontSize: '13px', color: '#94a3b8', marginRight: '8px', animation: 'fadeIn 0.2s ease' }}>
+            {isAutoSaving ? (
+              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <svg className="ai-spinner" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ animation: 'spin 1s linear infinite' }}><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg>
+                Saving...
+              </span>
+            ) : autoSaveTime ? (
+              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                Saved at {autoSaveTime}
+              </span>
+            ) : null}
+          </div>
+
           <button
             className="toolbar-btn secondary-action"
             onClick={() => onSave(false)}
