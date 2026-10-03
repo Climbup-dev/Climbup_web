@@ -87,7 +87,9 @@ export default function BlockEditor({
   return (
     <div className="block block-editor-card">
       <div className="editor-card-top">
-        <span className="block-type-pill">{type.toUpperCase()}</span>
+        <span className="block-type-pill" style={{ textTransform: 'capitalize', fontWeight: 500, letterSpacing: '0.5px' }}>
+          {type === 'markdown' ? 'Text' : type}
+        </span>
 
         <button 
           className="delete-block-btn" 
@@ -99,9 +101,10 @@ export default function BlockEditor({
             onDelete(index);
           }}
           title="Delete Block"
+          style={{ border: 'none', background: 'transparent', opacity: 0.6 }}
         >
           {isDeleting ? "..." : (
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
           )}
         </button>
       </div>
@@ -111,7 +114,7 @@ export default function BlockEditor({
           className="inline-content-textarea"
           value={block.content || ""}
           onChange={(value) => updateField("content", value)}
-          placeholder="Write content..."
+          placeholder="Start typing your answer here..."
         />
       )}
 
@@ -161,28 +164,14 @@ export default function BlockEditor({
                   {isUploading ? "Uploading..." : (
                     <>
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-                      Upload Image (Camera/Gallery)
+                      Upload Image (Camera / Gallery)
                     </>
                   )}
                 </button>
               </div>
-              <div style={{ textAlign: 'center', margin: '4px 0 8px', fontSize: '12px', color: '#94a3b8', fontWeight: 600 }}>OR</div>
-              <input
-                className="inline-input"
-                value={block.url || ""}
-                onChange={(e) => updateField("url", e.target.value)}
-                placeholder="Image URL"
-              />
             </>
           )}
 
-          <input
-            className="inline-input"
-            style={{ marginTop: '8px' }}
-            value={block.search_query || ""}
-            onChange={(e) => updateField("search_query", e.target.value)}
-            placeholder="Search query (Optional)"
-          />
           <input
             type="file"
             accept="image/*"

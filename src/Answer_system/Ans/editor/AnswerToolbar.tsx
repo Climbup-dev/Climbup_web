@@ -232,23 +232,23 @@ export default function AnswerToolbar({
       ) : (
         <>
           <button
-            className="toolbar-btn success-action"
+            className="toolbar-btn secondary-action"
             onClick={() => onSave(false)}
-            aria-label="Save private answer"
-            data-tooltip="Save Private"
+            aria-label="Save as draft"
+            data-tooltip="Save Draft"
           >
             <ToolIcon kind="save" />
-            <ToolLabel>Save Private</ToolLabel>
+            <ToolLabel>Save Draft</ToolLabel>
           </button>
 
           <button
-            className="toolbar-btn public-action"
+            className="toolbar-btn primary large-action"
             onClick={() => onSave(true)}
-            aria-label="Save public answer"
-            data-tooltip="Save Public"
+            aria-label="Publish answer"
+            data-tooltip="Publish"
           >
             <ToolIcon kind="public" />
-            <ToolLabel>Save Public</ToolLabel>
+            <ToolLabel>Publish</ToolLabel>
           </button>
 
           <button

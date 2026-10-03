@@ -110,7 +110,13 @@ export default function AddBlockMenu({ onAdd }: AddBlockMenuProps) {
       <div className="inline-add-line"></div>
       
       {isOpen && (
-        <div className="add-block-dropdown">
+        <div className="add-block-dropdown" style={{ 
+          boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.1)', 
+          borderRadius: '12px', 
+          padding: '8px', 
+          border: '1px solid rgba(255,255,255,0.05)',
+          animation: 'fadeIn 0.2s ease-out'
+        }}>
           {blockTools.map((tool) => (
             <button
               aria-label={tool.label}
