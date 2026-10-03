@@ -177,11 +177,11 @@ export default function AnswerToolbar({
           <button
             className="toolbar-btn primary large-action"
             onClick={onEdit}
-            aria-label="Improve answer"
-            data-tooltip="Improve answer"
+            aria-label="Edit answer"
+            data-tooltip="Edit Answer"
           >
             <ToolIcon kind="improve" />
-            <ToolLabel>Improve Answer</ToolLabel>
+            <ToolLabel>Edit Answer</ToolLabel>
           </button>
 
           <button
@@ -234,21 +234,21 @@ export default function AnswerToolbar({
           <button
             className="toolbar-btn secondary-action"
             onClick={() => onSave(false)}
-            aria-label="Save as draft"
-            data-tooltip="Save Draft"
+            aria-label="Save as draft and exit"
+            data-tooltip="Save & Close"
           >
             <ToolIcon kind="save" />
-            <ToolLabel>Save Draft</ToolLabel>
+            <ToolLabel>Save & Close</ToolLabel>
           </button>
 
           <button
             className="toolbar-btn primary large-action"
             onClick={() => onSave(true)}
-            aria-label="Publish answer"
-            data-tooltip="Publish"
+            aria-label="Publish and exit"
+            data-tooltip="Publish & Close"
           >
             <ToolIcon kind="public" />
-            <ToolLabel>Publish</ToolLabel>
+            <ToolLabel>Publish & Close</ToolLabel>
           </button>
 
           <button
@@ -265,11 +265,11 @@ export default function AnswerToolbar({
           <button
             className="toolbar-btn danger"
             onClick={onCancel}
-            aria-label="Cancel editing"
-            data-tooltip="Cancel"
+            aria-label="Exit editing without saving"
+            data-tooltip="Exit without saving"
           >
             <ToolIcon kind="cancel" />
-            <ToolLabel>Cancel</ToolLabel>
+            <ToolLabel>Exit Editor</ToolLabel>
           </button>
         </>
       )}

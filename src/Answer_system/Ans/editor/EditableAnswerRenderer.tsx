@@ -350,7 +350,7 @@ export default function EditableAnswerRenderer({
     }
   };
 
-  const applyHighlight = () => {
+  const applyHighlight = (colorClass = 'highlight') => {
     if (!selectionRange) return;
 
     const textToHighlight = selectionRange.toString();
@@ -370,12 +370,14 @@ export default function EditableAnswerRenderer({
       const oldContent = targetBlock[contentKey] || "";
       
       if (oldContent.includes(textToHighlight)) {
-        let newContent = oldContent.replace(textToHighlight, `<mark class="highlight">${textToHighlight}</mark>`);
+        // Escaping HTML special chars if necessary, but here we just replace the exact match
+        let newContent = oldContent.replace(textToHighlight, `<mark class="${colorClass}">${textToHighlight}</mark>`);
         
         // Flatten any nested mark tags that might have been accidentally created
         newContent = newContent.replace(/<mark[^>]*>(.*?)<\/mark>/g, (match: string) => {
             const innerText = match.replace(/<\/?mark[^>]*>/g, '');
-            return `<mark class="highlight">${innerText}</mark>`;
+            // Preserve the original class of the outer mark if possible, or just use the new colorClass
+            return `<mark class="${colorClass}">${innerText}</mark>`;
         });
         
         const newBlocks = [...editableBlocks];
@@ -922,7 +924,31 @@ export default function EditableAnswerRenderer({
       </>
     ) : (
       <>
-        <div className="answer-container">
+        <div className="answer-container" style={{ position: 'relative' }}>
+          <button
+            onClick={cancelEdit}
+            style={{
+              position: 'absolute',
+              top: '0',
+              right: '0',
+              background: 'var(--bg-elevated, #1e293b)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: '50%',
+              width: '32px',
+              height: '32px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+              color: '#f8fafc',
+              zIndex: 10,
+            }}
+            title="Exit Editor"
+            aria-label="Exit Editor"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
           <div className="question-header">
             <div className="question-label">Question</div>
             <h1><MathText text={normalized.question} /></h1>
@@ -1068,46 +1094,55 @@ export default function EditableAnswerRenderer({
               animation: "tooltipPop 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
             }}
           >
-            <button
-              style={{
-                background: isRemovingHighlight ? "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)" : "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-                color: "white",
-                border: "1px solid rgba(255, 255, 255, 0.2)",
-                borderRadius: "6px",
-                padding: "6px 12px",
-                fontSize: "13px",
-                fontWeight: 600,
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-                transition: "all 0.2s ease"
-              }}
-              className="tooltip-btn highlight-btn"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (isRemovingHighlight) {
+            {isRemovingHighlight ? (
+              <button
+                style={{
+                  background: "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)",
+                  color: "white",
+                  border: "1px solid rgba(255, 255, 255, 0.2)",
+                  borderRadius: "6px",
+                  padding: "6px 12px",
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  transition: "all 0.2s ease"
+                }}
+                className="tooltip-btn highlight-btn"
+                onClick={(e) => {
+                  e.preventDefault(); e.stopPropagation();
                   removeHighlight();
-                } else {
-                  applyHighlight();
-                }
-              }}
-            >
-              {isRemovingHighlight ? (
+                }}
+              >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M18 6L6 18M6 6l12 12"></path>
                 </svg>
-              ) : (
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 19l7-7 3 3-7 7-3-3z"></path>
-                  <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path>
-                  <path d="M2 2l7.586 7.586"></path>
-                  <circle cx="11" cy="11" r="2"></circle>
-                </svg>
-              )}
-              {isRemovingHighlight ? "Remove" : "Highlight"}
-            </button>
+                Remove
+              </button>
+            ) : (
+              <div style={{ display: 'flex', gap: '8px', padding: '0 8px', alignItems: 'center', borderRight: '1px solid rgba(255,255,255,0.1)', marginRight: '4px' }}>
+                <button
+                  className="tooltip-btn"
+                  style={{ background: '#fef08a', border: '2px solid transparent', borderRadius: '50%', width: '22px', height: '22px', cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.3)', padding: 0 }}
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); applyHighlight('highlight-yellow'); }}
+                  title="Highlight Yellow"
+                />
+                <button
+                  className="tooltip-btn"
+                  style={{ background: '#bbf7d0', border: '2px solid transparent', borderRadius: '50%', width: '22px', height: '22px', cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.3)', padding: 0 }}
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); applyHighlight('highlight-green'); }}
+                  title="Highlight Green"
+                />
+                <button
+                  className="tooltip-btn"
+                  style={{ background: '#fbcfe8', border: '2px solid transparent', borderRadius: '50%', width: '22px', height: '22px', cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.3)', padding: 0 }}
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); applyHighlight('highlight-pink'); }}
+                  title="Highlight Pink"
+                />
+              </div>
+            )}
             <button
               style={{
                 background: "transparent",
@@ -1157,6 +1192,28 @@ export default function EditableAnswerRenderer({
           .ask-ai-btn:hover {
             color: #fff !important;
             background: rgba(255, 255, 255, 0.1) !important;
+          }
+          
+          mark.highlight-yellow {
+            background-color: rgba(254, 240, 138, 0.4);
+            border-bottom: 2px solid #facc15;
+            color: inherit;
+            border-radius: 3px;
+            padding: 0 2px;
+          }
+          mark.highlight-green {
+            background-color: rgba(187, 247, 208, 0.4);
+            border-bottom: 2px solid #4ade80;
+            color: inherit;
+            border-radius: 3px;
+            padding: 0 2px;
+          }
+          mark.highlight-pink {
+            background-color: rgba(251, 207, 232, 0.4);
+            border-bottom: 2px solid #f472b6;
+            color: inherit;
+            border-radius: 3px;
+            padding: 0 2px;
           }
         `}</style>
     </div>
