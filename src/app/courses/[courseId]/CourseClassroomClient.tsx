@@ -66,18 +66,19 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
 
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then((res: any) => {
+      const session = res?.data?.session;
       if (session?.access_token) {
         setAuthToken(session.access_token);
       }
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
       setAuthToken(session?.access_token || "");
     });
 
     return () => {
-      subscription.unsubscribe();
+      data?.subscription?.unsubscribe();
     };
   }, []);
 
