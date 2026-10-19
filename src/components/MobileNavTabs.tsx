@@ -29,7 +29,7 @@ export default function MobileNavTabs() {
             right: 0;
             z-index: 150;
             width: 100%;
-            padding: 8px 12px;
+            padding: 8px 12px calc(8px + env(safe-area-inset-bottom, 0px));
             background: rgba(2, 21, 38, 0.95);
             backdrop-filter: blur(14px);
             -webkit-backdrop-filter: blur(14px);
@@ -58,6 +58,8 @@ export default function MobileNavTabs() {
             transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
             background: transparent;
             border: 1px solid transparent;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
           }
           .mobileNavTabBtn.active {
             color: #38d399;

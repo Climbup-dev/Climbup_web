@@ -21,12 +21,11 @@ import MobileNavTabs from "@/components/MobileNavTabs";
 import AuthModal from "@/components/AuthModal";
 import { useAuth } from "@/hooks/useAuth";
 import { fetchAllCourses } from "@/lib/courses/coursesService";
-import { Course, CourseCategory, CourseLevel } from "@/types/courses";
+import { Course, CourseLevel } from "@/types/courses";
 import "@/styles/CoursesPage.css";
 
 function CoursesContent() {
   const searchParams = useSearchParams();
-  const initialCategory = (searchParams.get("cat") as CourseCategory) || "All";
   const initialSearch = searchParams.get("search") || "";
 
   const { currentUser, loading } = useAuth();
@@ -36,7 +35,6 @@ function CoursesContent() {
   const [allCourses, setAllCourses] = useState<Course[]>([]);
   const [loadingCourses, setLoadingCourses] = useState(true);
   const [searchQuery, setSearchQuery] = useState(initialSearch);
-  const [selectedCategory, setSelectedCategory] = useState<CourseCategory>(initialCategory);
 
   useEffect(() => {
     let isMounted = true;
@@ -57,30 +55,18 @@ function CoursesContent() {
     return () => { isMounted = false; };
   }, []);
 
-  const categories: CourseCategory[] = [
-    "All",
-    "Full-Stack Web Dev",
-    "AI & Machine Learning",
-    "System Design & DSA",
-  ];
-
   const filteredCourses = useMemo(() => {
     return allCourses.filter((course) => {
-      const matchesCategory =
-        selectedCategory === "All" || course.category === selectedCategory;
-
-      const matchesSearch =
-        !searchQuery.trim() ||
-        course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        course.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        course.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        course.skillsGained.some((s) =>
-          s.toLowerCase().includes(searchQuery.toLowerCase())
-        );
-
-      return matchesCategory && matchesSearch;
+      if (!searchQuery.trim()) return true;
+      const q = searchQuery.toLowerCase();
+      return (
+        course.title.toLowerCase().includes(q) ||
+        course.description.toLowerCase().includes(q) ||
+        course.category.toLowerCase().includes(q) ||
+        course.skillsGained.some((s) => s.toLowerCase().includes(q))
+      );
     });
-  }, [allCourses, selectedCategory, searchQuery]);
+  }, [allCourses, searchQuery]);
 
   const openAuth = (mode: "login" | "register") => {
     setAuthMode(mode);
@@ -135,20 +121,6 @@ function CoursesContent() {
               )}
             </div>
           </div>
-
-          {/* Category Filters */}
-          <div className="categoryPillsContainer">
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                type="button"
-                className={`categoryPill ${selectedCategory === cat ? "active" : ""}`}
-                onClick={() => setSelectedCategory(cat)}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
         </div>
       </section>
 
@@ -186,17 +158,14 @@ function CoursesContent() {
             <BookOpen size={48} color="#38d399" style={{ margin: "0 auto 16px", opacity: 0.6 }} />
             <h3>No courses found</h3>
             <p>
-              Try adjusting your search query or switching categories.
+              Try adjusting your search query to find courses.
             </p>
             <button
               type="button"
               className="resetFiltersBtn"
-              onClick={() => {
-                setSearchQuery("");
-                setSelectedCategory("All");
-              }}
+              onClick={() => setSearchQuery("")}
             >
-              Reset Filters
+              Clear Search
             </button>
           </div>
         ) : (

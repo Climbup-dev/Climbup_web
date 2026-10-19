@@ -470,16 +470,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             closePopupWindow(popup);
             try {
               if (result.code) {
-                console.log("[DEBUG] Exchanging code:", result.code);
                 const { error } = await supabase.auth.exchangeCodeForSession(
                   result.code
                 );
 
                 if (error) {
-                  console.error("[DEBUG] exchangeCodeForSession error:", error);
                   throw error;
                 }
-                console.log("[DEBUG] exchangeCodeForSession success!");
               }
 
               finish(resolve);

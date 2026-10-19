@@ -46,16 +46,22 @@ const nextConfig: NextConfig = {
     ];
   },
   async rewrites() {
-    return [
-      {
+    const smartUploadUrl = process.env.SMART_UPLOAD_URL;
+    const classAgentWsUrl = process.env.CLASS_AGENT_WS_URL;
+    const rewritesList = [];
+    if (smartUploadUrl) {
+      rewritesList.push({
         source: '/api/v1/upload-smart',
-        destination: 'https://climbup-class-agent.onrender.com/api/v1/upload-smart'
-      },
-      {
+        destination: smartUploadUrl,
+      });
+    }
+    if (classAgentWsUrl) {
+      rewritesList.push({
         source: '/ws/chat/:path*',
-        destination: 'https://class-agent-1043127428629.asia-south1.run.app/ws/classroom/:path*'
-      }
-    ]
+        destination: classAgentWsUrl,
+      });
+    }
+    return rewritesList;
   },
   images: {
     qualities: [75, 78, 85],

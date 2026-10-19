@@ -18,7 +18,7 @@ import {
 
 import { useAuth } from "@/hooks/useAuth";
 import { fetchAllCourses } from "@/lib/courses/coursesService";
-import { Course, CourseCategory } from "@/types/courses";
+import { Course } from "@/types/courses";
 import "@/styles/HomeSections.css";
 
 type EntryMode = "login" | "register";
@@ -33,7 +33,6 @@ export default function HomeSections() {
   const [authOpen, setAuthOpen] = useState(false);
   const [entryMode, setEntryMode] = useState<EntryMode>("login");
   const [courses, setCourses] = useState<Course[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<CourseCategory>("All");
 
   useEffect(() => {
     let isMounted = true;
@@ -56,16 +55,7 @@ export default function HomeSections() {
     setAuthOpen(true);
   };
 
-  const categories: CourseCategory[] = [
-    "All",
-    "Full-Stack Web Dev",
-    "AI & Machine Learning",
-    "System Design & DSA",
-  ];
-
-  const displayedCourses = selectedCategory === "All"
-    ? courses
-    : courses.filter((c) => c.category === selectedCategory);
+  const displayedCourses = courses;
 
   return (
     <div className="homeSections">
@@ -95,31 +85,6 @@ export default function HomeSections() {
             </p>
           </div>
 
-          {/* Category Filter Pills */}
-          <div style={{ display: "flex", gap: "10px", justifyContent: "center", flexWrap: "wrap", marginBottom: "36px" }}>
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                type="button"
-                onClick={() => setSelectedCategory(cat)}
-                style={{
-                  background: selectedCategory === cat
-                    ? "linear-gradient(135deg, #38d399, #00c78c)"
-                    : "rgba(255, 255, 255, 0.05)",
-                  color: selectedCategory === cat ? "#021526" : "rgba(255, 255, 255, 0.8)",
-                  border: selectedCategory === cat ? "none" : "1px solid rgba(255, 255, 255, 0.15)",
-                  fontWeight: 700,
-                  fontSize: "14px",
-                  padding: "8px 18px",
-                  borderRadius: "99px",
-                  cursor: "pointer",
-                  transition: "all 0.2s ease",
-                }}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
 
           {/* Course Cards Grid */}
           <div style={{

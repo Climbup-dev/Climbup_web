@@ -64,11 +64,8 @@ export async function middleware(request: NextRequest) {
 
   // 1. Enforce API Security
   if (isApiRoute) {
-    console.log(`Middleware checking API Route: ${pathname}`);
-    console.log(`Extracted User:`, user?.id || 'null');
     // Z+ Security: Block all unauthenticated API requests at the edge
     if (!user) {
-      console.log(`Blocking unauthorized API request to ${pathname}`);
       return NextResponse.json(
         { status: "error", detail: "Unauthorized - API Access Denied" }, 
         { status: 401 }

@@ -555,3 +555,38 @@
   color: rgba(255, 255, 255, 0.25);
   cursor: default;
 }
+
+/* Responsive Mobile Optimizations */
+@media (max-width: 640px) {
+  .chatHeader {
+    padding: 10px 12px;
+  }
+  .chatMessagesScroll {
+    padding: 12px 10px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .messageWrapper {
+    max-width: 98%;
+  }
+  .chatBubble {
+    padding: 10px 12px;
+    font-size: 13.5px;
+  }
+  .chatInputForm {
+    padding: 8px 10px;
+  }
+  .chatInputContainer {
+    padding: 4px 6px 4px 10px;
+  }
+  .chatInputField {
+    font-size: 13px;
+  }
+  .suggestedQuestionChip {
+    font-size: 12px;
+    padding: 6px 10px;
+  }
+  .jumpTimestampBtn {
+    font-size: 11px;
+    padding: 2px 7px;
+  }
+}

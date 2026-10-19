@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -20,7 +20,8 @@ import {
   ExternalLink, 
   Code2, 
   Timer,
-  Lock
+  Lock,
+  RefreshCw
 } from "lucide-react";
 
 import Navbar from "@/components/Navbar";
@@ -40,6 +41,7 @@ import {
 import { Course, CourseLesson, CourseAssignment } from "@/types/courses";
 import { LectureChatbot } from "@/components/LectureChatbot";
 import { parseTimestampToSeconds } from "@/utils/ragHelpers";
+import { getVideoTypeAndEmbedUrl } from "@/utils/videoHelpers";
 import "@/styles/ClassroomTabs.css";
 
 type TabType = "overview" | "assignments" | "mcqs" | "resources" | "syllabus" | "rag" | "discussions" | "certificate";
@@ -54,28 +56,17 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
   const [activeTab, setActiveTab] = useState<TabType>("assignments");
   const [sidebarTab, setSidebarTab] = useState<"curriculum" | "rag">("curriculum");
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [videoPlaybackError, setVideoPlaybackError] = useState(false);
 
-  // Check if video is a local/server upload or direct video stream
-  const isDirectVideo = (url?: string) => {
-    if (!url) return false;
-    if (url.startsWith("/uploads/") || url.startsWith("uploads/") || url.includes("/uploads/")) return true;
-    const clean = url.split("?")[0].toLowerCase();
-    return clean.endsWith(".mp4") || clean.endsWith(".webm") || clean.endsWith(".ogg") || clean.endsWith(".mov");
-  };
+  // Cross-browser universal video resolution (YouTube embed/shorts, Google Drive, and MP4/WebM uploads)
+  const resolvedVideo = useMemo(() => {
+    return getVideoTypeAndEmbedUrl(activeLesson?.videoUrl || "");
+  }, [activeLesson?.videoUrl]);
 
-  // Resolve video URL for HTML5 player or iframe
-  const getResolvedVideoUrl = (url?: string) => {
-    if (!url) return "";
-    const ragServer = process.env.NEXT_PUBLIC_RAG_SERVER_URL || "http://127.0.0.1:8000";
-    if (url.startsWith("/uploads/") || url.startsWith("uploads/")) {
-      const path = url.startsWith("/") ? url : `/${url}`;
-      return `${ragServer}${path}`;
-    }
-    if (url.includes("drive.google.com")) {
-      return url.replace(/\/view(\?.*)?$/, "/preview").replace(/\/edit(\?.*)?$/, "/preview");
-    }
-    return url;
-  };
+  // Reset video error on lesson change
+  useEffect(() => {
+    setVideoPlaybackError(false);
+  }, [activeLesson?.id, activeLesson?.videoUrl]);
 
   // Enrollment & Progress
   const [isEnrolled, setIsEnrolled] = useState(false);
@@ -159,6 +150,32 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
       setAuthOpen(true);
     }
   }, [loading, currentUser]);
+
+  // Anti-download security restrictions: prevent context menu, drag-to-save, and save shortcuts
+  useEffect(() => {
+    const handleContextMenu = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (target && target.closest(".classroomVideoContainer")) {
+        e.preventDefault();
+      }
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && (e.key === "s" || e.key === "S")) {
+        const activeEl = document.activeElement;
+        if (activeEl && (activeEl.tagName === "VIDEO" || activeEl.closest(".classroomVideoContainer"))) {
+          e.preventDefault();
+        }
+      }
+    };
+
+    document.addEventListener("contextmenu", handleContextMenu);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("contextmenu", handleContextMenu);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
 
   if (loading) {
     return (
@@ -311,8 +328,8 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
     setActiveTimestampBanner(`Video jumped to [${label}]`);
     setTimeout(() => setActiveTimestampBanner(null), 4000);
 
-    // 1. HTML5 Video Player Jump
-    if (videoRef.current) {
+    // 1. Direct HTML5 Video Player Instant Jump
+    if (resolvedVideo.isDirectVideo && videoRef.current) {
       try {
         videoRef.current.currentTime = seconds;
         videoRef.current.play().catch((err) => {
@@ -321,14 +338,34 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
       } catch (err) {
         console.error("Error seeking HTML5 video:", err);
       }
+      return;
     }
 
-    // 2. Fallback for iframe player (e.g. YouTube)
+    // 2. YouTube & Iframe Player Instant Jump
     const iframe = document.getElementById("classroom-video-player") as HTMLIFrameElement | null;
-    if (iframe && activeLesson?.videoUrl && !isDirectVideo(activeLesson.videoUrl)) {
-      const base = activeLesson.videoUrl.split("?")[0];
-      if (base.includes("youtube.com") || base.includes("youtu.be")) {
-        iframe.src = `${base}?autoplay=1&start=${Math.floor(seconds)}&enablejsapi=1`;
+    if (iframe && activeLesson?.videoUrl) {
+      if (resolvedVideo.type === "youtube") {
+        try {
+          // Instant seek via YouTube iframe API without reloading
+          iframe.contentWindow?.postMessage(
+            JSON.stringify({
+              event: "command",
+              func: "seekTo",
+              args: [seconds, true],
+            }),
+            "*"
+          );
+          iframe.contentWindow?.postMessage(
+            JSON.stringify({
+              event: "command",
+              func: "playVideo",
+              args: [],
+            }),
+            "*"
+          );
+        } catch {
+          iframe.src = getVideoTypeAndEmbedUrl(activeLesson.videoUrl, seconds).embedUrl;
+        }
       }
     }
   };
@@ -464,7 +501,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
   };
 
   const renderAiTutor = (height = "600px") => (
-    <div style={{ height, minHeight: "450px", overflow: "hidden" }}>
+    <div style={{ height, minHeight: "420px", maxHeight: "calc(100vh - 180px)", overflow: "hidden" }}>
       <LectureChatbot
         key={activeLesson?.id || "lecture-ai-tutor"}
         lessonId={activeLesson?.id || "lesson_70635d10"}
@@ -532,29 +569,77 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
         {/* Left Column: Video Player + Tabs */}
         <div className="classroomMainColumn">
           
-          {/* Video Player Container */}
-          <div className="classroomVideoContainer">
+          {/* Video Player Container (Protected with anti-download restrictions) */}
+          <div
+            className="classroomVideoContainer"
+            onContextMenu={(e) => e.preventDefault()}
+            onDragStart={(e) => e.preventDefault()}
+          >
             {activeLesson?.videoUrl ? (
-              isDirectVideo(activeLesson.videoUrl) ? (
-                <video
-                  key={activeLesson.id || activeLesson.videoUrl}
-                  ref={videoRef}
-                  id="classroom-video-player-html5"
-                  src={getResolvedVideoUrl(activeLesson.videoUrl)}
-                  controls
-                  playsInline
-                  style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
-                />
+              resolvedVideo.isDirectVideo ? (
+                <>
+                  <video
+                    key={activeLesson.id || activeLesson.videoUrl}
+                    ref={videoRef}
+                    id="classroom-video-player-html5"
+                    src={resolvedVideo.embedUrl}
+                    controls
+                    controlsList="nodownload noplaybackrate"
+                    disablePictureInPicture
+                    disableRemotePlayback
+                    onContextMenu={(e) => e.preventDefault()}
+                    onDragStart={(e) => e.preventDefault()}
+                    playsInline
+                    preload="metadata"
+                    crossOrigin="anonymous"
+                    onError={() => setVideoPlaybackError(true)}
+                    onLoadedData={() => setVideoPlaybackError(false)}
+                    style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
+                  />
+                  {videoPlaybackError && (
+                    <div className="classroomVideoErrorOverlay">
+                      <p style={{ margin: "0 0 10px", fontSize: "14px", fontWeight: 600 }}>Video playback interrupted or format unsupported.</p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setVideoPlaybackError(false);
+                          if (videoRef.current) {
+                            videoRef.current.load();
+                            videoRef.current.play().catch(() => {});
+                          }
+                        }}
+                        className="retryVideoBtn"
+                      >
+                        <RefreshCw size={14} style={{ display: "inline-block", marginRight: "6px" }} />
+                        Reload Video
+                      </button>
+                    </div>
+                  )}
+                </>
               ) : (
-                <iframe
-                  key={activeLesson.id || activeLesson.videoUrl}
-                  id="classroom-video-player"
-                  src={getResolvedVideoUrl(activeLesson.videoUrl)}
-                  title={activeLesson.title}
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  style={{ width: "100%", height: "100%", border: "none" }}
-                />
+                <>
+                  <iframe
+                    key={activeLesson.id || activeLesson.videoUrl}
+                    id="classroom-video-player"
+                    src={resolvedVideo.embedUrl}
+                    title={activeLesson.title}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                    style={{ width: "100%", height: "100%", border: "none" }}
+                  />
+                  {/* Google Drive Popout blocker: intercepts clicks to the external 'Open in new window' button to prevent downloads */}
+                  {resolvedVideo.type === "drive" && (
+                    <div
+                      className="classroomIframePopoutBlocker"
+                      title="ClimbUP Protected Video"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                      }}
+                      onContextMenu={(e) => e.preventDefault()}
+                    />
+                  )}
+                </>
               )
             ) : (
               <div style={{ width: "100%", height: "100%", display: "grid", placeItems: "center", color: "#94a3b8" }}>
@@ -806,7 +891,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                         </p>
                       </div>
 
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "16px" }}>
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "16px", marginBottom: "16px" }}>
                         <div>
                           <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "rgba(255,255,255,0.75)", marginBottom: "6px" }}>
                             GitHub Repository Link:
@@ -1162,6 +1247,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "space-between",
+                        flexWrap: "wrap",
                         gap: "16px",
                         backdropFilter: "blur(12px)",
                         transition: "all 160ms ease",
