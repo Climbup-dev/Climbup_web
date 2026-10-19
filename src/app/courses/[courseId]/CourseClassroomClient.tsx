@@ -620,6 +620,73 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
             onContextMenu={(e) => e.preventDefault()}
             onDragStart={(e) => e.preventDefault()}
           >
+            {/* Player Quick Controls (Speed & Quality options) */}
+            {activeLesson?.videoUrl && (
+              <div className="classroomPlayerToolbar">
+                {/* Playback Speed Control */}
+                <div className="playerControlGroup">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowSpeedMenu(!showSpeedMenu);
+                      setShowQualityMenu(false);
+                    }}
+                    className="playerControlBtn"
+                    title="Change Playback Speed"
+                  >
+                    <Gauge size={13} /> {playbackSpeed}x
+                  </button>
+                  {showSpeedMenu && (
+                    <div className="playerControlDropdown">
+                      <div className="playerControlDropdownTitle">Playback Speed</div>
+                      {[0.5, 0.75, 1, 1.25, 1.5, 1.75, 2].map((s) => (
+                        <button
+                          key={s}
+                          type="button"
+                          onClick={() => handleSpeedChange(s)}
+                          className={`playerDropdownItem ${playbackSpeed === s ? "active" : ""}`}
+                        >
+                          <span>{s === 1 ? "1.0x (Normal)" : `${s}x`}</span>
+                          {playbackSpeed === s && <CheckCircle2 size={12} color="#38d399" />}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Video Quality Control */}
+                <div className="playerControlGroup">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowQualityMenu(!showQualityMenu);
+                      setShowSpeedMenu(false);
+                    }}
+                    className="playerControlBtn"
+                    title="Change Video Quality"
+                  >
+                    <Settings2 size={13} /> {selectedQuality.replace(" (1080p)", "")}
+                  </button>
+                  {showQualityMenu && (
+                    <div className="playerControlDropdown">
+                      <div className="playerControlDropdownTitle">Streaming Quality</div>
+                      {["Auto (1080p)", "1080p HD", "720p", "480p", "360p"].map((q) => (
+                        <button
+                          key={q}
+                          type="button"
+                          onClick={() => handleQualityChange(q)}
+                          className={`playerDropdownItem ${selectedQuality === q ? "active" : ""}`}
+                        >
+                          <span>{q}</span>
+                          {selectedQuality === q && <CheckCircle2 size={12} color="#38d399" />}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {activeLesson?.videoUrl ? (
               resolvedVideo.isDirectVideo ? (
                 <>
@@ -629,16 +696,21 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                     id="classroom-video-player-html5"
                     src={resolvedVideo.embedUrl}
                     controls
-                    controlsList="nodownload noplaybackrate"
+                    controlsList="nodownload"
                     disablePictureInPicture
                     disableRemotePlayback
                     onContextMenu={(e) => e.preventDefault()}
                     onDragStart={(e) => e.preventDefault()}
                     playsInline
                     preload="metadata"
-                    crossOrigin="anonymous"
-                    onError={() => setVideoPlaybackError(true)}
+                    onCanPlay={() => setVideoPlaybackError(false)}
                     onLoadedData={() => setVideoPlaybackError(false)}
+                    onError={(e) => {
+                      const err = e.currentTarget.error;
+                      if (err && (err.code === 4 || err.code === 2)) {
+                        setVideoPlaybackError(true);
+                      }
+                    }}
                     style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
                   />
                   {videoPlaybackError && (
