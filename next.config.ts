@@ -61,6 +61,11 @@ const nextConfig: NextConfig = {
         destination: classAgentWsUrl,
       });
     }
+    const ragServer = process.env.NEXT_PUBLIC_RAG_SERVER_URL || 'http://127.0.0.1:8000';
+    rewritesList.push({
+      source: '/uploads/:path*',
+      destination: `${ragServer}/uploads/:path*`,
+    });
     return rewritesList;
   },
   images: {

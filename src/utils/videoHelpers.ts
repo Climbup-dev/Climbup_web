@@ -76,11 +76,10 @@ export function getVideoTypeAndEmbedUrl(url: string, startSeconds?: number): Vid
   }
 
   // 3. Native Direct Video (MP4, WebM, OGG, or Cloud Storage stream)
-  const ragServer = process.env.NEXT_PUBLIC_RAG_SERVER_URL || "http://127.0.0.1:8000";
   let resolvedUrl = trimmed;
   if (trimmed.startsWith("/uploads/") || trimmed.startsWith("uploads/")) {
     const path = trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
-    resolvedUrl = `${ragServer}${path}`;
+    resolvedUrl = path; // Proxied through Next.js rewrite (/uploads/* -> RAG server)
   }
 
   return {

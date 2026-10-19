@@ -8,6 +8,7 @@ const PUBLIC_ROUTE_PREFIXES = [
   "/courses",
   "/privacy",
   "/terms",
+  "/uploads",
 ];
 
 // /pyqs is now protected (needs auth)
@@ -103,6 +104,6 @@ function isPublicRoute(pathname: string) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|uploads|.*\\.(?:svg|png|jpg|jpeg|gif|webp|mp4|webm|ogg|mov|m4v)$).*)",
   ],
 };

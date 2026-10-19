@@ -21,7 +21,9 @@ import {
   Code2, 
   Timer,
   Lock,
-  RefreshCw
+  RefreshCw,
+  Gauge,
+  Settings2
 } from "lucide-react";
 
 import Navbar from "@/components/Navbar";
@@ -63,10 +65,53 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
     return getVideoTypeAndEmbedUrl(activeLesson?.videoUrl || "");
   }, [activeLesson?.videoUrl]);
 
-  // Reset video error on lesson change
-  useEffect(() => {
-    setVideoPlaybackError(false);
-  }, [activeLesson?.id, activeLesson?.videoUrl]);
+  // Video Speed & Quality Controls State
+  const [playbackSpeed, setPlaybackSpeed] = useState<number>(1);
+  const [selectedQuality, setSelectedQuality] = useState<string>("Auto (1080p)");
+  const [showSpeedMenu, setShowSpeedMenu] = useState(false);
+  const [showQualityMenu, setShowQualityMenu] = useState(false);
+
+  const handleSpeedChange = (speed: number) => {
+    setPlaybackSpeed(speed);
+    setShowSpeedMenu(false);
+    if (videoRef.current) {
+      videoRef.current.playbackRate = speed;
+    }
+    const iframe = document.getElementById("classroom-video-player") as HTMLIFrameElement | null;
+    if (iframe && resolvedVideo.type === "youtube") {
+      try {
+        iframe.contentWindow?.postMessage(
+          JSON.stringify({
+            event: "command",
+            func: "setPlaybackRate",
+            args: [speed],
+          }),
+          "*"
+        );
+      } catch {}
+    }
+    showToast(`Speed set to ${speed}x`, "info");
+  };
+
+  const handleQualityChange = (quality: string) => {
+    setSelectedQuality(quality);
+    setShowQualityMenu(false);
+    const iframe = document.getElementById("classroom-video-player") as HTMLIFrameElement | null;
+    if (iframe && resolvedVideo.type === "youtube") {
+      const qCode = quality.includes("1080") ? "hd1080" : quality.includes("720") ? "hd720" : quality.includes("480") ? "large" : "medium";
+      try {
+        iframe.contentWindow?.postMessage(
+          JSON.stringify({
+            event: "command",
+            func: "setPlaybackQuality",
+            args: [qCode],
+          }),
+          "*"
+        );
+      } catch {}
+    }
+    showToast(`Streaming Quality: ${quality}`, "info");
+  };
 
   // Enrollment & Progress
   const [isEnrolled, setIsEnrolled] = useState(false);
