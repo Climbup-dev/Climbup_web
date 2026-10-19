@@ -1,0 +1,257 @@
+/* ClimbUP - Student Profile Page Styling */
+
+.profilePageWrapper {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--page-bg, #021526);
+  color: #fff;
+}
+
+.profileMain {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 24px 80px;
+  width: 100%;
+  flex-grow: 1;
+}
+
+/* Profile Card Header */
+.profileHeaderCard {
+  background: linear-gradient(145deg, rgba(7, 48, 73, 0.75) 0%, rgba(2, 21, 38, 0.96) 100%);
+  border: 1px solid rgba(56, 211, 153, 0.28);
+  border-radius: 20px;
+  padding: 30px 34px;
+  margin-bottom: 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 24px;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.42), 0 0 25px rgba(56, 211, 153, 0.08);
+  transition: border-color 200ms ease, box-shadow 200ms ease;
+  transform: translateZ(0);
+}
+
+.profileHeaderCard:hover {
+  border-color: rgba(56, 211, 153, 0.45);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.5), 0 0 35px rgba(56, 211, 153, 0.12);
+}
+
+.profileUserGroup {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+
+.profileAvatar {
+  position: relative;
+  width: 78px;
+  height: 78px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid #38d399;
+  background: #9ef8dc;
+  color: #021526;
+  display: grid;
+  place-items: center;
+  font-size: 24px;
+  font-weight: 800;
+  box-shadow: 0 0 20px rgba(56, 211, 153, 0.3);
+  flex-shrink: 0;
+}
+
+.profileNameRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+
+.profileName {
+  font-size: clamp(22px, 3vw, 28px);
+  font-weight: 800;
+  margin: 0;
+  color: #fff;
+  letter-spacing: -0.02em;
+}
+
+.profileStudentBadge {
+  background: rgba(56, 211, 153, 0.16);
+  color: #38d399;
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  border: 1px solid rgba(56, 211, 153, 0.3);
+}
+
+.profileMetaRow {
+  display: flex;
+  gap: 18px;
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 13px;
+  flex-wrap: wrap;
+}
+
+.profileMetaItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.profileActionsGroup {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.hubBtn {
+  background: linear-gradient(135deg, #38d399, #00c78c);
+  color: #021526;
+  font-weight: 800;
+  font-size: 13px;
+  padding: 10px 18px;
+  border-radius: 10px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 4px 14px rgba(56, 211, 153, 0.3);
+  transition: transform 160ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 160ms ease;
+  white-space: nowrap;
+}
+
+.hubBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(56, 211, 153, 0.45);
+}
+
+.signOutBtn {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+.signOutBtn:hover {
+  background: rgba(239, 68, 68, 0.22);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+/* Stats Row */
+.profileStatsRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 18px;
+  margin-bottom: 36px;
+}
+
+.profileStatCard {
+  background: rgba(7, 48, 73, 0.45);
+  border: 1px solid rgba(56, 211, 153, 0.18);
+  border-radius: 14px;
+  padding: 20px 22px;
+  transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1), border-color 180ms ease;
+}
+
+.profileStatCard:hover {
+  transform: translateY(-3px);
+  border-color: rgba(56, 211, 153, 0.38);
+}
+
+.statCardHeader {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 500;
+}
+
+.statCardValue {
+  font-size: 30px;
+  font-weight: 800;
+  color: #38d399;
+  margin: 6px 0 2px;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.statCardSub {
+  font-size: 12px;
+  color: #9ef8dc;
+}
+
+/* Active Progress Rows */
+.progressListTitle {
+  font-size: 20px;
+  font-weight: 800;
+  margin: 0 0 18px;
+  color: #fff;
+}
+
+.progressItemCard {
+  background: rgba(7, 48, 73, 0.4);
+  border: 1px solid rgba(56, 211, 153, 0.18);
+  border-radius: 14px;
+  padding: 18px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 14px;
+  transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+}
+
+.progressItemCard:hover {
+  transform: translateY(-2px);
+  border-color: rgba(56, 211, 153, 0.4);
+  background: rgba(7, 48, 73, 0.6);
+}
+
+.progressItemTitle {
+  font-size: 16.5px;
+  font-weight: 700;
+  margin: 0 0 6px;
+  color: #fff;
+}
+
+.progressItemMeta {
+  font-size: 12.5px;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.progressItemRight {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 240px;
+}
+
+.openCourseBtn {
+  background: rgba(56, 211, 153, 0.14);
+  color: #38d399;
+  border: 1px solid rgba(56, 211, 153, 0.3);
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+.openCourseBtn:hover {
+  background: rgba(56, 211, 153, 0.28);
+  color: #fff;
+  transform: translateX(2px);
+}

@@ -10,7 +10,7 @@ const HeroSection = dynamic(() => import("@/components/HeroSection"), {
   ssr: false,
   loading: () => (
     <div 
-      style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "100%", minHeight: '100vh', backgroundColor: "#021526" }}
+      style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "100%", minHeight: "100vh", backgroundColor: "#021526" }}
     >
       <div style={{ width: "40px", height: "40px", border: "3px solid rgba(56, 211, 153, 0.1)", borderTopColor: "#38d399", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
     </div>
@@ -19,7 +19,7 @@ const HeroSection = dynamic(() => import("@/components/HeroSection"), {
 
 const HomeSections = dynamic(() => import("@/components/HomeSections"), {
   ssr: false,
-  loading: () => <div className="w-full bg-[#021526]" style={{ minHeight: '100vh' }} />,
+  loading: () => <div className="w-full bg-[#021526]" style={{ minHeight: "100vh" }} />,
 });
 
 export default function Page() {
@@ -28,8 +28,8 @@ export default function Page() {
 
   useEffect(() => {
     if (currentUser) {
-      // Prefetch academic page for instant navigation after login
-      router.prefetch("/academic");
+      router.prefetch("/my-courses");
+      router.prefetch("/courses");
     }
   }, [currentUser, router]);
 

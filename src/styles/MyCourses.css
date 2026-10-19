@@ -1,0 +1,485 @@
+/* ClimbUP - My Courses (Student Learning Dashboard) */
+
+.myCoursesWrapper {
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  background: #090d16;
+  color: #fff;
+  font-family: Inter, system-ui, -apple-system, sans-serif;
+}
+
+/* Background & Grid (Identical to Home Hero Section) */
+.myCoursesBackgroundWrapper {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  background: #090d16;
+  pointer-events: none;
+}
+
+.myCoursesBgImage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.3;
+  filter: saturate(1.1) brightness(0.65);
+}
+
+.myCoursesOverlay {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 60% 50% at 20% 40%, rgba(16, 185, 129, 0.15), transparent 70%),
+    radial-gradient(ellipse 50% 50% at 80% 60%, rgba(14, 165, 233, 0.1), transparent 70%),
+    linear-gradient(180deg, rgba(9, 13, 22, 0.4) 0%, #090d16 100%);
+}
+
+.myCoursesGridPattern {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse at center, #000 30%, transparent 80%);
+}
+
+.myCoursesAmbientGlow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at 50% 20%, rgba(52, 211, 153, 0.08), transparent 50%);
+}
+
+.myCoursesMain {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 36px 24px 70px;
+  width: 100%;
+  flex-grow: 1;
+  position: relative;
+  z-index: 5;
+}
+
+/* Animations */
+@keyframes heroFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes heroWindowIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes cardSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Executive Greeting Header */
+.dashboardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-bottom: 24px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  animation: heroFadeIn 500ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.dashboardGreetingTitle {
+  font-size: clamp(24px, 3.2vw, 32px);
+  font-weight: 800;
+  margin: 0 0 6px;
+  color: #ffffff;
+  letter-spacing: -0.025em;
+}
+
+.dashboardGreetingSub {
+  margin: 0;
+  color: #94a3b8;
+  font-size: 14.5px;
+}
+
+.dashboardHeaderActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.exploreCatalogBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #e2e8f0;
+  padding: 8.5px 16px;
+  border-radius: 9px;
+  font-size: 13.5px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.18s ease;
+}
+
+.exploreCatalogBtn:hover {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.35);
+  color: #34d399;
+  transform: translateY(-1px);
+}
+
+/* Status Filter Tabs Bar */
+.dashboardFilterRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.filterTabsList {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  padding: 4px;
+  border-radius: 10px;
+}
+
+.filterTabBtn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  padding: 6px 14px;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.filterTabBtn:hover {
+  color: #f1f5f9;
+}
+
+.filterTabBtn.active {
+  background: rgba(255, 255, 255, 0.1);
+  color: #34d399;
+}
+
+.tabCountBadge {
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #cbd5e1;
+}
+
+.filterTabBtn.active .tabCountBadge {
+  background: rgba(16, 185, 129, 0.2);
+  color: #a7f3d0;
+}
+
+/* Enrolled Courses Grid */
+.enrolledHeaderRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.enrolledSectionTitle {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0;
+  color: #fff;
+}
+
+.exploreMoreLink {
+  color: #34d399;
+  font-size: 13.5px;
+  font-weight: 600;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: transform 150ms ease, color 150ms ease;
+}
+
+.exploreMoreLink:hover {
+  color: #a7f3d0;
+  transform: translateX(2px);
+}
+
+.enrolledGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 22px;
+}
+
+/* Enrolled Course Card */
+.enrolledCard {
+  background: linear-gradient(160deg, rgba(15, 23, 42, 0.85) 0%, rgba(7, 48, 73, 0.4) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  transition: transform 240ms cubic-bezier(0.16, 1, 0.3, 1), border-color 240ms ease, box-shadow 240ms ease;
+  transform: translateZ(0);
+  animation: cardSlideUp 480ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.enrolledGrid > .enrolledCard:nth-child(1) { animation-delay: 120ms; }
+.enrolledGrid > .enrolledCard:nth-child(2) { animation-delay: 200ms; }
+.enrolledGrid > .enrolledCard:nth-child(3) { animation-delay: 280ms; }
+.enrolledGrid > .enrolledCard:nth-child(4) { animation-delay: 360ms; }
+
+.enrolledCard:hover {
+  transform: translateY(-5px);
+  border-color: rgba(56, 211, 153, 0.45);
+  box-shadow: 0 16px 36px -10px rgba(0, 0, 0, 0.6), 0 0 20px rgba(56, 211, 153, 0.1);
+}
+
+.enrolledThumbWrap {
+  position: relative;
+  height: 155px;
+  width: 100%;
+  overflow: hidden;
+  background: #021526;
+}
+
+.enrolledThumbWrap img {
+  transition: transform 300ms ease;
+}
+
+.enrolledCard:hover .enrolledThumbWrap img {
+  transform: scale(1.04);
+}
+
+.enrolledThumbOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(15, 23, 42, 0.95), transparent 70%);
+  pointer-events: none;
+}
+
+.enrolledCategoryBadge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: rgba(15, 23, 42, 0.85);
+  color: #34d399;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.enrolledDurationBadge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(15, 23, 42, 0.85);
+  color: #cbd5e1;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: inline-flex;
+  align-items: center;
+}
+
+.enrolledCardBody {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.enrolledInstructorRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.instructorAvatarCircle {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #10b981, #065f46);
+  color: #fff;
+  font-size: 9.5px;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+}
+
+.instructorNameText {
+  font-size: 12px;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.enrolledCardTitle {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0 0 8px;
+  color: #fff;
+  line-height: 1.35;
+  transition: color 180ms ease;
+}
+
+.enrolledCard:hover .enrolledCardTitle {
+  color: #a7f3d0;
+}
+
+.nextLessonSnippet {
+  font-size: 12px;
+  color: #94a3b8;
+  margin: 0 0 14px;
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nextLabel {
+  color: #34d399;
+  font-weight: 700;
+  margin-right: 4px;
+}
+
+.enrolledProgressBlock {
+  margin-bottom: 16px;
+  margin-top: auto;
+}
+
+.progressLabelRow {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #94a3b8;
+  margin-bottom: 6px;
+}
+
+.progressPercent {
+  color: #34d399;
+  font-weight: 700;
+}
+
+.enrolledCardBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 8px;
+  color: #34d399;
+  font-weight: 700;
+  font-size: 13px;
+  text-decoration: none;
+  transition: background 180ms ease, color 180ms ease, border-color 180ms ease;
+}
+
+.enrolledCardBtn:hover {
+  background: rgba(16, 185, 129, 0.24);
+  color: #fff;
+  border-color: rgba(16, 185, 129, 0.5);
+}
+
+.enrolledCardBtn.completed {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #e2e8f0;
+}
+
+.enrolledCardBtn.completed:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+/* Empty Enrolled State */
+.enrolledEmptyState {
+  text-align: center;
+  padding: 60px 20px;
+  background: rgba(15, 23, 42, 0.4);
+  border: 1px dashed rgba(56, 211, 153, 0.25);
+  border-radius: 16px;
+}
+
+.enrolledEmptyState h3 {
+  font-size: 19px;
+  color: #fff;
+  margin: 0 0 6px;
+}
+
+.enrolledEmptyState p {
+  color: #94a3b8;
+  font-size: 14px;
+  margin: 0 0 18px;
+}
+
+.emptyBrowseBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #38d399, #00c78c);
+  color: #021526;
+  font-weight: 700;
+  font-size: 13.5px;
+  border-radius: 10px;
+  text-decoration: none;
+  box-shadow: 0 4px 16px rgba(56, 211, 153, 0.3);
+  transition: transform 180ms ease;
+}
+
+.emptyBrowseBtn:hover {
+  transform: translateY(-2px);
+}

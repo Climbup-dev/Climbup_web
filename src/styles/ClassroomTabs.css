@@ -1,0 +1,111 @@
+/* Classroom Activity Tabs — Modern, Flat & Clean Underline Style */
+.classroomTabsWrapper {
+  display: flex;
+  width: 100%;
+  margin: 20px 0 28px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.classroomTabsCapsule {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  width: 100%;
+  background: transparent;
+  padding: 0;
+  border: none;
+  box-shadow: none;
+}
+
+.classroomTabBtn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 4px 16px;
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  letter-spacing: -0.01em;
+  transition: color 180ms ease;
+  user-select: none;
+  width: auto;
+}
+
+.classroomTabBtn:hover {
+  color: #fff;
+  background: transparent;
+  transform: none;
+}
+
+.classroomTabBtn.active {
+  color: #38d399;
+  font-weight: 700;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.classroomTabBtn.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2.5px;
+  background: #38d399;
+  border-radius: 3px 3px 0 0;
+  box-shadow: 0 0 10px rgba(56, 211, 153, 0.55);
+}
+
+/* Sidebar Mode Switcher Capsule */
+.sidebarTabsCapsule {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: rgba(10, 16, 30, 0.65);
+  padding: 4px;
+  border-radius: 12px;
+  margin: 12px 14px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  gap: 4px;
+}
+
+.sidebarTabBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 9px 12px;
+  border-radius: 9px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #94a3b8;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 160ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sidebarTabBtn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.sidebarTabBtn.active {
+  background: rgba(56, 211, 153, 0.12);
+  color: #38d399;
+  border-color: rgba(56, 211, 153, 0.32);
+  font-weight: 700;
+  box-shadow: 0 2px 12px rgba(56, 211, 153, 0.15);
+}
+
+@media (max-width: 768px) {
+  .classroomTabsCapsule {
+    gap: 18px;
+    overflow-x: auto;
+  }
+}

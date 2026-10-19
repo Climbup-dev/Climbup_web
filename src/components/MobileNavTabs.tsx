@@ -2,22 +2,16 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookOpen, FileText, Compass, Briefcase } from "lucide-react";
+import { Home, BookOpen, GraduationCap, User } from "lucide-react";
 
 export default function MobileNavTabs() {
   const pathname = usePathname();
 
-  // Hide on homepage or auth pages if desired, or show on main feature routes
-  const mainRoutes = ["/academic", "/study-hub", "/pyqs", "/discoveries", "/jobs"];
-  const isMainRoute = mainRoutes.some((route) => pathname.startsWith(route));
-
-  if (!isMainRoute) return null;
-
   const tabs = [
-    { name: "Academic", path: "/academic", icon: BookOpen, matchPaths: ["/academic", "/study-hub"] },
-    { name: "PYQs", path: "/pyqs", icon: FileText, matchPaths: ["/pyqs"] },
-    { name: "Discoveries", path: "/discoveries", icon: Compass, matchPaths: ["/discoveries"] },
-    { name: "Jobs", path: "/jobs", icon: Briefcase, matchPaths: ["/jobs"] },
+    { name: "Home", path: "/", icon: Home, matchPaths: ["/"] },
+    { name: "Courses", path: "/courses", icon: BookOpen, matchPaths: ["/courses"] },
+    { name: "My Learning", path: "/my-courses", icon: GraduationCap, matchPaths: ["/my-courses"] },
+    { name: "Profile", path: "/profile", icon: User, matchPaths: ["/profile"] },
   ];
 
   return (
@@ -29,16 +23,18 @@ export default function MobileNavTabs() {
         @media (max-width: 850px) {
           .mobileNavTabsWrap {
             display: flex;
-            position: sticky;
-            top: 64px;
-            z-index: 90;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 150;
             width: 100%;
             padding: 8px 12px;
-            background: rgba(2, 12, 27, 0.85);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border-bottom: 1px solid rgba(56, 211, 153, 0.15);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+            background: rgba(2, 21, 38, 0.95);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border-top: 1px solid rgba(56, 211, 153, 0.2);
+            box-shadow: 0 -4px 25px rgba(0, 0, 0, 0.5);
           }
           .mobileNavTabsGrid {
             display: grid;
@@ -52,13 +48,13 @@ export default function MobileNavTabs() {
             align-items: center;
             justify-content: center;
             gap: 4px;
-            padding: 8px 4px;
+            padding: 6px 4px;
             border-radius: 12px;
             text-decoration: none;
-            color: rgba(255, 255, 255, 0.6);
+            color: rgba(255, 255, 255, 0.65);
             font-size: 0.72rem;
             font-weight: 600;
-            font-family: Inter, system-ui, sans-serif;
+            font-family: inherit;
             transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
             background: transparent;
             border: 1px solid transparent;
@@ -81,7 +77,9 @@ export default function MobileNavTabs() {
 
       <div className="mobileNavTabsGrid">
         {tabs.map((tab) => {
-          const isActive = tab.matchPaths.some((p) => pathname.startsWith(p));
+          const isActive = tab.path === "/" 
+            ? pathname === "/" 
+            : tab.matchPaths.some((p) => pathname.startsWith(p));
           const Icon = tab.icon;
 
           return (

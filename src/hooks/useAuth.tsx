@@ -51,11 +51,8 @@ interface AuthContextValue {
 
 interface UserProfileRow {
   profile_image: string | null;
-  university_id: string | null;
-  branch_id: string | null;
-  semester: number | null;
-  mdm_branch_id: string | null;
-  oe_id: string | null;
+  role: string | null;
+  full_name: string | null;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -150,7 +147,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const { data, error } = await supabase
           .from("users")
-          .select("profile_image, university_id, branch_id, semester, mdm_branch_id, oe_id")
+          .select("profile_image, role, full_name")
           .eq("user_id", user.id)
           .maybeSingle();
 
@@ -168,38 +165,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             ? profile.profile_image.trim()
             : "";
         setProfileImage(databaseImage || fallbackImage);
-
-        /* ── Check academic completeness ── */
-        const hasAcademic =
-          !!profile?.university_id &&
-          !!profile?.branch_id &&
-          profile?.semester != null;
-
-        if (hasAcademic) {
-          // Mark as done in localStorage so refresh doesn't flash the modal
-          localStorage.setItem("climbup_academic_done", "1");
-          academicSetupDoneRef.current = true;
-        }
-
-        // Only show setup modal if profile is ACTUALLY incomplete (not just loading)
-        // AND we haven't confirmed completion before (prevents flash on refresh)
-        setNeedsAcademicSetup(!hasAcademic && !academicSetupDoneRef.current);
-
-        if (hasAcademic && profile) {
-          setUserAcademicProfile({
-            university_id: profile.university_id!,
-            branch_id: profile.branch_id!,
-            semester: profile.semester!,
-            mdm_branch_id: profile.mdm_branch_id,
-            oe_id: profile.oe_id,
-          });
-        } else {
-          setUserAcademicProfile(null);
-        }
+        setNeedsAcademicSetup(false);
+        setUserAcademicProfile(null);
       } catch {
         if (mountedRef.current) {
           setProfileImage(fallbackImage);
           setNeedsAcademicSetup(false);
+          setUserAcademicProfile(null);
         }
       }
     },

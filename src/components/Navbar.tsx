@@ -4,11 +4,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, X, BookOpen, GraduationCap, LayoutDashboard, UserCircle, LogOut, ChevronDown } from "lucide-react";
 
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/useToast";
-import MobileNavTabs from "@/components/MobileNavTabs";
 import "@/styles/Navbar.css";
 
 interface NavbarProps {
@@ -107,17 +106,25 @@ export default function Navbar({ onLogin, onSignUp }: NavbarProps) {
 
   return (
     <nav className="navbar" aria-label="Main navigation">
-      <Link className="brand" href="/" aria-label="ClimbUP home">
-        <Image src="/logo.png" alt="ClimbUP logo" width={52} height={52} priority />
+      <Link className="brand" href="/" aria-label="ClimbUP Courses home">
+        <Image src="/logo-transparent.png" alt="ClimbUP logo" width={38} height={38} priority />
         <span>ClimbUP</span>
       </Link>
 
       <div className="navLinks" aria-label="Main sections">
-        <Link className={pathname === "/" ? "active" : undefined} href="/">Home</Link>
-        <Link className={pathname.startsWith("/academic") || pathname.startsWith("/study-hub") ? "active" : undefined} href="/academic" onClick={handleProtectedNavigation}>Academic</Link>
-        <Link className={pathname.startsWith("/pyqs") ? "active" : undefined} href="/pyqs" onClick={handleProtectedNavigation}>PYQs</Link>
-        <Link className={pathname.startsWith("/discoveries") ? "active" : undefined} href="/discoveries" onClick={handleProtectedNavigation}>Discoveries</Link>
-        <Link className={pathname.startsWith("/jobs") ? "active" : undefined} href="/jobs" onClick={handleProtectedNavigation}>Job Preparation</Link>
+        <Link className={pathname === "/" ? "active" : undefined} href="/">
+          Home
+        </Link>
+        <Link className={pathname.startsWith("/courses") ? "active" : undefined} href="/courses">
+          Explore Courses
+        </Link>
+        <Link
+          className={pathname.startsWith("/my-courses") ? "active" : undefined}
+          href="/my-courses"
+          onClick={handleProtectedNavigation}
+        >
+          My Learning
+        </Link>
       </div>
 
       <div className="navActions">
@@ -138,19 +145,16 @@ export default function Navbar({ onLogin, onSignUp }: NavbarProps) {
                   <Image
                     src={profileImage}
                     alt=""
-                    width={44}
-                    height={44}
+                    width={34}
+                    height={34}
                     onError={() => setAvatarError(true)}
                   />
                 ) : (
                   getInitials(displayName)
                 )}
               </span>
-              <span className="userIdentity">
-                <strong>{displayName}</strong>
-                <small>View profile</small>
-              </span>
-              <span className={`profileChevron ${profileOpen ? "open" : ""}`} aria-hidden>⌄</span>
+              <span className="userNameText">{displayName}</span>
+              <ChevronDown size={14} className={`profileChevron ${profileOpen ? "open" : ""}`} aria-hidden />
             </button>
 
             {profileOpen && (
@@ -159,9 +163,17 @@ export default function Navbar({ onLogin, onSignUp }: NavbarProps) {
                   <strong>{displayName}</strong>
                   <span>{currentUser.email}</span>
                 </div>
+                <Link role="menuitem" href="/my-courses" onClick={() => setProfileOpen(false)}>
+                  <LayoutDashboard size={16} />
+                  My Learning Hub
+                </Link>
+                <Link role="menuitem" href="/courses" onClick={() => setProfileOpen(false)}>
+                  <BookOpen size={16} />
+                  Browse All Courses
+                </Link>
                 <Link role="menuitem" href="/profile" onClick={() => setProfileOpen(false)}>
-                  <span aria-hidden>◉</span>
-                  Open profile
+                  <UserCircle size={16} />
+                  My Profile & Certificates
                 </Link>
                 <button
                   type="button"
@@ -170,7 +182,7 @@ export default function Navbar({ onLogin, onSignUp }: NavbarProps) {
                   onClick={handleLogout}
                   disabled={signingOut}
                 >
-                  <span aria-hidden>↗</span>
+                  <LogOut size={16} />
                   {signingOut ? "Signing out..." : "Log out"}
                 </button>
               </div>
@@ -178,8 +190,12 @@ export default function Navbar({ onLogin, onSignUp }: NavbarProps) {
           </div>
         ) : (
           <div className="desktopAuthButtons">
-            <button type="button" className="loginBtn" onClick={() => onLogin?.()}>Log In</button>
-            <button type="button" className="signupBtn" onClick={() => onSignUp?.()}>Sign Up</button>
+            <button type="button" className="loginBtn" onClick={() => onLogin?.()}>
+              Log In
+            </button>
+            <button type="button" className="signupBtn" onClick={() => onSignUp?.()}>
+              Get Started Free
+            </button>
           </div>
         )}
 
@@ -193,7 +209,7 @@ export default function Navbar({ onLogin, onSignUp }: NavbarProps) {
         <div className="mobileMenuOverlay">
           <div className="mobileMenuHeader">
             <Link className="brand mobileBrand" href="/" onClick={closeMenu}>
-              <Image src="/logo.png" alt="ClimbUP logo" width={42} height={42} />
+              <Image src="/logo-transparent.png" alt="ClimbUP logo" width={38} height={38} />
               <span>ClimbUP</span>
             </Link>
             <button className="mobileMenuCloseBtn" onClick={closeMenu}>
@@ -202,17 +218,34 @@ export default function Navbar({ onLogin, onSignUp }: NavbarProps) {
           </div>
           
           <div className="mobileNavLinks">
-            <Link className={pathname === "/" ? "active" : undefined} href="/" onClick={closeMenu}>Home</Link>
-            <Link className={pathname.startsWith("/academic") ? "active" : undefined} href="/academic" onClick={(e) => { closeMenu(); handleProtectedNavigation(e); }}>Academic</Link>
-            <Link className={pathname.startsWith("/pyqs") ? "active" : undefined} href="/pyqs" onClick={(e) => { closeMenu(); handleProtectedNavigation(e); }}>PYQs</Link>
-            <Link className={pathname.startsWith("/discoveries") ? "active" : undefined} href="/discoveries" onClick={(e) => { closeMenu(); handleProtectedNavigation(e); }}>Discoveries</Link>
-            <Link className={pathname.startsWith("/jobs") ? "active" : undefined} href="/jobs" onClick={(e) => { closeMenu(); handleProtectedNavigation(e); }}>Job Preparation</Link>
+            <Link className={pathname === "/" ? "active" : undefined} href="/" onClick={closeMenu}>
+              Home
+            </Link>
+            <Link className={pathname.startsWith("/courses") ? "active" : undefined} href="/courses" onClick={closeMenu}>
+              Explore Courses
+            </Link>
+            <Link
+              className={pathname.startsWith("/my-courses") ? "active" : undefined}
+              href="/my-courses"
+              onClick={(e) => { closeMenu(); handleProtectedNavigation(e); }}
+            >
+              My Learning
+            </Link>
+            {currentUser && (
+              <Link className={pathname.startsWith("/profile") ? "active" : undefined} href="/profile" onClick={closeMenu}>
+                My Profile
+              </Link>
+            )}
           </div>
 
           {!currentUser && (
             <div className="mobileAuthButtons">
-              <button type="button" className="loginBtn" onClick={() => { closeMenu(); onLogin?.(); }}>Log In</button>
-              <button type="button" className="signupBtn" onClick={() => { closeMenu(); onSignUp?.(); }}>Sign Up</button>
+              <button type="button" className="loginBtn" onClick={() => { closeMenu(); onLogin?.(); }}>
+                Log In
+              </button>
+              <button type="button" className="signupBtn" onClick={() => { closeMenu(); onSignUp?.(); }}>
+                Get Started Free
+              </button>
             </div>
           )}
         </div>

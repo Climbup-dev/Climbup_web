@@ -2,11 +2,23 @@
 
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { CheckCircle2 } from "lucide-react";
+import Link from "next/link";
+import { useState, useEffect } from "react";
+import { 
+  CheckCircle2, 
+  Play, 
+  Sparkles, 
+  BookOpen, 
+  Star, 
+  Clock, 
+  Layers, 
+  FileCheck, 
+  ArrowRight
+} from "lucide-react";
 
 import { useAuth } from "@/hooks/useAuth";
+import { fetchAllCourses } from "@/lib/courses/coursesService";
+import { Course, CourseCategory } from "@/types/courses";
 import "@/styles/HomeSections.css";
 
 type EntryMode = "login" | "register";
@@ -17,128 +29,288 @@ const AuthModal = dynamic(() => import("@/components/AuthModal"), {
 });
 
 export default function HomeSections() {
-  const { currentUser, loading, passwordRecovery } = useAuth();
-  const router = useRouter();
-
+  const { currentUser, loading } = useAuth();
   const [authOpen, setAuthOpen] = useState(false);
   const [entryMode, setEntryMode] = useState<EntryMode>("login");
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<CourseCategory>("All");
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadLiveCourses() {
+      try {
+        const live = await fetchAllCourses();
+        if (isMounted && live && live.length > 0) {
+          setCourses(live);
+        }
+      } catch (err) {
+        console.warn("HomeSections fetchAllCourses fallback:", err);
+      }
+    }
+    loadLiveCourses();
+    return () => { isMounted = false; };
+  }, []);
 
   const openAuth = (mode: EntryMode) => {
     setEntryMode(mode);
     setAuthOpen(true);
   };
 
-  const handleFeatureClick = (href: string) => {
-    if (loading) return;
-    if (currentUser) {
-      router.push(href);
-      return;
-    }
-    openAuth("login");
-  };
+  const categories: CourseCategory[] = [
+    "All",
+    "Full-Stack Web Dev",
+    "AI & Machine Learning",
+    "System Design & DSA",
+  ];
+
+  const displayedCourses = selectedCategory === "All"
+    ? courses
+    : courses.filter((c) => c.category === selectedCategory);
 
   return (
     <div className="homeSections">
-      <section className="startupSection showcaseSection" id="features">
-        <div className="sectionContainer">
-          <div className="sectionIntro">
-            <span className="sectionLabel">Collective Intelligence</span>
-            <h2>Study with the minds of thousands of engineering students.</h2>
-            <p>
-              Don't study in isolation. Every time someone finds a brilliant shortcut, decodes a complex concept, or discovers a pattern, it is shared here. ClimbUP turns individual late-night study sessions into a powerful shared brain.
-            </p>
-          </div>
-
-          <div className="showcaseList">
-            {/* Feature 1 */}
-            <div className="showcaseRow">
-              <div className="showcaseContent">
-                <span className="showcaseNumber">01</span>
-                <h3>Master Your Exams</h3>
-                <p>Tap into a stream of insights, PYQ patterns, and smart preparation resources to score high marks with less effort.</p>
-                <ul className="showcaseFeatures">
-                  <li><CheckCircle2 size={16} /> Exam-focused PYQ solutions</li>
-                  <li><CheckCircle2 size={16} /> Fast concept mastery</li>
-                  <li><CheckCircle2 size={16} /> Save 80% time searching internet & books</li>
-                  <li><CheckCircle2 size={16} /> Ask AI to easily resolve doubts</li>
-                </ul>
-                <button 
-                  className="showcaseAction" 
-                  onClick={() => handleFeatureClick("/pyqs")}
-                >
-                  Explore PYQs <span>→</span>
-                </button>
-              </div>
-              <div className="showcaseImageWrapper">
-                <Image src="/features/learning_v3.png" alt="Learning Hub" width={600} height={450} className="showcaseImage" />
-              </div>
-            </div>
-
-            {/* Feature 2: Reversed */}
-            <div className="showcaseRow reversed">
-              <div className="showcaseContent">
-                <span className="showcaseNumber">02</span>
-                <h3>The Discovery Network</h3>
-                <p>See how other students think. Grasp difficult topics through diverse perspectives, shortcuts, and fresh explanations shared by peers.</p>
-                <ul className="showcaseFeatures">
-                  <li><CheckCircle2 size={16} /> Share 'Aha!' moments</li>
-                  <li><CheckCircle2 size={16} /> Real-time peer collaboration</li>
-                  <li><CheckCircle2 size={16} /> Share skill insights & build confidence</li>
-                  <li><CheckCircle2 size={16} /> Build a strong peer learning network</li>
-                </ul>
-                <button 
-                  className="showcaseAction" 
-                  onClick={() => handleFeatureClick("/discoveries")}
-                >
-                  See Discoveries <span>→</span>
-                </button>
-              </div>
-              <div className="showcaseImageWrapper">
-                <Image src="/features/discovery_v3.png" alt="Discovery Network" width={600} height={450} className="showcaseImage" />
-              </div>
-            </div>
-
-            {/* Feature 3 */}
-            <div className="showcaseRow">
-              <div className="showcaseContent">
-                <span className="showcaseNumber">03</span>
-                <h3>Career & Job Preparation</h3>
-                <p>Prepare for internships, placements, and aptitude tests. Get insider tips and real interview experiences from placed seniors to land your dream job.</p>
-                <ul className="showcaseFeatures">
-                  <li><CheckCircle2 size={16} /> Aptitude & interview prep</li>
-                  <li><CheckCircle2 size={16} /> Real interview experiences</li>
-                </ul>
-                <button 
-                  className="showcaseAction" 
-                  onClick={() => handleFeatureClick("/jobs")}
-                >
-                  Start Job Prep <span>→</span>
-                </button>
-              </div>
-              <div className="showcaseImageWrapper">
-                <Image src="/features/mentorship_v3.png" alt="Senior Mentorship" width={600} height={450} className="showcaseImage" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="startupSection visionSection" id="knowledge-network">
-        <div className="sectionContainer">
-          <div className="visionPanel">
-            <span className="sectionLabel">The Network Effect</span>
-            <h2>
-              Your insights shape<br />
-              the future of learning.
+      {/* ── Section 1: Featured Courses ── */}
+      <section className="startupSection" id="featured-courses" style={{ padding: "64px 24px" }}>
+        <div className="sectionContainer" style={{ maxWidth: "1240px", margin: "0 auto" }}>
+          <div className="sectionIntro" style={{ textAlign: "center", marginBottom: "36px" }}>
+            <span style={{
+              color: "#38d399",
+              background: "rgba(56, 211, 153, 0.12)",
+              padding: "4px 14px",
+              borderRadius: "99px",
+              fontSize: "12px",
+              fontWeight: 700,
+              display: "inline-block",
+              marginBottom: "12px",
+              letterSpacing: "0.04em",
+              textTransform: "uppercase"
+            }}>
+              Practical Skills Over Rote Learning
+            </span>
+            <h2 style={{ fontSize: "32px", fontWeight: 800, color: "#fff", marginBottom: "8px", letterSpacing: "-0.02em" }}>
+              Hands-on Project Learning Paths
             </h2>
-            <p>
-              Imagine a campus where every senior's best interview tips and every student's best ideas are instantly available to everyone else. When one person shares, the whole community levels up. That's the real power of ClimbUP.
+            <p style={{ color: "#94a3b8", maxWidth: "660px", margin: "0 auto", fontSize: "15px", lineHeight: "1.6" }}>
+              Writing real code, resolving runtime errors, and building functional applications is how true developers are made. Theory gives definitions — building projects gives real engineering intuition.
             </p>
+          </div>
+
+          {/* Category Filter Pills */}
+          <div style={{ display: "flex", gap: "10px", justifyContent: "center", flexWrap: "wrap", marginBottom: "36px" }}>
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                type="button"
+                onClick={() => setSelectedCategory(cat)}
+                style={{
+                  background: selectedCategory === cat
+                    ? "linear-gradient(135deg, #38d399, #00c78c)"
+                    : "rgba(255, 255, 255, 0.05)",
+                  color: selectedCategory === cat ? "#021526" : "rgba(255, 255, 255, 0.8)",
+                  border: selectedCategory === cat ? "none" : "1px solid rgba(255, 255, 255, 0.15)",
+                  fontWeight: 700,
+                  fontSize: "14px",
+                  padding: "8px 18px",
+                  borderRadius: "99px",
+                  cursor: "pointer",
+                  transition: "all 0.2s ease",
+                }}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+
+          {/* Course Cards Grid */}
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))",
+            gap: "28px",
+          }}>
+            {displayedCourses.map((course) => (
+              <div
+                key={course.id}
+                style={{
+                  background: "linear-gradient(145deg, rgba(7, 48, 73, 0.7), rgba(2, 21, 38, 0.9))",
+                  border: "1px solid rgba(56, 211, 153, 0.25)",
+                  borderRadius: "18px",
+                  overflow: "hidden",
+                  display: "flex",
+                  flexDirection: "column",
+                  transition: "transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease",
+                  boxShadow: "0 10px 30px rgba(0, 0, 0, 0.3)",
+                }}
+              >
+                {/* Course Thumbnail */}
+                <div style={{ position: "relative", height: "190px", width: "100%", overflow: "hidden" }}>
+                  <Image
+                    src={course.thumbnail}
+                    alt={course.title}
+                    fill
+                    sizes="(max-width: 768px) 100vw, 380px"
+                    style={{ objectFit: "cover" }}
+                  />
+                  <div style={{
+                    position: "absolute",
+                    inset: 0,
+                    background: "linear-gradient(to top, rgba(2, 21, 38, 0.95), transparent)",
+                  }} />
+
+                  <span style={{
+                    position: "absolute",
+                    top: "12px",
+                    left: "12px",
+                    background: "rgba(2, 21, 38, 0.85)",
+                    color: "#38d399",
+                    border: "1px solid rgba(56, 211, 153, 0.4)",
+                    padding: "3px 10px",
+                    borderRadius: "8px",
+                    fontSize: "11px",
+                    fontWeight: 700,
+                  }}>
+                    {course.category}
+                  </span>
+
+                  <span style={{
+                    position: "absolute",
+                    top: "12px",
+                    right: "12px",
+                    background: "rgba(0, 0, 0, 0.7)",
+                    color: "#fff",
+                    padding: "3px 8px",
+                    borderRadius: "6px",
+                    fontSize: "11px",
+                    fontWeight: 600,
+                  }}>
+                    {course.level}
+                  </span>
+                </div>
+
+                {/* Course Body */}
+                <div style={{ padding: "20px", display: "flex", flexDirection: "column", flexGrow: 1 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "8px" }}>
+                    <Star size={16} color="#f59e0b" fill="#f59e0b" />
+                    <strong style={{ color: "#fff", fontSize: "14px" }}>{course.rating}</strong>
+                    <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "12px" }}>
+                      ({course.reviewsCount.toLocaleString()} reviews)
+                    </span>
+                  </div>
+
+                  <h3 style={{ fontSize: "18px", fontWeight: 700, color: "#fff", marginBottom: "8px", lineHeight: "1.4" }}>
+                    {course.title}
+                  </h3>
+
+                  <p style={{
+                    color: "rgba(255,255,255,0.65)",
+                    fontSize: "13px",
+                    lineHeight: "1.5",
+                    marginBottom: "16px",
+                    flexGrow: 1,
+                  }}>
+                    {course.tagline}
+                  </p>
+
+                  {/* Metadata Row */}
+                  <div style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: "10px 0",
+                    borderTop: "1px solid rgba(255, 255, 255, 0.08)",
+                    borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
+                    marginBottom: "16px",
+                    fontSize: "12px",
+                    color: "rgba(255,255,255,0.7)",
+                  }}>
+                    <span style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                      <Clock size={14} color="#38d399" /> {course.duration}
+                    </span>
+                    <span style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                      <Layers size={14} color="#38d399" /> {course.totalLessons} Lessons
+                    </span>
+                    <span style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                      <FileCheck size={14} color="#38d399" /> {course.assignments.length} Assignments
+                    </span>
+                  </div>
+
+                  {/* Action Button */}
+                  {currentUser ? (
+                    <Link
+                      href={`/courses/${course.id}`}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: "8px",
+                        width: "100%",
+                        padding: "11px",
+                        background: "rgba(56, 211, 153, 0.12)",
+                        border: "1px solid rgba(56, 211, 153, 0.4)",
+                        borderRadius: "10px",
+                        color: "#38d399",
+                        fontWeight: 700,
+                        fontSize: "14px",
+                        textDecoration: "none",
+                        transition: "all 0.2s ease",
+                      }}
+                    >
+                      Enter Classroom & Projects <ArrowRight size={15} />
+                    </Link>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => openAuth("register")}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: "8px",
+                        width: "100%",
+                        padding: "11px",
+                        background: "rgba(56, 211, 153, 0.12)",
+                        border: "1px solid rgba(56, 211, 153, 0.4)",
+                        borderRadius: "10px",
+                        color: "#38d399",
+                        fontWeight: 700,
+                        fontSize: "14px",
+                        cursor: "pointer",
+                        transition: "all 0.2s ease",
+                      }}
+                    >
+                      Login to Enter Classroom <ArrowRight size={15} />
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ textAlign: "center", marginTop: "40px" }}>
+            <Link
+              href="/courses"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "8px",
+                padding: "12px 28px",
+                background: "linear-gradient(135deg, #38d399, #00c78c)",
+                color: "#021526",
+                fontWeight: 800,
+                fontSize: "15px",
+                borderRadius: "12px",
+                textDecoration: "none",
+                boxShadow: "0 0 25px rgba(56, 211, 153, 0.35)",
+              }}
+            >
+              Browse All Peer Courses <ArrowRight size={16} />
+            </Link>
           </div>
         </div>
       </section>
 
-      {(authOpen || passwordRecovery) && (
+
+
+      {(authOpen) && (
         <AuthModal
           key={entryMode}
           open={authOpen}

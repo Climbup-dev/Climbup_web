@@ -15,23 +15,24 @@ export const metadata: Metadata = {
     process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
   ),
   title: {
-    default: "ClimbUP - Boost Academic Marks & Master New Skills",
+    default: "ClimbUP - Learn Tech Skills, Practice & Build",
     template: "%s | ClimbUP",
   },
   description:
-    "ClimbUP helps B.Tech students clear exams, practice with PYQs, and prepare for placements.",
+    "Master in-demand tech skills with interactive video courses, practice quizzes, real-world projects, and instant AI guidance.",
   applicationName: "ClimbUP",
   keywords: [
-    "B.Tech question papers",
-    "engineering exam prep",
-    "previous year questions",
-    "placement preparation",
+    "online courses",
+    "web development masterclass",
+    "AI and machine learning",
+    "system design and DSA",
+    "coding assignments",
     "ClimbUP",
   ],
   openGraph: {
-    title: "ClimbUP - Boost Academic Marks & Master New Skills",
+    title: "ClimbUP - Learn Tech Skills, Practice & Build",
     description:
-      "Practice PYQs, compare answers, and prepare for engineering exams and placements.",
+      "Master in-demand tech skills with interactive video courses, practice quizzes, real-world projects, and instant AI guidance.",
     type: "website",
     siteName: "ClimbUP",
     images: [

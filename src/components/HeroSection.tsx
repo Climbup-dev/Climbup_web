@@ -3,9 +3,13 @@
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
-import { useState, useEffect, MouseEvent } from "react";
-import { Brain, Laptop, Settings, Lightbulb, PenTool, CheckCircle2 } from "lucide-react";
-
+import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { 
+  Play, 
+  ArrowRight,
+  Code2
+} from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { useAuth } from "@/hooks/useAuth";
 import "@/styles/HeroSection.css";
@@ -22,34 +26,47 @@ function getDisplayName(user: ReturnType<typeof useAuth>["currentUser"]) {
     user?.user_metadata?.full_name ||
     user?.user_metadata?.name ||
     user?.email?.split("@")[0] ||
-    "Member";
+    "Learner";
 
-  return String(name).trim() || "Member";
+  return String(name).trim() || "Learner";
 }
 
-const CYCLES = [
-  { prefix: "Marks &", suffix: "Skills." },
-  { prefix: "Build", suffix: "Projects." },
-  { prefix: "Share", suffix: "Ideas." },
-  { prefix: "Get", suffix: "Placed." },
+const DYNAMIC_PHRASES = [
+  "Build Something Real.",
+  "Ship Production AI Systems.",
+  "Solve Real Engineering Problems.",
+  "Create Practical GitHub Projects.",
+  "Turn Theory into Working Code.",
+  "Master Hands-on Problem Solving.",
 ];
 
 export default function HeroSection() {
+  const router = useRouter();
   const { currentUser, loading, passwordRecovery } = useAuth();
   const displayName = getDisplayName(currentUser);
 
   const [authOpen, setAuthOpen] = useState(false);
   const [entryMode, setEntryMode] = useState<EntryMode>("login");
+  const [phraseIndex, setPhraseIndex] = useState(0);
 
-  const [wordIndex, setWordIndex] = useState(0);
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-
-  // Handle Dynamic Word Cycling
   useEffect(() => {
     const interval = setInterval(() => {
-      setWordIndex((current) => (current + 1) % CYCLES.length);
-    }, 2800);
+      setPhraseIndex((current) => (current + 1) % DYNAMIC_PHRASES.length);
+    }, 3200);
     return () => clearInterval(interval);
+  }, []);
+
+  // Listen for login_required redirect from protected routes
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("login_required") === "true") {
+        setEntryMode("login");
+        setAuthOpen(true);
+        const cleanUrl = window.location.pathname;
+        window.history.replaceState({}, document.title, cleanUrl);
+      }
+    }
   }, []);
 
   const openAuth = (mode: EntryMode) => {
@@ -57,16 +74,22 @@ export default function HeroSection() {
     setAuthOpen(true);
   };
 
+  const handleCourseCardClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (currentUser) {
+      router.push("/courses/course-python-course-fe87");
+    } else {
+      openAuth("register");
+    }
+  };
+
   return (
-    <section 
-      className="homePage" 
-      id="home" 
-      aria-labelledby="home-heading"
-    >
+    <section className="homePage" id="home" aria-labelledby="home-heading">
+      {/* Background Ambience & Grid */}
       <div className="heroBackground" aria-hidden="true">
         <Image
           src="/hero-bg-v2.webp"
-          alt="ClimbUP Engineering Platform Background"
+          alt="ClimbUP Learning Platform Background"
           className="heroBgImage"
           fill
           priority
@@ -74,7 +97,6 @@ export default function HeroSection() {
           sizes="100vw"
           style={{ objectFit: "cover" }}
         />
-
         <div className="heroOverlay" />
         <div className="heroGrid" />
         <div className="heroGlow" />
@@ -86,97 +108,99 @@ export default function HeroSection() {
       />
 
       <main className="heroSection">
+        {/* Left Column: Main Messaging */}
         <div className="heroContent">
-          {currentUser ? (
-            <span className="heroEyebrow" style={{ textTransform: 'none', letterSpacing: '0.2px' }}>
-              <span className="waveEmoji" style={{ fontSize: '16px', marginRight: '4px' }}>👋</span>
-              Welcome back, <strong style={{ color: '#fff', fontWeight: 800, marginLeft: '4px' }}>{displayName}</strong>
-            </span>
-          ) : (
-            <span className="heroEyebrow">
-              <span className="eyebrowDot" />
-              Built by engineering students
-            </span>
-          )}
+          <div className="heroEyebrow">
+            <span className="unityPulseDot" />
+            {currentUser ? (
+              <span>LEARN • BUILD • GROW · Welcome back, <strong className="userNameHighlight">{displayName}</strong></span>
+            ) : (
+              <span>LEARN • BUILD • GROW</span>
+            )}
+          </div>
 
           <h1 className="heroTitle" id="home-heading">
-            <span>Learn Faster.</span>
-            <span>Grow Together.</span>
-            <strong className="dynamicWordContainer" key={wordIndex}>
-              <span className="masterText animatePrefix">{CYCLES[wordIndex].prefix}</span> 
-              <span className="animateWord">{CYCLES[wordIndex].suffix}</span>
-            </strong>
+            <span className="heroTitleLead">Don&apos;t Just Learn to Code.</span>
+            <span className="dynamicWordContainer">
+              <span className="animateWord" key={phraseIndex}>
+                {DYNAMIC_PHRASES[phraseIndex]}
+              </span>
+            </span>
           </h1>
 
+          <h2 className="heroSubtitle">
+            From Python Fundamentals to AI-Powered Projects.
+          </h2>
+
           <p className="heroDescription">
-            Built by engineering students, for engineering students. A place to
-            learn better, prepare confidently, share innovative ideas, and help
-            each other grow.
+            Master programming fundamentals, strengthen your problem-solving skills, and build practical projects that prepare you for the real world — one step at a time.
           </p>
 
-          {currentUser ? (
-            <div className="heroActionsContainer">
-              <div className="heroActions">
-                <Link href="/academic" className="joinClimbBtn">
-                  Start Learning
-                  <strong aria-hidden="true">→</strong>
+          {/* Primary Action Buttons */}
+          <div className="heroActionsContainer">
+            <div className="heroActions">
+              {currentUser ? (
+                <Link href="/courses" className="heroPrimaryBtn">
+                  <span>Start Learning</span>
+                  <ArrowRight size={17} />
                 </Link>
-
-                <a className="heroSecondaryLink" href="#about">
-                  How it works
-                </a>
-              </div>
-            </div>
-          ) : (
-            <div className="heroActionsContainer">
-              <div className="heroActions">
+              ) : (
                 <button
                   type="button"
-                  className="joinClimbBtn"
+                  className="heroPrimaryBtn"
                   onClick={() => openAuth("register")}
                   disabled={loading}
                 >
-                  {loading ? "Preparing..." : "Join ClimbUP"}
-                  <strong aria-hidden="true">→</strong>
+                  <span>Start Learning</span>
+                  <ArrowRight size={17} />
                 </button>
+              )}
 
-                <a className="heroSecondaryLink" href="#features">
-                  Explore Platform
-                </a>
+              <Link className="heroSecondaryBtn" href="#featured-courses">
+                <Code2 size={17} />
+                <span>Explore Projects</span>
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column: Fixed Course Preview Card with Play Button */}
+        <div className="heroIllustrationWrapper">
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={handleCourseCardClick}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                handleCourseCardClick(e as any);
+              }
+            }}
+            className="simpleVideoPlayerCard"
+            aria-label="Open Python and AI Course"
+          >
+            <div className="videoCanvasWrapper">
+              {/* Fixed Course Preview Image */}
+              <Image
+                src="/images/course-preview.jpg"
+                alt="Python and AI Course Practical Project Preview"
+                fill
+                priority
+                sizes="(max-width: 768px) 100vw, 580px"
+                className="coursePosterImage"
+              />
+
+              {/* Dark subtle overlay for contrast */}
+              <div className="videoPosterOverlay" />
+
+              {/* Pulsing ripple ring */}
+              <div className="playPulseRipple" />
+
+              {/* Centered Play Button */}
+              <div className="bigCenteredPlayBtn" aria-hidden="true">
+                <Play size={36} fill="#021526" color="#021526" style={{ marginLeft: "4px" }} />
               </div>
             </div>
-          )}
-        </div>
-        
-        <div className="heroIllustrationWrapper">
-          <div className="heroIllustration">
-            <Image
-              src="/hero_3d_v6.jpg"
-              alt="Students learning and discovering together"
-              width={650}
-              height={650}
-              priority
-              quality={85}
-              sizes="(max-width: 960px) 100vw, 50vw"
-              className="hero3dImage"
-            />
-          </div>
-          
-          {/* Animated Study Tools popping out of the 3D Box */}
-          <div className="floating-tool tool-1">
-            <Brain size={28} color="#9ef8dc" strokeWidth={1.5} />
-          </div>
-          <div className="floating-tool tool-2">
-            <Laptop size={26} color="#38d399" strokeWidth={1.5} />
-          </div>
-          <div className="floating-tool tool-3">
-            <Settings size={28} color="#9ef8dc" strokeWidth={1.5} />
-          </div>
-          <div className="floating-tool tool-4">
-            <Lightbulb size={26} color="#38d399" strokeWidth={1.5} />
-          </div>
-          <div className="floating-tool tool-5">
-            <PenTool size={30} color="#00c78c" strokeWidth={1.5} />
           </div>
         </div>
       </main>

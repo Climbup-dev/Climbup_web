@@ -5,8 +5,7 @@ import { createServerClient } from "@supabase/ssr";
 const PUBLIC_ROUTE_PREFIXES = [
   "/",
   "/auth",
-  "/discoveries",
-  "/jobs",
+  "/courses",
   "/privacy",
   "/terms",
 ];
@@ -96,6 +95,10 @@ export async function middleware(request: NextRequest) {
 }
 
 function isPublicRoute(pathname: string) {
+  // Individual course classrooms (/courses/[courseId]) require authentication
+  if (pathname.startsWith("/courses/") && pathname !== "/courses") {
+    return false;
+  }
   return PUBLIC_ROUTE_PREFIXES.some(
     (prefix) => pathname === prefix || (pathname.startsWith(`${prefix}/`) && prefix !== "/")
   );
