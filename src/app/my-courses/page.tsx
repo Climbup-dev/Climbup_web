@@ -9,7 +9,8 @@ import {
   BookOpen, 
   ArrowRight,
   Clock,
-  CheckCircle2
+  CheckCircle2,
+  Lock
 } from "lucide-react";
 
 import Navbar from "@/components/Navbar";
@@ -184,7 +185,47 @@ export default function MyCoursesPage() {
         )}
 
         {/* Enrolled Courses Grid */}
-        {displayedCourses.length === 0 ? (
+        {fetching || loading ? (
+          <div className="coursesLoadingState" style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "80px 24px",
+            minHeight: "360px",
+            textAlign: "center"
+          }}>
+            <div style={{
+              width: "44px",
+              height: "44px",
+              borderRadius: "50%",
+              border: "3px solid rgba(52, 211, 153, 0.15)",
+              borderTopColor: "#34d399",
+              animation: "spin 0.9s linear infinite",
+              marginBottom: "18px"
+            }} />
+            <h3 style={{ fontSize: "18px", fontWeight: 700, color: "#f8fafc", marginBottom: "6px" }}>
+              Loading Your Learning Dashboard...
+            </h3>
+            <p style={{ color: "#94a3b8", fontSize: "14px" }}>
+              Fetching enrolled masterclasses, progress and active projects...
+            </p>
+          </div>
+        ) : !currentUser ? (
+          <div className="enrolledEmptyState">
+            <Lock size={36} color="#34d399" style={{ margin: "0 auto 12px" }} />
+            <h3>Student Login Required</h3>
+            <p>Please log in or create an account to view your enrolled courses and projects.</p>
+            <button
+              type="button"
+              onClick={() => { setAuthMode("login"); setAuthOpen(true); }}
+              className="emptyBrowseBtn"
+              style={{ border: "none", cursor: "pointer" }}
+            >
+              Sign In to Account <ArrowRight size={14} />
+            </button>
+          </div>
+        ) : displayedCourses.length === 0 ? (
           <div className="enrolledEmptyState">
             <BookOpen size={36} color="#34d399" style={{ margin: "0 auto 12px" }} />
             <h3>

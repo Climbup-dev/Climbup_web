@@ -377,7 +377,7 @@
 
 .videoCanvasWrapper {
   width: 100%;
-  aspect-ratio: 16 / 10;
+  aspect-ratio: 16 / 9;
   position: relative;
   display: flex;
   align-items: center;
@@ -392,17 +392,17 @@
 }
 
 .simpleVideoPlayerCard:hover .coursePosterImage {
-  transform: scale(1.04);
+  transform: scale(1.025);
 }
 
 .videoPosterOverlay {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(180deg, rgba(9, 13, 22, 0.25) 0%, rgba(9, 13, 22, 0.55) 100%),
-    radial-gradient(circle at center, transparent 30%, rgba(9, 13, 22, 0.6) 100%);
+    radial-gradient(circle at center, rgba(6, 10, 18, 0.15) 0%, rgba(6, 10, 18, 0.38) 100%);
   pointer-events: none;
   z-index: 1;
+  transition: opacity 0.3s ease;
 }
 
 .playPulseRipple {
@@ -526,7 +526,7 @@
   }
 
   .videoCanvasWrapper {
-    aspect-ratio: 16 / 10;
+    aspect-ratio: 16 / 9;
   }
 
   .bigCenteredPlayBtn {

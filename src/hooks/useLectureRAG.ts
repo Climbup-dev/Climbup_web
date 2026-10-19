@@ -32,6 +32,7 @@ export function useLectureRAG(lessonId: string, sessionId: string = 'student_ses
   ]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [language, setLanguage] = useState<'en' | 'hi'>('en');
 
   const askDoubt = useCallback(async (query: string) => {
     if (!query.trim() || !lessonId) return;
@@ -53,8 +54,11 @@ export function useLectureRAG(lessonId: string, sessionId: string = 'student_ses
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          query,
+          question: query,
+          query: query,
+          language: language,
           lesson_id: lessonId,
+          video_id: lessonId,
           session_id: sessionId || 'student_session_1'
         })
       });
@@ -65,11 +69,26 @@ export function useLectureRAG(lessonId: string, sessionId: string = 'student_ses
       }
 
       const data = await response.json();
+      const answerText = 
+        data.answer || 
+        data.response || 
+        data.text || 
+        data.message || 
+        data.reply || 
+        (typeof data === 'string' ? data : 'Answer generated successfully.');
+
+      const evidenceData = 
+        data.retrieved_evidence || 
+        data.evidence || 
+        data.sources || 
+        data.citations || 
+        [];
+
       const aiMessage: ChatMessage = {
         id: `ai-${Date.now()}`,
         sender: 'ai',
-        text: data.answer,
-        evidence: data.retrieved_evidence || [],
+        text: answerText,
+        evidence: evidenceData,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
 
@@ -88,7 +107,7 @@ export function useLectureRAG(lessonId: string, sessionId: string = 'student_ses
     } finally {
       setLoading(false);
     }
-  }, [lessonId]);
+  }, [lessonId, language, sessionId]);
 
   const clearChat = useCallback(() => {
     setMessages([
@@ -105,6 +124,8 @@ export function useLectureRAG(lessonId: string, sessionId: string = 'student_ses
     messages,
     loading,
     error,
+    language,
+    setLanguage,
     askDoubt,
     clearChat
   };

@@ -12,7 +12,7 @@ interface LectureChatbotProps {
 }
 
 export const LectureChatbot: React.FC<LectureChatbotProps> = ({ lessonId, onSeekVideo, sessionId }) => {
-  const { messages, loading, error, askDoubt, clearChat } = useLectureRAG(lessonId, sessionId);
+  const { messages, loading, error, language, setLanguage, askDoubt, clearChat } = useLectureRAG(lessonId, sessionId);
   const [input, setInput] = useState('');
   const chatBottomRef = useRef<HTMLDivElement>(null);
 
@@ -52,6 +52,8 @@ export const LectureChatbot: React.FC<LectureChatbotProps> = ({ lessonId, onSeek
         padding: '12px 16px',
         background: 'rgba(7, 13, 25, 0.85)',
         borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+        gap: '8px',
+        flexWrap: 'wrap'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div style={{
@@ -93,27 +95,76 @@ export const LectureChatbot: React.FC<LectureChatbotProps> = ({ lessonId, onSeek
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={clearChat}
-          title="Clear Chat History"
-          style={{
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {/* Language Selector: en / hi */}
+          <div style={{
+            display: 'inline-flex',
             background: 'rgba(255, 255, 255, 0.05)',
             border: '1px solid rgba(255, 255, 255, 0.1)',
-            color: '#94a3b8',
-            padding: '5px 9px',
             borderRadius: '7px',
+            padding: '2px',
             fontSize: '11px',
-            fontWeight: 600,
-            cursor: 'pointer',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '5px',
-            transition: 'all 0.15s ease',
-          }}
-        >
-          <Trash2 size={12} /> Clear
-        </button>
+          }}>
+            <button
+              type="button"
+              onClick={() => setLanguage('en')}
+              title="Answer in English"
+              style={{
+                background: language === 'en' ? 'rgba(56, 211, 153, 0.25)' : 'transparent',
+                color: language === 'en' ? '#38d399' : '#94a3b8',
+                border: 'none',
+                borderRadius: '5px',
+                padding: '3px 8px',
+                cursor: 'pointer',
+                fontSize: '11px',
+                fontWeight: 700,
+                transition: 'all 0.15s ease'
+              }}
+            >
+              EN
+            </button>
+            <button
+              type="button"
+              onClick={() => setLanguage('hi')}
+              title="Answer in Hindi / Hinglish"
+              style={{
+                background: language === 'hi' ? 'rgba(56, 211, 153, 0.25)' : 'transparent',
+                color: language === 'hi' ? '#38d399' : '#94a3b8',
+                border: 'none',
+                borderRadius: '5px',
+                padding: '3px 8px',
+                cursor: 'pointer',
+                fontSize: '11px',
+                fontWeight: 700,
+                transition: 'all 0.15s ease'
+              }}
+            >
+              HI (हिंदी)
+            </button>
+          </div>
+
+          <button
+            type="button"
+            onClick={clearChat}
+            title="Clear Chat History"
+            style={{
+              background: 'rgba(255, 255, 255, 0.05)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              color: '#94a3b8',
+              padding: '5px 9px',
+              borderRadius: '7px',
+              fontSize: '11px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '5px',
+              transition: 'all 0.15s ease',
+            }}
+          >
+            <Trash2 size={12} /> Clear
+          </button>
+        </div>
       </div>
 
       {/* Messages Scroll Area */}
