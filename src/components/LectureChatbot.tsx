@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
-import { Sparkles, Send, Trash2, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { Sparkles, Send, Trash2, Brain, ArrowRight, Lightbulb } from 'lucide-react';
 import { useLectureRAG } from '@/hooks/useLectureRAG';
-import { parseTimestampToSeconds, parseTextWithTimestamps } from '@/utils/ragHelpers';
+import { parseTimestampToSeconds, parseInlineFormatted } from '@/utils/ragHelpers';
+import '@/styles/LectureChatbot.css';
 
 interface LectureChatbotProps {
   lessonId: string;
@@ -11,10 +12,288 @@ interface LectureChatbotProps {
   sessionId?: string;
 }
 
+const THINKING_STEPS = [
+  'Analyzing lecture audio & keywords...',
+  'Locating precise video timestamps...',
+  'Structuring clean, step-by-step explanation...',
+];
+
+/**
+ * Renders structured markdown text:
+ * - ### Headings
+ * - --- Horizontal rules
+ * - Bullet lists (* or -)
+ * - Suggested Question interactive chips (1. Question?, 2. Question?)
+ * - Inline bold, code, and clickable video timestamp buttons
+ */
+interface StructuredMessageContentProps {
+  text: string;
+  onTimestampClick: (ts: string) => void;
+  onSelectQuestion: (question: string) => void;
+  showCursor?: boolean;
+}
+
+const StructuredMessageContent: React.FC<StructuredMessageContentProps> = ({
+  text,
+  onTimestampClick,
+  onSelectQuestion,
+  showCursor,
+}) => {
+  const lines = text.split('\n');
+  const elements: React.ReactNode[] = [];
+
+  let currentBulletGroup: string[] = [];
+  let currentSuggestedQuestions: { num: string; text: string }[] = [];
+  let isUnderSuggestedHeader = false;
+
+  const flushBullets = (keyPrefix: string) => {
+    if (currentBulletGroup.length > 0) {
+      const bulletsToRender = [...currentBulletGroup];
+      currentBulletGroup = [];
+      elements.push(
+        <ul key={`${keyPrefix}-bullets`} className="chatBulletList">
+          {bulletsToRender.map((bText, bIdx) => (
+            <li key={bIdx} className="chatBulletItem">
+              <span className="chatBulletIcon">●</span>
+              <span>
+                {parseInlineFormatted(bText).map((part, pIdx) => {
+                  if (part.type === 'bold') {
+                    return <strong key={pIdx} className="chatBold">{part.value}</strong>;
+                  }
+                  if (part.type === 'code') {
+                    return <code key={pIdx} className="chatCode">{part.value}</code>;
+                  }
+                  if (part.type === 'timestamp') {
+                    return (
+                      <button
+                        key={pIdx}
+                        type="button"
+                        onClick={() => onTimestampClick(part.value)}
+                        className="chatTimestampBtn"
+                        title={`Jump to video at ${part.value}`}
+                      >
+                        ▶ {part.value}
+                      </button>
+                    );
+                  }
+                  return <span key={pIdx}>{part.value}</span>;
+                })}
+              </span>
+            </li>
+          ))}
+        </ul>
+      );
+    }
+  };
+
+  const flushSuggestedQuestions = (keyPrefix: string) => {
+    if (currentSuggestedQuestions.length > 0) {
+      const questionsToRender = [...currentSuggestedQuestions];
+      currentSuggestedQuestions = [];
+      elements.push(
+        <div key={`${keyPrefix}-suggested`} className="suggestedQuestionsContainer">
+          {questionsToRender.map((item, qIdx) => (
+            <button
+              key={qIdx}
+              type="button"
+              className="suggestedQuestionBtn"
+              onClick={() => onSelectQuestion(item.text)}
+              title="Click to ask this question"
+            >
+              <span className="questionNumBadge">{item.num}</span>
+              <span style={{ flex: 1 }}>{item.text}</span>
+              <ArrowRight size={13} className="questionArrowIcon" />
+            </button>
+          ))}
+        </div>
+      );
+    }
+  };
+
+  lines.forEach((line, lineIdx) => {
+    const trimmed = line.trim();
+
+    // Horizontal Rule
+    if (trimmed === '---' || trimmed === '___') {
+      flushBullets(`line-${lineIdx}`);
+      flushSuggestedQuestions(`line-${lineIdx}`);
+      elements.push(<hr key={`hr-${lineIdx}`} className="chatDivider" />);
+      return;
+    }
+
+    // Heading (e.g. ### Suggested Questions)
+    if (trimmed.startsWith('### ') || trimmed.startsWith('## ')) {
+      flushBullets(`line-${lineIdx}`);
+      flushSuggestedQuestions(`line-${lineIdx}`);
+      const headingText = trimmed.replace(/^#+\s*/, '');
+      if (headingText.toLowerCase().includes('suggested')) {
+        isUnderSuggestedHeader = true;
+      }
+      elements.push(
+        <h4 key={`heading-${lineIdx}`} className="chatHeading">
+          <Lightbulb size={13} style={{ color: '#34d399' }} />
+          <span>{headingText}</span>
+        </h4>
+      );
+      return;
+    }
+
+    // Numbered Item (e.g. 1. How do I install Python...)
+    const numMatch = trimmed.match(/^(\d+)\.\s+(.*)$/);
+    if (numMatch && (isUnderSuggestedHeader || numMatch[2].includes('?'))) {
+      flushBullets(`line-${lineIdx}`);
+      currentSuggestedQuestions.push({ num: numMatch[1], text: numMatch[2] });
+      return;
+    }
+
+    // Bullet Item (* or -)
+    if (trimmed.startsWith('* ') || trimmed.startsWith('- ')) {
+      currentBulletGroup.push(trimmed.slice(2));
+      return;
+    }
+
+    // If regular line, flush accumulated bullets and questions first
+    flushBullets(`line-${lineIdx}`);
+    flushSuggestedQuestions(`line-${lineIdx}`);
+
+    if (trimmed === '') {
+      // blank spacing
+      return;
+    }
+
+    // Regular Paragraph
+    elements.push(
+      <p key={`p-${lineIdx}`} className="chatParagraph">
+        {parseInlineFormatted(line).map((part, pIdx) => {
+          if (part.type === 'bold') {
+            return <strong key={pIdx} className="chatBold">{part.value}</strong>;
+          }
+          if (part.type === 'code') {
+            return <code key={pIdx} className="chatCode">{part.value}</code>;
+          }
+          if (part.type === 'timestamp') {
+            return (
+              <button
+                key={pIdx}
+                type="button"
+                onClick={() => onTimestampClick(part.value)}
+                className="chatTimestampBtn"
+                title={`Jump to video at ${part.value}`}
+              >
+                ▶ {part.value}
+              </button>
+            );
+          }
+          return <span key={pIdx}>{part.value}</span>;
+        })}
+      </p>
+    );
+  });
+
+  flushBullets('final');
+  flushSuggestedQuestions('final');
+
+  return (
+    <>
+      {elements}
+      {showCursor && <span className="typewriterCursor" aria-hidden="true" />}
+    </>
+  );
+};
+
+/**
+ * Typewriter message component:
+ * Types out the text letter by letter if newly received from AI
+ */
+interface TypewriterMessageProps {
+  messageId: string;
+  text: string;
+  isAi: boolean;
+  shouldAnimate: boolean;
+  onTimestampClick: (ts: string) => void;
+  onSelectQuestion: (q: string) => void;
+  onCompleteAnimation: (id: string) => void;
+}
+
+const TypewriterMessage: React.FC<TypewriterMessageProps> = ({
+  messageId,
+  text,
+  isAi,
+  shouldAnimate,
+  onTimestampClick,
+  onSelectQuestion,
+  onCompleteAnimation,
+}) => {
+  const [displayedLength, setDisplayedLength] = useState<number>(() => {
+    return shouldAnimate ? 0 : text.length;
+  });
+
+  useEffect(() => {
+    if (!shouldAnimate) {
+      setDisplayedLength(text.length);
+      return;
+    }
+
+    let current = 0;
+    const totalLength = text.length;
+    // Advance 2-3 characters every 12ms for a smooth, brisk letter-by-letter typing effect
+    const interval = setInterval(() => {
+      current += 2;
+      if (current >= totalLength) {
+        current = totalLength;
+        setDisplayedLength(totalLength);
+        clearInterval(interval);
+        onCompleteAnimation(messageId);
+      } else {
+        setDisplayedLength(current);
+      }
+    }, 12);
+
+    return () => clearInterval(interval);
+  }, [messageId, shouldAnimate, text, onCompleteAnimation]);
+
+  const isTyping = shouldAnimate && displayedLength < text.length;
+  const currentText = text.slice(0, displayedLength);
+
+  return (
+    <div
+      onClick={() => {
+        if (isTyping) {
+          setDisplayedLength(text.length);
+          onCompleteAnimation(messageId);
+        }
+      }}
+      title={isTyping ? 'Click to show all' : undefined}
+      style={{ cursor: isTyping ? 'pointer' : 'default' }}
+    >
+      <StructuredMessageContent
+        text={currentText}
+        onTimestampClick={onTimestampClick}
+        onSelectQuestion={onSelectQuestion}
+        showCursor={isTyping}
+      />
+    </div>
+  );
+};
+
 export const LectureChatbot: React.FC<LectureChatbotProps> = ({ lessonId, onSeekVideo, sessionId }) => {
-  const { messages, loading, error, language, setLanguage, askDoubt, clearChat } = useLectureRAG(lessonId, sessionId);
+  const { messages, loading, language, setLanguage, askDoubt, clearChat } = useLectureRAG(lessonId, sessionId);
   const [input, setInput] = useState('');
+  const [thinkingIndex, setThinkingIndex] = useState(0);
+  const animatedSetRef = useRef<Set<string>>(new Set(['welcome']));
   const chatBottomRef = useRef<HTMLDivElement>(null);
+
+  // Dynamic thinking status cycling every 1.5s
+  useEffect(() => {
+    if (!loading) {
+      setThinkingIndex(0);
+      return;
+    }
+    const timer = setInterval(() => {
+      setThinkingIndex((prev) => (prev + 1) % THINKING_STEPS.length);
+    }, 1500);
+    return () => clearInterval(timer);
+  }, [loading]);
 
   useEffect(() => {
     chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -23,121 +302,59 @@ export const LectureChatbot: React.FC<LectureChatbotProps> = ({ lessonId, onSeek
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || loading) return;
-    askDoubt(input);
+    askDoubt(input.trim());
     setInput('');
   };
 
-  const handleTimestampClick = (timeStr: string) => {
+  const handleSelectQuestion = (question: string) => {
+    if (loading) return;
+    askDoubt(question);
+  };
+
+  const handleTimestampClick = useCallback((timeStr: string) => {
     const seconds = parseTimestampToSeconds(timeStr);
     if (onSeekVideo) {
       onSeekVideo(seconds, timeStr);
     }
-  };
+  }, [onSeekVideo]);
+
+  const handleCompleteAnimation = useCallback((id: string) => {
+    animatedSetRef.current.add(id);
+  }, []);
 
   return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      height: '100%',
-      background: 'rgba(11, 18, 33, 0.95)',
-      borderRadius: '14px',
-      overflow: 'hidden',
-      border: '1px solid rgba(255, 255, 255, 0.08)',
-    }}>
+    <div className="chatbotContainer">
       {/* Chat Header */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '12px 16px',
-        background: 'rgba(7, 13, 25, 0.85)',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-        gap: '8px',
-        flexWrap: 'wrap'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{
-            width: '32px',
-            height: '32px',
-            borderRadius: '9px',
-            background: 'linear-gradient(135deg, rgba(56, 211, 153, 0.2), rgba(0, 199, 140, 0.1))',
-            border: '1px solid rgba(56, 211, 153, 0.35)',
-            display: 'grid',
-            placeItems: 'center',
-            color: '#38d399',
-            fontWeight: 800,
-            fontSize: '12px',
-          }}>
+      <div className="chatHeader">
+        <div className="chatHeaderLeft">
+          <div className="chatAvatarIcon">
             <Sparkles size={16} />
           </div>
           <div>
-            <h3 style={{ fontSize: '13.5px', fontWeight: 700, margin: 0, color: '#f1f5f9' }}>
-              Lecture AI Study Mentor
-            </h3>
-            <p style={{
-              margin: '2px 0 0',
-              fontSize: '11px',
-              color: '#34d399',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px'
-            }}>
-              <span style={{
-                width: '6px',
-                height: '6px',
-                borderRadius: '50%',
-                background: '#34d399',
-                boxShadow: '0 0 6px #34d399',
-                display: 'inline-block'
-              }} />
-              Grounded in Spoken Transcripts
+            <h3 className="chatTitle">ClimbUP AI Mentor</h3>
+            <p className="chatSubtitle">
+              <span className="chatStatusDot" />
+              Grounded in Video Transcripts
             </p>
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div className="chatHeaderRight">
           {/* Language Selector: en / hi */}
-          <div style={{
-            display: 'inline-flex',
-            background: 'rgba(255, 255, 255, 0.05)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            borderRadius: '7px',
-            padding: '2px',
-            fontSize: '11px',
-          }}>
+          <div className="langSwitch">
             <button
               type="button"
               onClick={() => setLanguage('en')}
+              className={`langBtn ${language === 'en' ? 'active' : ''}`}
               title="Answer in English"
-              style={{
-                background: language === 'en' ? 'rgba(56, 211, 153, 0.25)' : 'transparent',
-                color: language === 'en' ? '#38d399' : '#94a3b8',
-                border: 'none',
-                borderRadius: '5px',
-                padding: '3px 8px',
-                cursor: 'pointer',
-                fontSize: '11px',
-                fontWeight: 700,
-                transition: 'all 0.15s ease'
-              }}
             >
               EN
             </button>
             <button
               type="button"
               onClick={() => setLanguage('hi')}
+              className={`langBtn ${language === 'hi' ? 'active' : ''}`}
               title="Answer in Hindi / Hinglish"
-              style={{
-                background: language === 'hi' ? 'rgba(56, 211, 153, 0.25)' : 'transparent',
-                color: language === 'hi' ? '#38d399' : '#94a3b8',
-                border: 'none',
-                borderRadius: '5px',
-                padding: '3px 8px',
-                cursor: 'pointer',
-                fontSize: '11px',
-                fontWeight: 700,
-                transition: 'all 0.15s ease'
-              }}
             >
               HI (हिंदी)
             </button>
@@ -146,21 +363,8 @@ export const LectureChatbot: React.FC<LectureChatbotProps> = ({ lessonId, onSeek
           <button
             type="button"
             onClick={clearChat}
-            title="Clear Chat History"
-            style={{
-              background: 'rgba(255, 255, 255, 0.05)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              color: '#94a3b8',
-              padding: '5px 9px',
-              borderRadius: '7px',
-              fontSize: '11px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '5px',
-              transition: 'all 0.15s ease',
-            }}
+            title="Reset Chat History"
+            className="clearChatBtn"
           >
             <Trash2 size={12} /> Clear
           </button>
@@ -168,166 +372,88 @@ export const LectureChatbot: React.FC<LectureChatbotProps> = ({ lessonId, onSeek
       </div>
 
       {/* Messages Scroll Area */}
-      <div style={{
-        flexGrow: 1,
-        overflowY: 'auto',
-        padding: '16px 14px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '12px',
-      }}>
-        {messages.map((msg) => {
+      <div className="chatMessagesScroll">
+        {messages.map((msg, idx) => {
           const isStudent = msg.sender === 'student';
+          const isLatestAi = !isStudent && idx === messages.length - 1;
+          const shouldAnimate = isLatestAi && !animatedSetRef.current.has(msg.id);
+
           return (
             <div
               key={msg.id}
-              style={{
-                alignSelf: isStudent ? 'flex-end' : 'flex-start',
-                maxWidth: '92%',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '4px',
-              }}
+              className={`messageWrapper ${isStudent ? 'student' : 'ai'}`}
             >
               {/* Sender label */}
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                fontSize: '11px',
-                fontWeight: 600,
-                color: isStudent ? '#94a3b8' : '#34d399',
-                alignSelf: isStudent ? 'flex-end' : 'flex-start',
-              }}>
+              <div className="senderMeta">
                 <span>{isStudent ? 'You' : 'AI Mentor'}</span>
-                {msg.timestamp && (
-                  <span style={{ color: 'rgba(255,255,255,0.35)', fontWeight: 400 }}>• {msg.timestamp}</span>
-                )}
+                {msg.timestamp && <span className="senderTime">• {msg.timestamp}</span>}
               </div>
 
               {/* Message Bubble */}
-              <div
-                style={{
-                  padding: '12px 14px',
-                  borderRadius: '13px',
-                  background: isStudent
-                    ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.22), rgba(5, 150, 105, 0.18))'
-                    : 'rgba(15, 23, 42, 0.85)',
-                  border: `1px solid ${isStudent ? 'rgba(56, 211, 153, 0.4)' : 'rgba(255, 255, 255, 0.1)'}`,
-                  color: '#f8fafc',
-                  fontSize: '13px',
-                  lineHeight: '1.6',
-                  boxShadow: '0 4px 16px rgba(0, 0, 0, 0.25)',
-                }}
-              >
-                {parseTextWithTimestamps(msg.text).map((part, i) =>
-                  part.type === 'timestamp' ? (
-                    <button
-                      key={i}
-                      type="button"
-                      onClick={() => handleTimestampClick(part.content)}
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '4px',
-                        margin: '0 4px',
-                        padding: '2px 7px',
-                        borderRadius: '6px',
-                        background: 'rgba(56, 211, 153, 0.18)',
-                        border: '1px solid rgba(56, 211, 153, 0.4)',
-                        color: '#34d399',
-                        fontSize: '11.5px',
-                        fontFamily: 'monospace',
-                        fontWeight: 700,
-                        cursor: 'pointer',
-                        verticalAlign: 'baseline',
-                        transition: 'transform 0.12s ease',
-                      }}
-                      title="Jump to this video moment"
-                    >
-                      ▶ {part.content}
-                    </button>
-                  ) : (
-                    <span key={i} style={{ whiteSpace: 'pre-wrap' }}>{part.content}</span>
-                  )
+              <div className={`chatBubble ${isStudent ? 'student' : 'ai'}`}>
+                {isStudent ? (
+                  <p className="chatParagraph">{msg.text}</p>
+                ) : (
+                  <TypewriterMessage
+                    messageId={msg.id}
+                    text={msg.text}
+                    isAi={true}
+                    shouldAnimate={shouldAnimate}
+                    onTimestampClick={handleTimestampClick}
+                    onSelectQuestion={handleSelectQuestion}
+                    onCompleteAnimation={handleCompleteAnimation}
+                  />
                 )}
               </div>
             </div>
           );
         })}
 
+        {/* Thinking & Reasoning Animation Box */}
         {loading && (
-          <div style={{
-            alignSelf: 'flex-start',
-            background: 'rgba(56, 211, 153, 0.1)',
-            border: '1px solid rgba(56, 211, 153, 0.25)',
-            padding: '9px 14px',
-            borderRadius: '10px',
-            fontSize: '12px',
-            color: '#34d399',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-          }}>
-            <Sparkles size={14} className="animate-spin" />
-            <span>Searching pgvector transcripts & synthesizing cited answer...</span>
+          <div className="thinkingCard" role="status" aria-live="polite">
+            <div className="thinkingHeader">
+              <div className="thinkingBrainIconWrapper">
+                <div className="thinkingPulseGlow" />
+                <Brain size={14} />
+              </div>
+              <span className="thinkingLabel">Thinking</span>
+              <span className="thinkingDots" aria-hidden="true">
+                <span className="thinkingDot" />
+                <span className="thinkingDot" />
+                <span className="thinkingDot" />
+              </span>
+            </div>
+
+            <p className="thinkingStepText">
+              {THINKING_STEPS[thinkingIndex]}
+            </p>
+
+            <div className="thinkingShimmerBar" aria-hidden="true">
+              <div className="thinkingShimmerBeam" />
+            </div>
           </div>
         )}
+
         <div ref={chatBottomRef} />
       </div>
 
       {/* Input Form */}
-      <form
-        onSubmit={handleSubmit}
-        style={{
-          padding: '10px 12px',
-          borderTop: '1px solid rgba(255, 255, 255, 0.08)',
-          background: 'rgba(7, 13, 25, 0.95)',
-        }}
-      >
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          background: 'rgba(255, 255, 255, 0.05)',
-          border: '1px solid rgba(255, 255, 255, 0.12)',
-          borderRadius: '10px',
-          padding: '3px 5px 3px 12px',
-        }}>
+      <form onSubmit={handleSubmit} className="chatInputForm">
+        <div className="chatInputContainer">
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Ask doubt about this lecture..."
             disabled={loading}
-            style={{
-              flexGrow: 1,
-              background: 'transparent',
-              border: 'none',
-              color: '#fff',
-              fontSize: '13px',
-              outline: 'none',
-              padding: '7px 0',
-            }}
+            className="chatInputField"
           />
           <button
             type="submit"
             disabled={loading || !input.trim()}
-            style={{
-              background: input.trim() && !loading
-                ? 'linear-gradient(135deg, #38d399, #00c78c)'
-                : 'rgba(255, 255, 255, 0.08)',
-              border: 'none',
-              borderRadius: '8px',
-              color: input.trim() && !loading ? '#021526' : 'rgba(255, 255, 255, 0.3)',
-              width: '32px',
-              height: '32px',
-              cursor: input.trim() && !loading ? 'pointer' : 'default',
-              display: 'grid',
-              placeItems: 'center',
-              transition: 'all 160ms ease',
-              flexShrink: 0,
-            }}
+            className={`chatSendBtn ${input.trim() && !loading ? 'active' : 'disabled'}`}
+            title="Send query"
           >
             <Send size={13} />
           </button>

@@ -21,12 +21,28 @@ export interface ChatMessage {
   timestamp?: string;
 }
 
+const DEFAULT_WELCOME_MESSAGE = `Hello! Welcome to the teaching assistant desk for **"Learn Python in 1 hour!"**.
+
+I am here to help answer any questions you have about the concepts covered in this lecture. Here is a quick overview of what the professor introduces in the opening segments:
+
+* **Python & IDE Setup:** Downloading the Python interpreter from \`python.org\` (adding Python to PATH) \`▶ 00:00\`, downloading PyCharm Community Edition \`▶ 01:50\`, and creating your first \`.py\` file \`▶ 01:50\`.
+* **Basic Output & Syntax:** Running print statements using \`print()\` \`▶ 01:50\`, using quotes for strings \`▶ 03:44\`, and adding comments using the \`#\` symbol \`▶ 03:44\`.
+* **Variables & Data Types:** Defining variables as reusable containers \`▶ 03:44\`, using f-strings (\`f"..."\`) to insert variables into text \`▶ 05:38\`, and working with basic data types like **Strings**, **Integers**, and **Floats** \`▶ 03:44\` \`▶ 05:38\`.
+
+How can I assist you with your Python learning today? Feel free to ask a specific question about the lecture!
+
+---
+
+### Suggested Questions
+1. How do I install Python and configure PyCharm to create my first project?
+2. What is an f-string, and how do I use it to print variables in Python?`;
+
 export function useLectureRAG(lessonId: string, sessionId: string = 'student_session_1') {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 'welcome',
       sender: 'ai',
-      text: '👋 Hello! I am your AI Teaching Assistant for this lecture. Ask me any doubt and I will answer with exact video timestamps!',
+      text: DEFAULT_WELCOME_MESSAGE,
       timestamp: 'Now',
     }
   ]);
@@ -114,7 +130,7 @@ export function useLectureRAG(lessonId: string, sessionId: string = 'student_ses
       {
         id: 'welcome',
         sender: 'ai',
-        text: 'Chat cleared. Ask any doubt about this lecture!',
+        text: DEFAULT_WELCOME_MESSAGE,
         timestamp: 'Now',
       }
     ]);

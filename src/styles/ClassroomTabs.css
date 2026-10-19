@@ -1,18 +1,184 @@
-/* Classroom Activity Tabs — Modern, Flat & Clean Underline Style */
+/* ============================================================
+   ClimbUP Classroom Workspace & Responsive Tabs System
+   ============================================================ */
+
+/* Top Classroom Navigation Bar */
+.classroomTopBar {
+  background: rgba(7, 26, 46, 0.88);
+  border-bottom: 1px solid rgba(56, 211, 153, 0.2);
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  position: relative;
+  z-index: 10;
+  backdrop-filter: blur(14px);
+}
+
+.classroomTopBarLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.allCoursesBackBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #38d399;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 700;
+  background: rgba(56, 211, 153, 0.1);
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(56, 211, 153, 0.25);
+  transition: all 0.15s ease;
+}
+
+.allCoursesBackBtn:hover {
+  background: rgba(56, 211, 153, 0.2);
+  transform: translateX(-2px);
+}
+
+.classroomCourseTitle {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0;
+  color: #ffffff;
+}
+
+.classroomProgressBadge {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.enrolledStatusBadge {
+  background: rgba(56, 211, 153, 0.15);
+  color: #38d399;
+  border: 1px solid rgba(56, 211, 153, 0.35);
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Main Classroom Workspace Grid */
+.classroomWorkspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 390px;
+  flex-grow: 1;
+  max-width: 1600px;
+  margin: 0 auto;
+  width: 100%;
+  min-height: calc(100vh - 130px);
+}
+
+/* Left Column: Video + Activity Tabs */
+.classroomMainColumn {
+  padding: 20px 24px;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* Video Player Container */
+.classroomVideoContainer {
+  position: relative;
+  width: 100%;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #000;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.6);
+  margin-bottom: 16px;
+  aspect-ratio: 16 / 9;
+}
+
+/* Lesson Header Row */
+.lessonHeaderRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.lessonHeaderInfo h2 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 4px;
+}
+
+.lessonHeaderMeta {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.markCompleteBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 10px;
+  padding: 9px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+
+.markCompleteBtn.completed {
+  background: rgba(56, 211, 153, 0.18);
+  color: #38d399;
+  border: 1px solid rgba(56, 211, 153, 0.4);
+}
+
+.markCompleteBtn.pending {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.markCompleteBtn.pending:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* ────────────────────────────────────────────────────────
+   Activity Tabs Navigation (Under Video)
+   ──────────────────────────────────────────────────────── */
 .classroomTabsWrapper {
   display: flex;
   width: 100%;
-  margin: 20px 0 28px;
+  margin: 14px 0 22px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.classroomTabsWrapper::-webkit-scrollbar {
+  display: none;
 }
 
 .classroomTabsCapsule {
   display: flex;
   align-items: center;
-  gap: 32px;
-  width: 100%;
+  gap: 26px;
+  width: max-content;
+  min-width: 100%;
   background: transparent;
-  padding: 0;
+  padding: 0 4px;
   border: none;
   box-shadow: none;
 }
@@ -22,32 +188,28 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 4px 16px;
+  padding: 10px 4px 14px;
   background: transparent;
   border: none;
   color: #94a3b8;
-  font-size: 15px;
+  font-size: 14.5px;
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
   letter-spacing: -0.01em;
   transition: color 180ms ease;
   user-select: none;
-  width: auto;
 }
 
 .classroomTabBtn:hover {
-  color: #fff;
+  color: #ffffff;
   background: transparent;
-  transform: none;
 }
 
 .classroomTabBtn.active {
   color: #38d399;
   font-weight: 700;
   background: transparent;
-  border: none;
-  box-shadow: none;
 }
 
 .classroomTabBtn.active::after {
@@ -62,7 +224,28 @@
   box-shadow: 0 0 10px rgba(56, 211, 153, 0.55);
 }
 
-/* Sidebar Mode Switcher Capsule */
+/* Mobile-only tab button (hidden on desktop, shown on mobile) */
+.classroomTabBtn.mobileOnlyTab {
+  display: none;
+}
+
+/* ────────────────────────────────────────────────────────
+   Right Column: Desktop Sticky Sidebar (Curriculum / AI)
+   ──────────────────────────────────────────────────────── */
+.classroomSidebarColumn {
+  background: rgba(10, 16, 30, 0.85);
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 120px);
+  position: sticky;
+  top: 72px;
+  backdrop-filter: blur(14px);
+  overflow: hidden;
+  border-radius: 18px;
+  margin: 16px 16px 16px 0;
+}
+
 .sidebarTabsCapsule {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -91,7 +274,7 @@
 }
 
 .sidebarTabBtn:hover {
-  color: #fff;
+  color: #ffffff;
   background: rgba(255, 255, 255, 0.05);
 }
 
@@ -103,9 +286,76 @@
   box-shadow: 0 2px 12px rgba(56, 211, 153, 0.15);
 }
 
-@media (max-width: 768px) {
+/* ────────────────────────────────────────────────────────
+   Responsive Media Queries for Mobile & Tablet (< 1024px)
+   ──────────────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .classroomWorkspace {
+    display: flex;
+    flex-direction: column;
+    grid-template-columns: none;
+    width: 100%;
+    overflow-x: hidden;
+  }
+
+  .classroomMainColumn {
+    padding: 12px 14px 32px;
+    border-right: none;
+    width: 100%;
+  }
+
+  /* On mobile and tablet, hide separate desktop sidebar;
+     its contents (Syllabus and AI Tutor) are unified in the activity tabs! */
+  .classroomSidebarColumn {
+    display: none !important;
+  }
+
+  /* Show Syllabus & AI Tutor as tabs directly below the video on mobile */
+  .classroomTabBtn.mobileOnlyTab {
+    display: inline-flex;
+  }
+
   .classroomTabsCapsule {
     gap: 18px;
-    overflow-x: auto;
+  }
+
+  .classroomTabBtn {
+    font-size: 13.5px;
+    padding: 8px 2px 12px;
+  }
+
+  .classroomTopBar {
+    padding: 10px 14px;
+  }
+
+  .classroomCourseTitle {
+    font-size: 14.5px;
+  }
+
+  .lessonHeaderInfo h2 {
+    font-size: 17px;
+  }
+}
+
+@media (max-width: 640px) {
+  .classroomVideoContainer {
+    border-radius: 12px;
+    margin-bottom: 12px;
+  }
+
+  .lessonHeaderRow {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .markCompleteBtn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .assignmentWorkspaceCard,
+  .mcqWorkspaceCard {
+    padding: 18px 14px !important;
+    border-radius: 14px !important;
   }
 }

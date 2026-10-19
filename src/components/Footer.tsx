@@ -29,7 +29,7 @@ export default function Footer() {
               <span>ClimbUP</span>
             </Link>
             <p className="footerTagline">
-              Hands-on engineering education and real-world project building.
+              A free, non-profit learning initiative open to everyone. Let&apos;s grow together.
             </p>
           </div>
 

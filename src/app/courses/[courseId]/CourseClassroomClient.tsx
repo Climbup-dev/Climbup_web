@@ -42,7 +42,7 @@ import { LectureChatbot } from "@/components/LectureChatbot";
 import { parseTimestampToSeconds } from "@/utils/ragHelpers";
 import "@/styles/ClassroomTabs.css";
 
-type TabType = "overview" | "assignments" | "mcqs" | "resources" | "discussions" | "certificate";
+type TabType = "overview" | "assignments" | "mcqs" | "resources" | "syllabus" | "rag" | "discussions" | "certificate";
 
 export default function CourseClassroomClient({ courseId }: { courseId: string }) {
   const router = useRouter();
@@ -387,52 +387,116 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
     showToast(`Quiz completed! You scored ${correctCount}/${activeQuiz.questions.length}`, "success");
   };
 
+  const renderCurriculumList = () => {
+    if (!course) return null;
+    return (
+      <div style={{ overflowY: "auto", padding: "16px", flexGrow: 1 }}>
+        {course.modules.map((mod) => (
+          <div key={mod.id} style={{ marginBottom: "16px" }}>
+            <div style={{
+              fontSize: "13px",
+              fontWeight: 700,
+              color: "#9ef8dc",
+              padding: "8px 10px",
+              background: "rgba(255, 255, 255, 0.05)",
+              borderRadius: "8px",
+              marginBottom: "6px",
+            }}>
+              {mod.title}
+            </div>
+
+            <div style={{ display: "grid", gap: "4px" }}>
+              {mod.lessons.map((lesson) => {
+                const isCurrent = activeLesson?.id === lesson.id;
+                const isDone = completedLessonIds.includes(lesson.id);
+
+                return (
+                  <div
+                    key={lesson.id}
+                    onClick={() => {
+                      setActiveLesson(lesson);
+                      if (typeof window !== "undefined" && window.innerWidth <= 1024) {
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                      }
+                    }}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: "10px 12px",
+                      borderRadius: "8px",
+                      background: isCurrent ? "rgba(56, 211, 153, 0.18)" : "transparent",
+                      border: `1px solid ${isCurrent ? "rgba(56, 211, 153, 0.35)" : "transparent"}`,
+                      cursor: "pointer",
+                      transition: "all 0.15s ease",
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                      <span
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleToggleLesson(lesson.id);
+                        }}
+                        style={{ cursor: "pointer", display: "grid", placeItems: "center" }}
+                      >
+                        {isDone ? (
+                          <CheckCircle2 size={16} color="#38d399" />
+                        ) : (
+                          <Circle size={16} color="rgba(255,255,255,0.4)" />
+                        )}
+                      </span>
+                      <span style={{ fontSize: "13px", color: isCurrent ? "#fff" : "rgba(255, 255, 255, 0.8)", fontWeight: isCurrent ? 700 : 500 }}>
+                        {lesson.title}
+                      </span>
+                    </div>
+
+                    <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.5)", whiteSpace: "nowrap" }}>
+                      {lesson.duration}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  const renderAiTutor = (height = "600px") => (
+    <div style={{ height, minHeight: "450px", overflow: "hidden" }}>
+      <LectureChatbot
+        key={activeLesson?.id || "lecture-ai-tutor"}
+        lessonId={activeLesson?.id || "lesson_70635d10"}
+        sessionId="student_session_1"
+        onSeekVideo={handleTimestampJump}
+      />
+    </div>
+  );
+
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#021526", color: "#fff" }}>
       <Navbar onLogin={() => { setAuthMode("login"); setAuthOpen(true); }} onSignUp={() => { setAuthMode("register"); setAuthOpen(true); }} />
       <MobileNavTabs />
 
       {/* Top Classroom Bar */}
-      <div style={{
-        background: "rgba(7, 48, 73, 0.8)",
-        borderBottom: "1px solid rgba(56, 211, 153, 0.2)",
-        padding: "12px 24px",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        flexWrap: "wrap",
-        gap: "12px",
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <Link
-            href="/courses"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "6px",
-              color: "#38d399",
-              textDecoration: "none",
-              fontSize: "13px",
-              fontWeight: 700,
-              background: "rgba(56, 211, 153, 0.1)",
-              padding: "6px 12px",
-              borderRadius: "8px",
-            }}
-          >
+      <div className="classroomTopBar">
+        <div className="classroomTopBarLeft">
+          <Link href="/courses" className="allCoursesBackBtn">
             <ArrowLeft size={16} /> All Courses
           </Link>
-          <h1 style={{ fontSize: "16px", fontWeight: 700, margin: 0, color: "#fff" }}>
+          <h1 className="classroomCourseTitle">
             {course.title}
           </h1>
         </div>
 
         {/* Progress & Enrollment Action */}
-        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+        <div className="classroomProgressBadge">
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.7)" }}>
               Progress: <strong style={{ color: "#38d399" }}>{progressPercent}%</strong> ({completedLessonIds.length}/{totalLessonsCount} completed)
             </span>
-            <div style={{ width: "100px", height: "8px", background: "rgba(255,255,255,0.1)", borderRadius: "99px", overflow: "hidden" }}>
+            <div style={{ width: "90px", height: "8px", background: "rgba(255,255,255,0.1)", borderRadius: "99px", overflow: "hidden" }}>
               <div style={{ width: `${progressPercent}%`, height: "100%", background: "linear-gradient(90deg, #38d399, #00c78c)", transition: "width 0.3s ease" }} />
             </div>
           </div>
@@ -456,18 +520,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
               Enroll Now (Free)
             </button>
           ) : (
-            <span style={{
-              background: "rgba(56, 211, 153, 0.15)",
-              color: "#38d399",
-              border: "1px solid rgba(56, 211, 153, 0.35)",
-              borderRadius: "8px",
-              fontSize: "12px",
-              fontWeight: 700,
-              padding: "6px 12px",
-              display: "flex",
-              alignItems: "center",
-              gap: "6px",
-            }}>
+            <span className="enrolledStatusBadge">
               <CheckCircle2 size={14} /> Enrolled Learner
             </span>
           )}
@@ -475,28 +528,12 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
       </div>
 
       {/* Main Classroom Workspace: Video & Activity Left, Curriculum/AI Right */}
-      <div style={{
-        display: "grid",
-        gridTemplateColumns: "minmax(0, 1fr) 380px",
-        flexGrow: 1,
-        maxWidth: "1600px",
-        margin: "0 auto",
-        width: "100%",
-      }}>
+      <div className="classroomWorkspace">
         {/* Left Column: Video Player + Tabs */}
-        <div style={{ padding: "20px 24px", borderRight: "1px solid rgba(255, 255, 255, 0.08)", display: "flex", flexDirection: "column" }}>
+        <div className="classroomMainColumn">
           
           {/* Video Player Container */}
-          <div style={{
-            position: "relative",
-            width: "100%",
-            borderRadius: "16px",
-            overflow: "hidden",
-            background: "#000",
-            boxShadow: "0 14px 40px rgba(0, 0, 0, 0.6)",
-            marginBottom: "16px",
-            aspectRatio: "16 / 9",
-          }}>
+          <div className="classroomVideoContainer">
             {activeLesson?.videoUrl ? (
               isDirectVideo(activeLesson.videoUrl) ? (
                 <video
@@ -550,12 +587,12 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
           </div>
 
           {/* Lesson Header Row */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px", flexWrap: "wrap", gap: "10px" }}>
-            <div>
-              <h2 style={{ fontSize: "20px", fontWeight: 700, color: "#fff", margin: "0 0 4px" }}>
+          <div className="lessonHeaderRow">
+            <div className="lessonHeaderInfo">
+              <h2>
                 {activeLesson?.title}
               </h2>
-              <span style={{ fontSize: "13px", color: "rgba(255,255,255,0.6)" }}>
+              <span className="lessonHeaderMeta">
                 Duration: {activeLesson?.duration} • Instructor: {course.instructor.name}
               </span>
             </div>
@@ -563,23 +600,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
             <button
               type="button"
               onClick={() => activeLesson && handleToggleLesson(activeLesson.id)}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                background: activeLesson && completedLessonIds.includes(activeLesson.id)
-                  ? "rgba(56, 211, 153, 0.18)"
-                  : "rgba(255, 255, 255, 0.08)",
-                color: activeLesson && completedLessonIds.includes(activeLesson.id)
-                  ? "#38d399"
-                  : "rgba(255, 255, 255, 0.8)",
-                border: `1px solid ${activeLesson && completedLessonIds.includes(activeLesson.id) ? "rgba(56, 211, 153, 0.4)" : "rgba(255, 255, 255, 0.15)"}`,
-                borderRadius: "10px",
-                padding: "9px 16px",
-                fontSize: "13px",
-                fontWeight: 700,
-                cursor: "pointer",
-              }}
+              className={`markCompleteBtn ${activeLesson && completedLessonIds.includes(activeLesson.id) ? "completed" : "pending"}`}
             >
               {activeLesson && completedLessonIds.includes(activeLesson.id) ? (
                 <>
@@ -593,13 +614,16 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
             </button>
           </div>
 
-          {/* ── COURSE ACTIVITY TABS (Hero windowTabs capsule style - ONLY 3 TABS) ── */}
+          {/* ── COURSE ACTIVITY TABS (Unified Mobile & Desktop Activity Tabs) ── */}
           <div className="classroomTabsWrapper">
             <div className="classroomTabsCapsule" role="tablist">
               {[
                 { id: "assignments", label: "Assignment", icon: FileCheck2 },
                 { id: "mcqs", label: "MCQs Practice", icon: Award },
                 { id: "resources", label: "Resources", icon: FolderDown },
+                { id: "syllabus", label: "Syllabus", icon: FileCheck2, mobileOnly: true },
+                { id: "rag", label: "AI Mentor", icon: Sparkles, mobileOnly: true },
+                { id: "overview", label: "Overview", icon: BrainCircuit },
               ].map((tab) => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
@@ -610,9 +634,9 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                     role="tab"
                     aria-selected={isActive}
                     onClick={() => setActiveTab(tab.id as TabType)}
-                    className={`classroomTabBtn ${isActive ? "active" : ""}`}
+                    className={`classroomTabBtn ${isActive ? "active" : ""} ${tab.mobileOnly ? "mobileOnlyTab" : ""}`}
                   >
-                    <Icon size={18} /> {tab.label}
+                    <Icon size={16} /> {tab.label}
                   </button>
                 );
               })}
@@ -670,7 +694,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
             {activeTab === "assignments" && (
               <div>
                 {selectedAssignment ? (
-                  <div style={{
+                  <div className="assignmentWorkspaceCard" style={{
                     background: "linear-gradient(180deg, rgba(13, 22, 38, 0.85) 0%, rgba(9, 15, 28, 0.95) 100%)",
                     border: "1px solid rgba(56, 211, 153, 0.22)",
                     borderRadius: "18px",
@@ -892,7 +916,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
 
             {/* 3. MCQs Practice Tab */}
             {activeTab === "mcqs" && activeQuiz && (
-              <div style={{
+              <div className="mcqWorkspaceCard" style={{
                 background: "linear-gradient(180deg, rgba(13, 22, 38, 0.85) 0%, rgba(9, 15, 28, 0.95) 100%)",
                 border: "1px solid rgba(56, 211, 153, 0.22)",
                 borderRadius: "18px",
@@ -1316,23 +1340,49 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                 </button>
               </div>
             )}
+
+            {/* 7. Syllabus Tab (Mobile Unified Classroom View) */}
+            {activeTab === "syllabus" && (
+              <div style={{
+                background: "linear-gradient(180deg, rgba(13, 22, 38, 0.85) 0%, rgba(9, 15, 28, 0.95) 100%)",
+                border: "1px solid rgba(56, 211, 153, 0.22)",
+                borderRadius: "18px",
+                overflow: "hidden",
+                boxShadow: "0 14px 40px rgba(0, 0, 0, 0.35)",
+              }}>
+                <div style={{
+                  padding: "16px 20px",
+                  borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
+                  fontWeight: 700,
+                  fontSize: "15px",
+                  color: "#38d399",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px"
+                }}>
+                  <FileCheck2 size={16} /> Course Syllabus & Lessons Playlist
+                </div>
+                {renderCurriculumList()}
+              </div>
+            )}
+
+            {/* 8. AI Tutor Tab (Mobile Unified Classroom View) */}
+            {activeTab === "rag" && (
+              <div style={{
+                background: "linear-gradient(180deg, rgba(13, 22, 38, 0.85) 0%, rgba(9, 15, 28, 0.95) 100%)",
+                border: "1px solid rgba(56, 211, 153, 0.22)",
+                borderRadius: "18px",
+                overflow: "hidden",
+                boxShadow: "0 14px 40px rgba(0, 0, 0, 0.35)",
+              }}>
+                {renderAiTutor("580px")}
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Right Column: Sidebar (Curriculum Playlist OR RAG AI Chatbot) */}
-        <div style={{
-          background: "rgba(10, 16, 30, 0.75)",
-          border: "1px solid rgba(255, 255, 255, 0.08)",
-          borderRadius: "18px",
-          display: "flex",
-          flexDirection: "column",
-          height: "calc(100vh - 120px)",
-          position: "sticky",
-          top: "72px",
-          backdropFilter: "blur(14px)",
-          overflow: "hidden",
-        }}>
-          
+        {/* Right Column: Desktop Sticky Sidebar (Curriculum Playlist OR RAG AI Chatbot) */}
+        <aside className="classroomSidebarColumn">
           {/* Sidebar Mode Switcher */}
           <div className="sidebarTabsCapsule">
             <button
@@ -1348,91 +1398,16 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
               onClick={() => setSidebarTab("rag")}
               className={`sidebarTabBtn ${sidebarTab === "rag" ? "active" : ""}`}
             >
-              <Sparkles size={14} /> AI Tutor
+              <Sparkles size={14} /> AI Mentor
             </button>
           </div>
 
           {/* SIDEBAR TAB A: Curriculum List */}
-          {sidebarTab === "curriculum" && (
-            <div style={{ overflowY: "auto", padding: "16px", flexGrow: 1 }}>
-              {course.modules.map((mod) => (
-                <div key={mod.id} style={{ marginBottom: "16px" }}>
-                  <div style={{
-                    fontSize: "13px",
-                    fontWeight: 700,
-                    color: "#9ef8dc",
-                    padding: "8px 10px",
-                    background: "rgba(255, 255, 255, 0.05)",
-                    borderRadius: "8px",
-                    marginBottom: "6px",
-                  }}>
-                    {mod.title}
-                  </div>
-
-                  <div style={{ display: "grid", gap: "4px" }}>
-                    {mod.lessons.map((lesson) => {
-                      const isCurrent = activeLesson?.id === lesson.id;
-                      const isDone = completedLessonIds.includes(lesson.id);
-
-                      return (
-                        <div
-                          key={lesson.id}
-                          onClick={() => setActiveLesson(lesson)}
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                            padding: "10px 12px",
-                            borderRadius: "8px",
-                            background: isCurrent ? "rgba(56, 211, 153, 0.18)" : "transparent",
-                            border: `1px solid ${isCurrent ? "rgba(56, 211, 153, 0.35)" : "transparent"}`,
-                            cursor: "pointer",
-                            transition: "all 0.15s ease",
-                          }}
-                        >
-                          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                            <span
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleToggleLesson(lesson.id);
-                              }}
-                              style={{ cursor: "pointer", display: "grid", placeItems: "center" }}
-                            >
-                              {isDone ? (
-                                <CheckCircle2 size={16} color="#38d399" />
-                              ) : (
-                                <Circle size={16} color="rgba(255,255,255,0.4)" />
-                              )}
-                            </span>
-                            <span style={{ fontSize: "13px", color: isCurrent ? "#fff" : "rgba(255, 255, 255, 0.8)", fontWeight: isCurrent ? 700 : 500 }}>
-                              {lesson.title}
-                            </span>
-                          </div>
-
-                          <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.5)", whiteSpace: "nowrap" }}>
-                            {lesson.duration}
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+          {sidebarTab === "curriculum" && renderCurriculumList()}
 
           {/* SIDEBAR TAB B: Live EduRAG Video AI Tutor */}
-          {sidebarTab === "rag" && (
-            <div style={{ height: "100%", overflow: "hidden" }}>
-              <LectureChatbot
-                key={activeLesson?.id || "lecture-ai-tutor"}
-                lessonId={activeLesson?.id || "lesson_70635d10"}
-                sessionId="student_session_1"
-                onSeekVideo={handleTimestampJump}
-              />
-            </div>
-          )}
-        </div>
+          {sidebarTab === "rag" && renderAiTutor("100%")}
+        </aside>
       </div>
 
       {authOpen && (
