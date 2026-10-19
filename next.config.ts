@@ -66,6 +66,14 @@ const nextConfig: NextConfig = {
       source: '/uploads/:path*',
       destination: `${ragServer}/uploads/:path*`,
     });
+    rewritesList.push({
+      source: '/api/lessons/:lessonId/stream',
+      destination: `${ragServer}/api/lessons/:lessonId/stream`,
+    });
+    rewritesList.push({
+      source: '/api/stream/:path*',
+      destination: `${ragServer}/api/stream/:path*`,
+    });
     return rewritesList;
   },
   images: {

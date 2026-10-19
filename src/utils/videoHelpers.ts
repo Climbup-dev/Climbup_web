@@ -1,6 +1,6 @@
 /**
- * ClimbUP - Universal Video Helper
- * Intelligently handles YouTube embeds, Google Drive previews, and native HTML5 MP4/WebM video uploads.
+ * ClimbUP - Universal Secure Video Helper
+ * Intelligently handles YouTube embeds, protected Google Drive streaming, and native HTML5 video uploads.
  */
 
 export type VideoType = "youtube" | "drive" | "direct";
@@ -11,12 +11,29 @@ export interface VideoInfo {
   isDirectVideo: boolean;
 }
 
-export function getVideoTypeAndEmbedUrl(url: string, startSeconds?: number): VideoInfo {
+export function extractGoogleDriveId(urlOrId: string): string {
+  if (!urlOrId) return "";
+  const clean = urlOrId.trim();
+  const match = clean.match(/(?:file\/d\/|id=)([a-zA-Z0-9_-]{20,})/);
+  if (match) return match[1];
+  if (clean.length >= 20 && !clean.includes("/") && !clean.includes("?")) {
+    return clean;
+  }
+  return "";
+}
+
+export function getVideoTypeAndEmbedUrl(
+  url: string,
+  startSeconds?: number,
+  lessonId?: string,
+  authToken?: string
+): VideoInfo {
   if (!url) {
     return { type: "direct", embedUrl: "", isDirectVideo: true };
   }
 
   const trimmed = url.trim();
+  const tokenQuery = authToken ? `?token=${encodeURIComponent(authToken)}` : "";
 
   // 1. YouTube Links (watch, youtu.be, embed, shorts)
   if (trimmed.includes("youtube.com") || trimmed.includes("youtu.be")) {
@@ -48,8 +65,6 @@ export function getVideoTypeAndEmbedUrl(url: string, startSeconds?: number): Vid
 
     if (videoId) {
       const startParam = extractedStart ? `&start=${Math.floor(extractedStart)}` : "";
-      // playsinline=1 enables inline mobile playback on iOS/Safari and Android
-      // enablejsapi=1 allows instantaneous timestamp jumps via postMessage
       return {
         type: "youtube",
         embedUrl: `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=0&enablejsapi=1&playsinline=1&rel=0&modestbranding=1${startParam}`,
@@ -58,33 +73,60 @@ export function getVideoTypeAndEmbedUrl(url: string, startSeconds?: number): Vid
     }
   }
 
-  // 2. Google Drive Links
-  if (trimmed.includes("drive.google.com")) {
-    let previewUrl = trimmed;
-    if (trimmed.includes("/view")) {
-      previewUrl = trimmed.replace(/\/view(\?.*)?$/, "/preview");
-    } else if (trimmed.includes("/edit")) {
-      previewUrl = trimmed.replace(/\/edit(\?.*)?$/, "/preview");
-    } else if (!trimmed.endsWith("/preview")) {
-      previewUrl = `${trimmed}/preview`;
+  // 2. Google Drive Links & Private Drive Storage (Streamed securely via backend byte-range proxy)
+  if (
+    trimmed.includes("drive.google.com") ||
+    trimmed.startsWith("gdrive:") ||
+    trimmed.startsWith("drive://")
+  ) {
+    const driveId = extractGoogleDriveId(trimmed);
+    if (driveId) {
+      // If lessonId is known, stream through the authorized lesson endpoint
+      if (lessonId) {
+        return {
+          type: "direct",
+          embedUrl: `/api/lessons/${lessonId}/stream${tokenQuery}`,
+          isDirectVideo: true,
+        };
+      }
+      // Otherwise stream through the direct Drive stream endpoint
+      return {
+        type: "direct",
+        embedUrl: `/api/stream/drive/${driveId}${tokenQuery}`,
+        isDirectVideo: true,
+      };
     }
+  }
+
+  // 3. Native Direct Video / Uploads
+  if (trimmed.startsWith("/uploads/") || trimmed.startsWith("uploads/")) {
+    if (lessonId) {
+      return {
+        type: "direct",
+        embedUrl: `/api/lessons/${lessonId}/stream${tokenQuery}`,
+        isDirectVideo: true,
+      };
+    }
+    const cleanPath = trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
     return {
-      type: "drive",
-      embedUrl: previewUrl,
-      isDirectVideo: false,
+      type: "direct",
+      embedUrl: cleanPath,
+      isDirectVideo: true,
     };
   }
 
-  // 3. Native Direct Video (MP4, WebM, OGG, or Cloud Storage stream)
-  let resolvedUrl = trimmed;
-  if (trimmed.startsWith("/uploads/") || trimmed.startsWith("uploads/")) {
-    const path = trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
-    resolvedUrl = path; // Proxied through Next.js rewrite (/uploads/* -> RAG server)
+  // 4. Fallback: If lessonId is available and URL is not a direct MP4, route to secure stream
+  if (lessonId && !trimmed.endsWith(".mp4") && !trimmed.endsWith(".webm")) {
+    return {
+      type: "direct",
+      embedUrl: `/api/lessons/${lessonId}/stream${tokenQuery}`,
+      isDirectVideo: true,
+    };
   }
 
   return {
     type: "direct",
-    embedUrl: resolvedUrl,
+    embedUrl: trimmed,
     isDirectVideo: true,
   };
 }

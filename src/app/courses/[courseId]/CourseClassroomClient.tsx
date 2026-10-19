@@ -31,6 +31,7 @@ import MobileNavTabs from "@/components/MobileNavTabs";
 import AuthModal from "@/components/AuthModal";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/useToast";
+import { createClient } from "@/lib/supabase/client";
 import { 
   fetchCourseById,
   getUserEnrolledCourseIdsAsync, 
@@ -60,10 +61,35 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoPlaybackError, setVideoPlaybackError] = useState(false);
 
-  // Cross-browser universal video resolution (YouTube embed/shorts, Google Drive, and MP4/WebM uploads)
+  // Supabase session access token for authorized video byte streaming
+  const [authToken, setAuthToken] = useState<string>("");
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.access_token) {
+        setAuthToken(session.access_token);
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setAuthToken(session?.access_token || "");
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  // Cross-browser universal video resolution (YouTube embed, protected Google Drive stream, and MP4/WebM uploads)
   const resolvedVideo = useMemo(() => {
-    return getVideoTypeAndEmbedUrl(activeLesson?.videoUrl || "");
-  }, [activeLesson?.videoUrl]);
+    return getVideoTypeAndEmbedUrl(
+      activeLesson?.videoUrl || "",
+      undefined,
+      activeLesson?.id,
+      authToken
+    );
+  }, [activeLesson?.videoUrl, activeLesson?.id, authToken]);
 
   // Video Speed & Quality Controls State
   const [playbackSpeed, setPlaybackSpeed] = useState<number>(1);
@@ -930,8 +956,15 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                       <p style={{ margin: "0 0 10px", fontSize: "14px", fontWeight: 600 }}>Video playback interrupted or format unsupported.</p>
                       <button
                         type="button"
-                        onClick={() => {
+                        onClick={async () => {
                           setVideoPlaybackError(false);
+                          try {
+                            const supabase = createClient();
+                            const { data: { session } } = await supabase.auth.getSession();
+                            if (session?.access_token) {
+                              setAuthToken(session.access_token);
+                            }
+                          } catch {}
                           if (videoRef.current) {
                             videoRef.current.load();
                             videoRef.current.play().catch(() => {});
