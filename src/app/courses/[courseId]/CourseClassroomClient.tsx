@@ -224,10 +224,48 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
 
   if (loading) {
     return (
-      <div style={{ minHeight: "100vh", background: "#090d16", display: "grid", placeItems: "center", color: "#fff" }}>
-        <div style={{ textAlign: "center" }}>
-          <div style={{ width: "38px", height: "38px", border: "3px solid rgba(52, 211, 153, 0.15)", borderTopColor: "#34d399", borderRadius: "50%", animation: "spin 1s linear infinite", margin: "0 auto 16px" }} />
-          <p style={{ color: "#94a3b8", fontSize: "14px" }}>Verifying student session...</p>
+      <div
+        style={{
+          minHeight: "100vh",
+          background: "radial-gradient(ellipse at 50% 20%, #0f1d36 0%, #060b13 75%)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          color: "#fff",
+          padding: "24px"
+        }}
+      >
+        <div
+          style={{
+            maxWidth: "440px",
+            width: "100%",
+            background: "rgba(11, 20, 38, 0.85)",
+            backdropFilter: "blur(20px)",
+            border: "1px solid rgba(52, 211, 153, 0.2)",
+            borderRadius: "20px",
+            padding: "36px 28px",
+            textAlign: "center",
+            boxShadow: "0 24px 60px rgba(0, 0, 0, 0.8), 0 0 40px rgba(16, 185, 129, 0.1)"
+          }}
+        >
+          <div
+            style={{
+              width: "44px",
+              height: "44px",
+              border: "3px solid rgba(52, 211, 153, 0.15)",
+              borderTopColor: "#34d399",
+              borderRightColor: "#10b981",
+              borderRadius: "50%",
+              animation: "spin 1s linear infinite",
+              margin: "0 auto 18px"
+            }}
+          />
+          <h3 style={{ fontSize: "17px", fontWeight: 700, color: "#f8fafc", marginBottom: "6px" }}>
+            Verifying Student Session
+          </h3>
+          <p style={{ color: "#94a3b8", fontSize: "13.5px", margin: 0 }}>
+            Authenticating credentials and enrolled course permissions...
+          </p>
         </div>
       </div>
     );
@@ -316,8 +354,182 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
 
   if (!course) {
     return (
-      <div style={{ minHeight: "100vh", background: "#021526", display: "grid", placeItems: "center", color: "#fff" }}>
-        <div>Loading course materials...</div>
+      <div
+        style={{
+          minHeight: "100vh",
+          background: "radial-gradient(ellipse at 50% 20%, #0f1d36 0%, #060b13 75%)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          color: "#fff",
+          padding: "24px",
+          position: "relative",
+          overflow: "hidden"
+        }}
+      >
+        {/* Ambient glow decoration */}
+        <div
+          style={{
+            position: "absolute",
+            top: "20%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: "500px",
+            height: "500px",
+            background: "radial-gradient(circle, rgba(52, 211, 153, 0.08) 0%, transparent 70%)",
+            filter: "blur(60px)",
+            pointerEvents: "none"
+          }}
+        />
+
+        <div
+          style={{
+            maxWidth: "520px",
+            width: "100%",
+            background: "rgba(11, 20, 38, 0.85)",
+            backdropFilter: "blur(20px)",
+            border: "1px solid rgba(52, 211, 153, 0.25)",
+            borderRadius: "24px",
+            padding: "44px 36px",
+            textAlign: "center",
+            boxShadow: "0 30px 80px rgba(0, 0, 0, 0.8), 0 0 50px rgba(16, 185, 129, 0.12)",
+            position: "relative",
+            zIndex: 1
+          }}
+        >
+          {/* Animated Spinner & Center Badge */}
+          <div style={{ position: "relative", width: "76px", height: "76px", margin: "0 auto 24px" }}>
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                border: "3px solid rgba(52, 211, 153, 0.15)",
+                borderTopColor: "#34d399",
+                borderRightColor: "#10b981",
+                borderRadius: "50%",
+                animation: "spin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite"
+              }}
+            />
+            <div
+              style={{
+                position: "absolute",
+                inset: "8px",
+                borderRadius: "50%",
+                background: "rgba(52, 211, 153, 0.1)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                boxShadow: "0 0 20px rgba(52, 211, 153, 0.2)"
+              }}
+            >
+              <Sparkles size={28} color="#34d399" />
+            </div>
+          </div>
+
+          <h2
+            style={{
+              fontSize: "22px",
+              fontWeight: 800,
+              marginBottom: "10px",
+              background: "linear-gradient(135deg, #ffffff 30%, #a7f3d0)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              letterSpacing: "-0.02em"
+            }}
+          >
+            Preparing Classroom Environment
+          </h2>
+
+          <p
+            style={{
+              color: "#94a3b8",
+              fontSize: "14px",
+              lineHeight: "1.6",
+              maxWidth: "400px",
+              margin: "0 auto 26px"
+            }}
+          >
+            Synchronizing interactive video lectures, syllabus materials, and AI doubt assistant...
+          </p>
+
+          {/* Shimmering Feature Pills */}
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              gap: "8px",
+              flexWrap: "wrap",
+              marginBottom: "28px"
+            }}
+          >
+            <span
+              style={{
+                padding: "6px 12px",
+                background: "rgba(52, 211, 153, 0.08)",
+                border: "1px solid rgba(52, 211, 153, 0.2)",
+                borderRadius: "20px",
+                fontSize: "12px",
+                color: "#6ee7b7",
+                fontWeight: 600,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "5px"
+              }}
+            >
+              <BrainCircuit size={13} /> 768-dim Vector RAG
+            </span>
+            <span
+              style={{
+                padding: "6px 12px",
+                background: "rgba(56, 189, 248, 0.08)",
+                border: "1px solid rgba(56, 189, 248, 0.2)",
+                borderRadius: "20px",
+                fontSize: "12px",
+                color: "#7dd3fc",
+                fontWeight: 600,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "5px"
+              }}
+            >
+              <Play size={12} /> Adaptive HD Player
+            </span>
+            <span
+              style={{
+                padding: "6px 12px",
+                background: "rgba(168, 85, 247, 0.08)",
+                border: "1px solid rgba(168, 85, 247, 0.2)",
+                borderRadius: "20px",
+                fontSize: "12px",
+                color: "#d8b4fe",
+                fontWeight: 600,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "5px"
+              }}
+            >
+              <Award size={13} /> Verified Certificate
+            </span>
+          </div>
+
+          {/* Navigation fallback */}
+          <div style={{ borderTop: "1px solid rgba(255, 255, 255, 0.08)", paddingTop: "18px" }}>
+            <Link
+              href="/courses"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                color: "#94a3b8",
+                fontSize: "13px",
+                fontWeight: 600,
+                textDecoration: "none"
+              }}
+            >
+              <ArrowLeft size={14} /> Back to Course Catalog
+            </Link>
+          </div>
+        </div>
       </div>
     );
   }
