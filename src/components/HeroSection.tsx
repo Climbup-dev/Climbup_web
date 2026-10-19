@@ -182,8 +182,8 @@ export default function HeroSection() {
             <div className="videoCanvasWrapper">
               {/* Fixed Course Preview Image */}
               <Image
-                src="/images/course-preview.png"
-                alt="45+ Python Project Series: Learn, Practise, Build Real Projects"
+                src="/images/data-science-project-series.jpg"
+                alt="45 Data Science Project Series: Learn, Practise, Build Real Projects"
                 fill
                 priority
                 sizes="(max-width: 768px) 100vw, 580px"

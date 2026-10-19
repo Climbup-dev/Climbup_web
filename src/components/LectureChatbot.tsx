@@ -252,48 +252,6 @@ export const LectureChatbot: React.FC<LectureChatbotProps> = ({ lessonId, onSeek
                   )
                 )}
               </div>
-
-              {/* Retrieved Ground Truth Evidence Badges */}
-              {msg.evidence && msg.evidence.length > 0 && (
-                <div style={{
-                  marginTop: '4px',
-                  padding: '8px 10px',
-                  borderRadius: '8px',
-                  background: 'rgba(8, 14, 26, 0.65)',
-                  border: '1px solid rgba(255, 255, 255, 0.06)',
-                }}>
-                  <span style={{ fontSize: '10.5px', fontWeight: 700, color: '#94a3b8', display: 'block', marginBottom: '5px' }}>
-                    📚 Ground Truth Transcripts Cited:
-                  </span>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                    {msg.evidence.map((ev, idx) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => handleTimestampClick(ev.timestamp_label.split(' - ')[0])}
-                        style={{
-                          fontSize: '10.5px',
-                          padding: '3px 8px',
-                          borderRadius: '5px',
-                          background: 'rgba(30, 41, 59, 0.8)',
-                          border: '1px solid rgba(255, 255, 255, 0.1)',
-                          color: '#cbd5e1',
-                          cursor: 'pointer',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '5px',
-                          fontFamily: 'monospace',
-                        }}
-                      >
-                        <span style={{ color: '#34d399', fontWeight: 700 }}>
-                          {Math.round(ev.similarity_score * 100)}%
-                        </span>
-                        <span>{ev.timestamp_label}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
           );
         })}
