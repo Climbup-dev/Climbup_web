@@ -70,6 +70,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
       const session = res?.data?.session;
       if (session?.access_token) {
         setAuthToken(session.access_token);
+        setVideoPlaybackError(false);
       }
     });
 
@@ -930,7 +931,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
               resolvedVideo.isDirectVideo ? (
                 <>
                   <video
-                    key={activeLesson.id || activeLesson.videoUrl}
+                    key={ideo__}
                     ref={videoRef}
                     id="classroom-video-player-html5"
                     src={resolvedVideo.embedUrl}
