@@ -931,7 +931,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
               resolvedVideo.isDirectVideo ? (
                 <>
                   <video
-                    key={ideo__}
+                    key={activeLesson?.id ? `${activeLesson.id}_${authToken ? "auth" : "anon"}` : (activeLesson?.videoUrl || "player")}
                     ref={videoRef}
                     id="classroom-video-player-html5"
                     src={resolvedVideo.embedUrl}
