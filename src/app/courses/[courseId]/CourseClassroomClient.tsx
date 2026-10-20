@@ -739,9 +739,17 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                     key={lesson.id}
                     onClick={() => {
                       setActiveLesson(lesson);
+                      setVideoPlaybackError(false);
+                      setUseDrivePlayer(false);
                       if (typeof window !== "undefined" && window.innerWidth <= 1024) {
                         window.scrollTo({ top: 0, behavior: "smooth" });
                       }
+                      setTimeout(() => {
+                        if (videoRef.current) {
+                          videoRef.current.load();
+                          videoRef.current.play().catch(() => {});
+                        }
+                      }, 100);
                     }}
                     style={{
                       display: "flex",
@@ -858,7 +866,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
           
           {/* Video Player Container (Protected with anti-download restrictions) */}
           <div
-            className="classroomVideoContainer"
+            className="classroomVideoContainer" style={{ background: "#000" }}
             onContextMenu={(e) => e.preventDefault()}
             onDragStart={(e) => e.preventDefault()}
           >
@@ -938,13 +946,14 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                     id="classroom-video-player-html5"
                     src={resolvedVideo.embedUrl}
                     controls
+                    autoPlay
                     controlsList="nodownload"
                     disablePictureInPicture
                     disableRemotePlayback
                     onContextMenu={(e) => e.preventDefault()}
                     onDragStart={(e) => e.preventDefault()}
                     playsInline
-                    preload="metadata"
+                    preload="auto"
                     onCanPlay={() => setVideoPlaybackError(false)}
                     onLoadedData={() => setVideoPlaybackError(false)}
                     onError={(e) => {

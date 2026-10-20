@@ -14,11 +14,11 @@ export interface VideoInfo {
 
 const DEFAULT_CLOUD_RUN_URL = "https://teacher-lecture-video-rag-28929614461.asia-south1.run.app";
 function getBackendBaseUrl(): string {
-  const envUrl = process.env.NEXT_PUBLIC_RAG_SERVER_URL || process.env.NEXT_PUBLIC_PYTHON_BACKEND_URL || "";
-  if (!envUrl || envUrl.includes("127.0.0.1:8000") || envUrl.includes("localhost:8000")) {
-    return DEFAULT_CLOUD_RUN_URL;
+  const envUrl = process.env.NEXT_PUBLIC_RAG_SERVER_URL || "";
+  if (envUrl && envUrl.includes("run.app")) {
+    return envUrl.replace(/\/$/, "");
   }
-  return envUrl.replace(/\/$/, "");
+  return DEFAULT_CLOUD_RUN_URL;
 }
 
 export function extractGoogleDriveId(urlOrId: string): string {
