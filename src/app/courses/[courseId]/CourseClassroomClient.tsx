@@ -60,6 +60,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
   const [sidebarTab, setSidebarTab] = useState<"curriculum" | "rag">("curriculum");
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoPlaybackError, setVideoPlaybackError] = useState(false);
+  const [useDrivePlayer, setUseDrivePlayer] = useState(false);
 
   // Supabase session access token for authorized video byte streaming
   const [authToken, setAuthToken] = useState<string>("");
@@ -174,6 +175,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
         if (loaded && isMounted) {
           setCourse(loaded);
           setActiveLesson((prev) => prev || loaded.modules[0]?.lessons[0] || null);
+          setUseDrivePlayer(false);
           setSelectedAssignment((prev) => prev || (loaded.assignments.length > 0 ? loaded.assignments[0] : null));
         }
       } catch (err) {
@@ -928,7 +930,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
             )}
 
             {activeLesson?.videoUrl ? (
-              resolvedVideo.isDirectVideo ? (
+              (resolvedVideo.isDirectVideo && !useDrivePlayer) ? (
                 <>
                   <video
                     key={activeLesson?.id ? `${activeLesson.id}_${authToken ? "auth" : "anon"}` : (activeLesson?.videoUrl || "player")}
@@ -956,27 +958,42 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                   {videoPlaybackError && (
                     <div className="classroomVideoErrorOverlay">
                       <p style={{ margin: "0 0 10px", fontSize: "14px", fontWeight: 600 }}>Video playback interrupted or format unsupported.</p>
-                      <button
-                        type="button"
-                        onClick={async () => {
-                          setVideoPlaybackError(false);
-                          try {
-                            const supabase = createClient();
-                            const { data: { session } } = await supabase.auth.getSession();
-                            if (session?.access_token) {
-                              setAuthToken(session.access_token);
+                      <div style={{ display: "flex", gap: "10px", justifyContent: "center", flexWrap: "wrap" }}>
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            setVideoPlaybackError(false);
+                            try {
+                              const supabase = createClient();
+                              const { data: { session } } = await supabase.auth.getSession();
+                              if (session?.access_token) {
+                                setAuthToken(session.access_token);
+                              }
+                            } catch {}
+                            if (videoRef.current) {
+                              videoRef.current.load();
+                              videoRef.current.play().catch(() => {});
                             }
-                          } catch {}
-                          if (videoRef.current) {
-                            videoRef.current.load();
-                            videoRef.current.play().catch(() => {});
-                          }
-                        }}
-                        className="retryVideoBtn"
-                      >
-                        <RefreshCw size={14} style={{ display: "inline-block", marginRight: "6px" }} />
-                        Reload Video
-                      </button>
+                          }}
+                          className="retryVideoBtn"
+                        >
+                          <RefreshCw size={14} style={{ display: "inline-block", marginRight: "6px" }} />
+                          Reload Video
+                        </button>
+                        {resolvedVideo.driveFallbackUrl && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setUseDrivePlayer(true);
+                              setVideoPlaybackError(false);
+                            }}
+                            className="retryVideoBtn"
+                            style={{ background: "#4f46e5", color: "#fff", border: "none" }}
+                          >
+                            Play via Drive Web Player
+                          </button>
+                        )}
+                      </div>
                     </div>
                   )}
                 </>

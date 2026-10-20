@@ -9,6 +9,16 @@ export interface VideoInfo {
   type: VideoType;
   embedUrl: string;
   isDirectVideo: boolean;
+  driveFallbackUrl?: string;
+}
+
+const DEFAULT_CLOUD_RUN_URL = "https://teacher-lecture-video-rag-28929614461.asia-south1.run.app";
+function getBackendBaseUrl(): string {
+  const envUrl = process.env.NEXT_PUBLIC_RAG_SERVER_URL || process.env.NEXT_PUBLIC_PYTHON_BACKEND_URL || "";
+  if (!envUrl || envUrl.includes("127.0.0.1:8000") || envUrl.includes("localhost:8000")) {
+    return DEFAULT_CLOUD_RUN_URL;
+  }
+  return envUrl.replace(/\/$/, "");
 }
 
 export function extractGoogleDriveId(urlOrId: string): string {
@@ -81,19 +91,23 @@ export function getVideoTypeAndEmbedUrl(
   ) {
     const driveId = extractGoogleDriveId(trimmed);
     if (driveId) {
+      const backendBase = getBackendBaseUrl();
+      const driveFallbackUrl = `https://drive.google.com/file/d/${driveId}/preview`;
       // If lessonId is known, stream through the authorized lesson endpoint
       if (lessonId) {
         return {
           type: "direct",
-          embedUrl: `/api/lessons/${lessonId}/stream${tokenQuery}`,
+          embedUrl: `${backendBase}/api/lessons/${lessonId}/stream${tokenQuery}`,
           isDirectVideo: true,
+          driveFallbackUrl,
         };
       }
       // Otherwise stream through the direct Drive stream endpoint
       return {
         type: "direct",
-        embedUrl: `/api/stream/drive/${driveId}${tokenQuery}`,
+        embedUrl: `${backendBase}/api/stream/drive/${driveId}${tokenQuery}`,
         isDirectVideo: true,
+        driveFallbackUrl,
       };
     }
   }
