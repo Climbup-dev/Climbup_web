@@ -18,8 +18,13 @@ export async function middleware(request: NextRequest) {
   const isPublic = isPublicRoute(pathname);
   const isApiRoute = pathname.startsWith("/api/");
 
-  // For file upload routes, return immediately without cloning request stream in updateSession
-  if (pathname.startsWith("/api/drive-upload")) {
+  // For file upload and video stream routes, bypass edge auth check so video byte ranges and backend proxy can stream
+  if (
+    pathname.startsWith("/api/drive-upload") ||
+    pathname.startsWith("/api/lessons/") ||
+    pathname.startsWith("/api/stream/") ||
+    pathname.includes("/stream")
+  ) {
     return NextResponse.next();
   }
 

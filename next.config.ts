@@ -61,7 +61,7 @@ const nextConfig: NextConfig = {
         destination: classAgentWsUrl,
       });
     }
-    const ragServer = process.env.NEXT_PUBLIC_RAG_SERVER_URL || 'http://127.0.0.1:8000';
+    const ragServer = process.env.NEXT_PUBLIC_RAG_SERVER_URL || 'https://teacher-lecture-video-rag-28929614461.asia-south1.run.app';
     rewritesList.push({
       source: '/uploads/:path*',
       destination: `${ragServer}/uploads/:path*`,
