@@ -93,21 +93,18 @@ export function getVideoTypeAndEmbedUrl(
     if (driveId) {
       const backendBase = getBackendBaseUrl();
       const driveFallbackUrl = `https://drive.google.com/file/d/${driveId}/preview`;
-      // If lessonId is known, stream through the authorized lesson endpoint
+      // Masked first-party streaming endpoint (Next.js server-side proxies to Cloud Run; hides backend URL from browser Network tab)
       if (lessonId) {
         return {
           type: "direct",
-          embedUrl: `${backendBase}/api/lessons/${lessonId}/stream${tokenQuery}`,
+          embedUrl: `/api/lessons/${lessonId}/stream${tokenQuery}`,
           isDirectVideo: true,
-          
         };
       }
-      // Otherwise stream through the direct Drive stream endpoint
       return {
         type: "direct",
-        embedUrl: `${backendBase}/api/stream/drive/${driveId}${tokenQuery}`,
+        embedUrl: `/api/stream/drive/${driveId}${tokenQuery}`,
         isDirectVideo: true,
-        
       };
     }
   }

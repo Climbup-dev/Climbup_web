@@ -65,7 +65,8 @@ const nextConfig: NextConfig = {
         destination: classAgentWsUrl,
       });
     }
-    const ragServer = process.env.NEXT_PUBLIC_RAG_SERVER_URL || 'https://teacher-lecture-video-rag-28929614461.asia-south1.run.app';
+    // Internal backend RAG & Video Streaming proxy (Hides raw Cloud Run server URL from student browsers)
+    const ragServer = process.env.RAG_SERVER_INTERNAL_URL || process.env.NEXT_PUBLIC_RAG_SERVER_URL || 'https://teacher-lecture-video-rag-28929614461.asia-south1.run.app';
     rewritesList.push({
       source: '/uploads/:path*',
       destination: `${ragServer}/uploads/:path*`,
@@ -75,8 +76,16 @@ const nextConfig: NextConfig = {
       destination: `${ragServer}/api/lessons/:lessonId/stream`,
     });
     rewritesList.push({
+      source: '/api/lessons/:lessonId/stream-token',
+      destination: `${ragServer}/api/lessons/:lessonId/stream-token`,
+    });
+    rewritesList.push({
       source: '/api/stream/:path*',
       destination: `${ragServer}/api/stream/:path*`,
+    });
+    rewritesList.push({
+      source: '/api/rag/:path*',
+      destination: `${ragServer}/api/:path*`,
     });
     return rewritesList;
   },

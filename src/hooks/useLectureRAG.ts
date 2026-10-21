@@ -73,7 +73,9 @@ export function useLectureRAG(
     setError(null);
 
     try {
-      const response = await fetch(`${RAG_BASE_URL}/api/chat`, {
+      // First-party masked endpoint: browser only calls /api/rag/chat; Next.js proxies to Cloud Run
+      const endpoint = typeof window !== 'undefined' ? '/api/rag/chat' : `${RAG_BASE_URL}/api/chat`;
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
