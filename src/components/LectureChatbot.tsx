@@ -1,7 +1,20 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Sparkles, Send, Trash2, Brain, ArrowRight, Lightbulb } from 'lucide-react';
+import { 
+  Sparkles, 
+  Send, 
+  Trash2, 
+  Brain, 
+  ArrowRight, 
+  Lightbulb, 
+  Copy, 
+  Check, 
+  Zap, 
+  Clock, 
+  BookOpen,
+  Volume2
+} from 'lucide-react';
 import { useLectureRAG } from '@/hooks/useLectureRAG';
 import { parseTimestampToSeconds, parseInlineFormatted } from '@/utils/ragHelpers';
 import '@/styles/LectureChatbot.css';
@@ -14,9 +27,32 @@ interface LectureChatbotProps {
 }
 
 const THINKING_STEPS = [
-  'Analyzing lecture audio & keywords...',
-  'Locating precise video timestamps...',
-  'Structuring clean, step-by-step explanation...',
+  'Scanning lecture audio & speech transcript...',
+  'Pinpointing precise video timestamps...',
+  'Structuring clear, step-by-step explanation...',
+];
+
+const QUICK_STARTERS = [
+  {
+    icon: Zap,
+    label: 'Key Concepts',
+    query: 'Summarize the core topics and concepts taught in this video lecture.'
+  },
+  {
+    icon: Clock,
+    label: 'Timestamps & Chapters',
+    query: 'What are the main sections and important timestamps in this lecture?'
+  },
+  {
+    icon: Lightbulb,
+    label: 'Main Takeaway',
+    query: 'Explain the most important takeaway of this lecture in simple words.'
+  },
+  {
+    icon: BookOpen,
+    label: 'Study Notes',
+    query: 'What are the most crucial points I should write down in my study notes from this lecture?'
+  }
 ];
 
 /**
@@ -71,9 +107,9 @@ const StructuredMessageContent: React.FC<StructuredMessageContentProps> = ({
                         type="button"
                         onClick={() => onTimestampClick(part.value)}
                         className="chatTimestampBtn"
-                        title={`Jump to video at ${part.value}`}
+                        title={`Jump video to ${part.value}`}
                       >
-                        ▶ {part.value}
+                        <span className="tsPlayTriangle">▶</span> {part.value}
                       </button>
                     );
                   }
@@ -122,7 +158,7 @@ const StructuredMessageContent: React.FC<StructuredMessageContentProps> = ({
       return;
     }
 
-    // Heading (e.g. ### Suggested Questions)
+    // Heading (e.g. ### Suggested Questions or Notes)
     if (trimmed.startsWith('### ') || trimmed.startsWith('## ')) {
       flushBullets(`line-${lineIdx}`);
       flushSuggestedQuestions(`line-${lineIdx}`);
@@ -132,14 +168,14 @@ const StructuredMessageContent: React.FC<StructuredMessageContentProps> = ({
       }
       elements.push(
         <h4 key={`heading-${lineIdx}`} className="chatHeading">
-          <Lightbulb size={13} style={{ color: '#34d399' }} />
+          <Lightbulb size={14} style={{ color: '#34d399' }} />
           <span>{headingText}</span>
         </h4>
       );
       return;
     }
 
-    // Numbered Item (e.g. 1. How do I install Python...)
+    // Numbered Item
     const numMatch = trimmed.match(/^(\d+)\.\s+(.*)$/);
     if (numMatch && (isUnderSuggestedHeader || numMatch[2].includes('?'))) {
       flushBullets(`line-${lineIdx}`);
@@ -153,7 +189,7 @@ const StructuredMessageContent: React.FC<StructuredMessageContentProps> = ({
       return;
     }
 
-    // If regular line, flush accumulated bullets and questions first
+    // Regular line
     flushBullets(`line-${lineIdx}`);
     flushSuggestedQuestions(`line-${lineIdx}`);
 
@@ -178,9 +214,9 @@ const StructuredMessageContent: React.FC<StructuredMessageContentProps> = ({
                 type="button"
                 onClick={() => onTimestampClick(part.value)}
                 className="chatTimestampBtn"
-                title={`Jump to video at ${part.value}`}
+                title={`Jump video to ${part.value}`}
               >
-                ▶ {part.value}
+                <span className="tsPlayTriangle">▶</span> {part.value}
               </button>
             );
           }
@@ -288,6 +324,7 @@ export const LectureChatbot: React.FC<LectureChatbotProps> = ({
   );
   const [input, setInput] = useState('');
   const [thinkingIndex, setThinkingIndex] = useState(0);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
   const animatedSetRef = useRef<Set<string>>(new Set(['welcome']));
   const chatBottomRef = useRef<HTMLDivElement>(null);
 
@@ -319,6 +356,14 @@ export const LectureChatbot: React.FC<LectureChatbotProps> = ({
     askDoubt(question);
   };
 
+  const handleCopy = (id: string, text: string) => {
+    navigator.clipboard?.writeText(text);
+    setCopiedId(id);
+    setTimeout(() => {
+      setCopiedId(null);
+    }, 2000);
+  };
+
   const handleTimestampClick = useCallback((timeStr: string) => {
     const seconds = parseTimestampToSeconds(timeStr);
     if (onSeekVideo) {
@@ -330,19 +375,30 @@ export const LectureChatbot: React.FC<LectureChatbotProps> = ({
     animatedSetRef.current.add(id);
   }, []);
 
+  const isWelcomeOnly = messages.length === 1 && messages[0].id.startsWith('welcome');
+
   return (
     <div className="chatbotContainer">
       {/* Chat Header */}
       <div className="chatHeader">
         <div className="chatHeaderLeft">
           <div className="chatAvatarIcon">
-            <Sparkles size={17} />
+            <Sparkles size={18} />
           </div>
           <div>
-            <h3 className="chatTitle">ClimbUP AI Mentor</h3>
+            <div className="chatHeaderTitleRow">
+              <h3 className="chatTitle">ClimbUP AI Mentor</h3>
+              <span className="chatOnlineBadge">Live</span>
+            </div>
             <p className="chatSubtitle">
               <span className="chatStatusDot" />
-              Grounded in Video Transcripts
+              {lessonTitle ? (
+                <span className="chatLessonPill" title={lessonTitle}>
+                  {lessonTitle.length > 28 ? `${lessonTitle.slice(0, 26)}...` : lessonTitle}
+                </span>
+              ) : (
+                'Grounded in Video Transcripts'
+              )}
             </p>
           </div>
         </div>
@@ -381,7 +437,79 @@ export const LectureChatbot: React.FC<LectureChatbotProps> = ({
 
       {/* Messages Scroll Area */}
       <div className="chatMessagesScroll">
-        {messages.map((msg, idx) => {
+        {/* Rich Welcome Hero Card when chat is in initial state */}
+        {isWelcomeOnly && (
+          <div className="welcomeHeroCard">
+            <div className="welcomeBadgeRow">
+              <span className="welcomeAssistantPill">
+                <Sparkles size={13} />
+                <span>AI Teaching Assistant Desk</span>
+              </span>
+              <span className="welcomeActiveDot">
+                <span className="welcomeLivePulse" />
+                Ready
+              </span>
+            </div>
+
+            <h2 className="welcomeHeroTitle">
+              Welcome to your Lecture Mentor!
+            </h2>
+
+            {lessonTitle && (
+              <div className="welcomeLessonBanner">
+                <BookOpen size={14} className="welcomeLessonIcon" />
+                <span className="welcomeLessonPrefix">Lecture:</span>
+                <strong className="welcomeLessonName">{lessonTitle}</strong>
+              </div>
+            )}
+
+            <p className="welcomeHeroDesc">
+              Ask any doubts about concepts, explanations, or code shown in this video. 
+              Every answer gives you concise explanations with <strong>clickable video jump links</strong>!
+            </p>
+
+            <div className="welcomeFeaturesRow">
+              <span className="welcomeFeatureTag">🎯 100% Transcript Grounded</span>
+              <span className="welcomeFeatureTag">⏱️ Interactive Video Jump Points</span>
+              <span className="welcomeFeatureTag">🌐 English & Hinglish</span>
+            </div>
+
+            {/* Quick Starter Action Chips */}
+            <div className="quickStartersSection">
+              <div className="quickStartersHeader">
+                <Lightbulb size={13} style={{ color: '#34d399' }} />
+                <span>Quick Prompt Starters</span>
+              </div>
+              <div className="quickStartersGrid">
+                {QUICK_STARTERS.map((item, sIdx) => {
+                  const Icon = item.icon;
+                  return (
+                    <button
+                      key={sIdx}
+                      type="button"
+                      className="quickStarterBtn"
+                      onClick={() => handleSelectQuestion(item.query)}
+                      disabled={loading}
+                      title={`Click to ask: "${item.query}"`}
+                    >
+                      <div className="quickStarterIconBox">
+                        <Icon size={14} />
+                      </div>
+                      <div className="quickStarterTextBox">
+                        <span className="quickStarterLabel">{item.label}</span>
+                        <span className="quickStarterSnippet">{item.query}</span>
+                      </div>
+                      <ArrowRight size={13} className="quickStarterArrow" />
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Regular Messages Stream (Shown after initial interaction, or normal messages) */}
+        {!isWelcomeOnly && messages.map((msg, idx) => {
           const isStudent = msg.sender === 'student';
           const isLatestAi = !isStudent && idx === messages.length - 1;
           const shouldAnimate = isLatestAi && !animatedSetRef.current.has(msg.id);
@@ -391,10 +519,30 @@ export const LectureChatbot: React.FC<LectureChatbotProps> = ({
               key={msg.id}
               className={`messageWrapper ${isStudent ? 'student' : 'ai'}`}
             >
-              {/* Sender label */}
+              {/* Sender label & Actions */}
               <div className="senderMeta">
-                <span>{isStudent ? 'You' : 'AI Mentor'}</span>
+                <span className="senderLabel">{isStudent ? 'You' : 'AI Mentor'}</span>
                 {msg.timestamp && <span className="senderTime">⏱ {msg.timestamp}</span>}
+                {!isStudent && (
+                  <button
+                    type="button"
+                    onClick={() => handleCopy(msg.id, msg.text)}
+                    className="copyMsgBtn"
+                    title="Copy AI explanation"
+                  >
+                    {copiedId === msg.id ? (
+                      <>
+                        <Check size={11} style={{ color: '#34d399' }} />
+                        <span>Copied!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy size={11} />
+                        <span>Copy</span>
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
 
               {/* Message Bubble */}
@@ -417,30 +565,47 @@ export const LectureChatbot: React.FC<LectureChatbotProps> = ({
           );
         })}
 
-        {/* Thinking & Reasoning Animation Box */}
+        {/* High-Tech Thinking & Reasoning Hologram Box */}
         {loading && (
           <div className="thinkingCard" role="status" aria-live="polite">
             <div className="thinkingHeader">
+              {/* Vibrant Glowing Brain Icon Wrapper */}
               <div className="thinkingBrainIconWrapper">
-                <div className="thinkingPulseRing" />
+                <div className="thinkingPulseRing1" />
+                <div className="thinkingPulseRing2" />
                 <div className="thinkingPulseGlow" />
-                <Brain size={20} strokeWidth={2.4} className="thinkingBrainSvg" />
+                <Brain size={22} strokeWidth={2.4} className="thinkingBrainSvg" />
               </div>
+
+              {/* Status and Audio Equalizer Visualizer */}
               <div className="thinkingTitleContainer">
                 <div className="thinkingTitleRow">
-                  <span className="thinkingLabel">AI Thinking</span>
+                  <span className="thinkingLabel">AI Reasoning & Retrieval</span>
+                  
+                  {/* Animated Audio Equalizer Bars showing live transcript scan */}
+                  <div className="audioEqualizerBars" title="Scanning audio transcript">
+                    <span className="audioBar bar1" />
+                    <span className="audioBar bar2" />
+                    <span className="audioBar bar3" />
+                    <span className="audioBar bar4" />
+                    <span className="audioBar bar5" />
+                  </div>
+
                   <span className="thinkingDots" aria-hidden="true">
                     <span className="thinkingDot" />
                     <span className="thinkingDot" />
                     <span className="thinkingDot" />
                   </span>
                 </div>
+
+                {/* Dynamic Step Text */}
                 <p className="thinkingStepText">
                   {THINKING_STEPS[thinkingIndex]}
                 </p>
               </div>
             </div>
 
+            {/* Glowing Shimmer Laser Beam */}
             <div className="thinkingShimmerBar" aria-hidden="true">
               <div className="thinkingShimmerBeam" />
             </div>
@@ -450,14 +615,14 @@ export const LectureChatbot: React.FC<LectureChatbotProps> = ({
         <div ref={chatBottomRef} />
       </div>
 
-      {/* Input Form */}
+      {/* Input Form with Floating Styling */}
       <form onSubmit={handleSubmit} className="chatInputForm">
         <div className="chatInputContainer">
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask doubt about this lecture..."
+            placeholder="Ask doubt about this lecture (e.g. explain formula at 03:45)..."
             disabled={loading}
             className="chatInputField"
           />
@@ -467,8 +632,11 @@ export const LectureChatbot: React.FC<LectureChatbotProps> = ({
             className={`chatSendBtn ${input.trim() && !loading ? 'active' : 'disabled'}`}
             title="Send query"
           >
-            <Send size={14} />
+            <Send size={15} />
           </button>
+        </div>
+        <div className="chatInputHintRow">
+          <span>💡 Press Enter to ask • Click any video timestamp to jump player</span>
         </div>
       </form>
     </div>
