@@ -8,6 +8,7 @@ import '@/styles/LectureChatbot.css';
 
 interface LectureChatbotProps {
   lessonId: string;
+  lessonTitle?: string;
   onSeekVideo?: (seconds: number, label?: string) => void;
   sessionId?: string;
 }
@@ -23,7 +24,7 @@ const THINKING_STEPS = [
  * - ### Headings
  * - --- Horizontal rules
  * - Bullet lists (* or -)
- * - Suggested Question interactive chips (1. Question?, 2. Question?)
+ * - Suggested Question interactive chips (if any)
  * - Inline bold, code, and clickable video timestamp buttons
  */
 interface StructuredMessageContentProps {
@@ -54,7 +55,7 @@ const StructuredMessageContent: React.FC<StructuredMessageContentProps> = ({
         <ul key={`${keyPrefix}-bullets`} className="chatBulletList">
           {bulletsToRender.map((bText, bIdx) => (
             <li key={bIdx} className="chatBulletItem">
-              <span className="chatBulletIcon">●</span>
+              <span className="chatBulletIcon">▶</span>
               <span>
                 {parseInlineFormatted(bText).map((part, pIdx) => {
                   if (part.type === 'bold') {
@@ -157,7 +158,6 @@ const StructuredMessageContent: React.FC<StructuredMessageContentProps> = ({
     flushSuggestedQuestions(`line-${lineIdx}`);
 
     if (trimmed === '') {
-      // blank spacing
       return;
     }
 
@@ -236,7 +236,6 @@ const TypewriterMessage: React.FC<TypewriterMessageProps> = ({
 
     let current = 0;
     const totalLength = text.length;
-    // Advance 2-3 characters every 12ms for a smooth, brisk letter-by-letter typing effect
     const interval = setInterval(() => {
       current += 2;
       if (current >= totalLength) {
@@ -276,8 +275,17 @@ const TypewriterMessage: React.FC<TypewriterMessageProps> = ({
   );
 };
 
-export const LectureChatbot: React.FC<LectureChatbotProps> = ({ lessonId, onSeekVideo, sessionId }) => {
-  const { messages, loading, language, setLanguage, askDoubt, clearChat } = useLectureRAG(lessonId, sessionId);
+export const LectureChatbot: React.FC<LectureChatbotProps> = ({ 
+  lessonId, 
+  lessonTitle, 
+  onSeekVideo, 
+  sessionId 
+}) => {
+  const { messages, loading, language, setLanguage, askDoubt, clearChat } = useLectureRAG(
+    lessonId, 
+    sessionId, 
+    lessonTitle
+  );
   const [input, setInput] = useState('');
   const [thinkingIndex, setThinkingIndex] = useState(0);
   const animatedSetRef = useRef<Set<string>>(new Set(['welcome']));
@@ -328,7 +336,7 @@ export const LectureChatbot: React.FC<LectureChatbotProps> = ({ lessonId, onSeek
       <div className="chatHeader">
         <div className="chatHeaderLeft">
           <div className="chatAvatarIcon">
-            <Sparkles size={16} />
+            <Sparkles size={17} />
           </div>
           <div>
             <h3 className="chatTitle">ClimbUP AI Mentor</h3>
@@ -356,7 +364,7 @@ export const LectureChatbot: React.FC<LectureChatbotProps> = ({ lessonId, onSeek
               className={`langBtn ${language === 'hi' ? 'active' : ''}`}
               title="Answer in Hindi / Hinglish"
             >
-              HI (हिंदी)
+              HI (हिन्दी)
             </button>
           </div>
 
@@ -386,7 +394,7 @@ export const LectureChatbot: React.FC<LectureChatbotProps> = ({ lessonId, onSeek
               {/* Sender label */}
               <div className="senderMeta">
                 <span>{isStudent ? 'You' : 'AI Mentor'}</span>
-                {msg.timestamp && <span className="senderTime">• {msg.timestamp}</span>}
+                {msg.timestamp && <span className="senderTime">⏱ {msg.timestamp}</span>}
               </div>
 
               {/* Message Bubble */}
@@ -414,20 +422,24 @@ export const LectureChatbot: React.FC<LectureChatbotProps> = ({ lessonId, onSeek
           <div className="thinkingCard" role="status" aria-live="polite">
             <div className="thinkingHeader">
               <div className="thinkingBrainIconWrapper">
+                <div className="thinkingPulseRing" />
                 <div className="thinkingPulseGlow" />
-                <Brain size={14} />
+                <Brain size={20} strokeWidth={2.4} className="thinkingBrainSvg" />
               </div>
-              <span className="thinkingLabel">Thinking</span>
-              <span className="thinkingDots" aria-hidden="true">
-                <span className="thinkingDot" />
-                <span className="thinkingDot" />
-                <span className="thinkingDot" />
-              </span>
+              <div className="thinkingTitleContainer">
+                <div className="thinkingTitleRow">
+                  <span className="thinkingLabel">AI Thinking</span>
+                  <span className="thinkingDots" aria-hidden="true">
+                    <span className="thinkingDot" />
+                    <span className="thinkingDot" />
+                    <span className="thinkingDot" />
+                  </span>
+                </div>
+                <p className="thinkingStepText">
+                  {THINKING_STEPS[thinkingIndex]}
+                </p>
+              </div>
             </div>
-
-            <p className="thinkingStepText">
-              {THINKING_STEPS[thinkingIndex]}
-            </p>
 
             <div className="thinkingShimmerBar" aria-hidden="true">
               <div className="thinkingShimmerBeam" />
@@ -455,7 +467,7 @@ export const LectureChatbot: React.FC<LectureChatbotProps> = ({ lessonId, onSeek
             className={`chatSendBtn ${input.trim() && !loading ? 'active' : 'disabled'}`}
             title="Send query"
           >
-            <Send size={13} />
+            <Send size={14} />
           </button>
         </div>
       </form>

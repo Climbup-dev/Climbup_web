@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 
 const RAG_BASE_URL = 
   process.env.NEXT_PUBLIC_RAG_SERVER_URL || 
@@ -21,34 +21,41 @@ export interface ChatMessage {
   timestamp?: string;
 }
 
-const DEFAULT_WELCOME_MESSAGE = `Hello! Welcome to the teaching assistant desk for **"Learn Python in 1 hour!"**.
+export const createWelcomeMessage = (title?: string): string => {
+  const lectureName = title && title.trim() ? `for **"${title.trim()}"**` : 'for this lecture';
+  return `Hello! Welcome to your AI Teaching Assistant ${lectureName}.
 
-I am here to help answer any questions you have about the concepts covered in this lecture. Here is a quick overview of what the professor introduces in the opening segments:
+I am here to help answer any questions you have about the concepts covered in this video. Ask me any doubt, and I will explain it step-by-step with exact video timestamp jump points!`;
+};
 
-* **Python & IDE Setup:** Downloading the Python interpreter from \`python.org\` (adding Python to PATH) \`▶ 00:00\`, downloading PyCharm Community Edition \`▶ 01:50\`, and creating your first \`.py\` file \`▶ 01:50\`.
-* **Basic Output & Syntax:** Running print statements using \`print()\` \`▶ 01:50\`, using quotes for strings \`▶ 03:44\`, and adding comments using the \`#\` symbol \`▶ 03:44\`.
-* **Variables & Data Types:** Defining variables as reusable containers \`▶ 03:44\`, using f-strings (\`f"..."\`) to insert variables into text \`▶ 05:38\`, and working with basic data types like **Strings**, **Integers**, and **Floats** \`▶ 03:44\` \`▶ 05:38\`.
-
-How can I assist you with your Python learning today? Feel free to ask a specific question about the lecture!
-
----
-
-### Suggested Questions
-1. How do I install Python and configure PyCharm to create my first project?
-2. What is an f-string, and how do I use it to print variables in Python?`;
-
-export function useLectureRAG(lessonId: string, sessionId: string = 'student_session_1') {
-  const [messages, setMessages] = useState<ChatMessage[]>([
+export function useLectureRAG(
+  lessonId: string, 
+  sessionId: string = 'student_session_1',
+  lessonTitle?: string
+) {
+  const [messages, setMessages] = useState<ChatMessage[]>(() => [
     {
       id: 'welcome',
       sender: 'ai',
-      text: DEFAULT_WELCOME_MESSAGE,
+      text: createWelcomeMessage(lessonTitle),
       timestamp: 'Now',
     }
   ]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [language, setLanguage] = useState<'en' | 'hi'>('en');
+
+  // Update initial welcome message when lessonId or lessonTitle changes
+  useEffect(() => {
+    setMessages([
+      {
+        id: `welcome-${lessonId || 'default'}`,
+        sender: 'ai',
+        text: createWelcomeMessage(lessonTitle),
+        timestamp: 'Now',
+      }
+    ]);
+  }, [lessonId, lessonTitle]);
 
   const askDoubt = useCallback(async (query: string) => {
     if (!query.trim() || !lessonId) return;
@@ -128,13 +135,13 @@ export function useLectureRAG(lessonId: string, sessionId: string = 'student_ses
   const clearChat = useCallback(() => {
     setMessages([
       {
-        id: 'welcome',
+        id: `welcome-${Date.now()}`,
         sender: 'ai',
-        text: DEFAULT_WELCOME_MESSAGE,
+        text: createWelcomeMessage(lessonTitle),
         timestamp: 'Now',
       }
     ]);
-  }, []);
+  }, [lessonTitle]);
 
   return {
     messages,

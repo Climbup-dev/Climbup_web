@@ -836,6 +836,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
         key={activeLesson?.id || "lecture-ai-tutor"}
         lessonId={activeLesson?.id || "lesson_70635d10"}
         sessionId="student_session_1"
+        lessonTitle={activeLesson?.title || course?.title}
         onSeekVideo={handleTimestampJump}
       />
     </div>
