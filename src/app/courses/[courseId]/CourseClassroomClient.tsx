@@ -831,7 +831,14 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
   };
 
   const renderAiTutor = (height = "600px") => (
-    <div style={{ height, minHeight: "420px", maxHeight: "calc(100vh - 180px)", overflow: "hidden" }}>
+    <div style={{ 
+      height, 
+      minHeight: height === "100%" ? "0" : "500px", 
+      flex: height === "100%" ? 1 : undefined,
+      display: "flex",
+      flexDirection: "column",
+      overflow: "hidden" 
+    }}>
       <LectureChatbot
         key={activeLesson?.id || "lecture-ai-tutor"}
         lessonId={activeLesson?.id || "lesson_70635d10"}

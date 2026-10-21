@@ -13,7 +13,8 @@ import {
   Zap, 
   Clock, 
   BookOpen,
-  Volume2
+  Volume2,
+  Code2
 } from 'lucide-react';
 import { useLectureRAG } from '@/hooks/useLectureRAG';
 import { parseTimestampToSeconds, parseInlineFormatted } from '@/utils/ragHelpers';
@@ -63,6 +64,52 @@ const QUICK_STARTERS = [
  * - Suggested Question interactive chips (if any)
  * - Inline bold, code, and clickable video timestamp buttons
  */
+
+/**
+ * Renders a syntax-styled code block with language badge and one-click copy button
+ */
+const CodeBlock: React.FC<{ code: string; language: string }> = ({ code, language }) => {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyCode = () => {
+    navigator.clipboard?.writeText(code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="chatCodeBlockContainer">
+      <div className="chatCodeBlockHeader">
+        <div className="chatCodeBlockLangBadge">
+          <Code2 size={13} style={{ color: '#34d399' }} />
+          <span>{language.toUpperCase() || 'CODE'}</span>
+        </div>
+        <button
+          type="button"
+          onClick={handleCopyCode}
+          className="chatCodeCopyBtn"
+          title="Copy code to clipboard"
+        >
+          {copied ? (
+            <>
+              <Check size={12} style={{ color: '#34d399' }} />
+              <span style={{ color: '#34d399' }}>Copied!</span>
+            </>
+          ) : (
+            <>
+              <Copy size={12} />
+              <span>Copy Code</span>
+            </>
+          )}
+        </button>
+      </div>
+      <pre className="chatCodeBlockPre">
+        <code className="chatCodeBlockContent">{code}</code>
+      </pre>
+    </div>
+  );
+};
+
 interface StructuredMessageContentProps {
   text: string;
   onTimestampClick: (ts: string) => void;
@@ -147,8 +194,42 @@ const StructuredMessageContent: React.FC<StructuredMessageContentProps> = ({
     }
   };
 
+  let inCodeBlock = false;
+  let codeBlockLang = '';
+  let currentCodeLines: string[] = [];
+
   lines.forEach((line, lineIdx) => {
     const trimmed = line.trim();
+
+    // Fenced Code Block (```lang ... ```)
+    if (trimmed.startsWith('```')) {
+      if (inCodeBlock) {
+        // Closing code block
+        const codeText = currentCodeLines.join('\n');
+        elements.push(
+          <CodeBlock
+            key={`code-block-${lineIdx}`}
+            code={codeText}
+            language={codeBlockLang}
+          />
+        );
+        currentCodeLines = [];
+        codeBlockLang = '';
+        inCodeBlock = false;
+      } else {
+        // Opening code block
+        flushBullets(`line-${lineIdx}`);
+        flushSuggestedQuestions(`line-${lineIdx}`);
+        codeBlockLang = trimmed.replace(/^```/, '').trim() || 'code';
+        inCodeBlock = true;
+      }
+      return;
+    }
+
+    if (inCodeBlock) {
+      currentCodeLines.push(line);
+      return;
+    }
 
     // Horizontal Rule
     if (trimmed === '---' || trimmed === '___') {
@@ -228,6 +309,16 @@ const StructuredMessageContent: React.FC<StructuredMessageContentProps> = ({
 
   flushBullets('final');
   flushSuggestedQuestions('final');
+
+  if (inCodeBlock && currentCodeLines.length > 0) {
+    elements.push(
+      <CodeBlock
+        key="code-block-unclosed"
+        code={currentCodeLines.join('\n')}
+        language={codeBlockLang}
+      />
+    );
+  }
 
   return (
     <>

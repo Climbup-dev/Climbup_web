@@ -931,3 +931,91 @@
   color: #64748b;
   padding: 0 4px;
 }
+
+/* ============================================================
+   Code Block Component with Language Badge & Copy Button
+   ============================================================ */
+.chatCodeBlockContainer {
+  margin: 10px 0;
+  border-radius: 11px;
+  background: #080f1e;
+  border: 1px solid rgba(52, 211, 153, 0.35);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.chatCodeBlockHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  background: rgba(13, 23, 42, 0.95);
+  border-bottom: 1px solid rgba(52, 211, 153, 0.2);
+}
+
+.chatCodeBlockLangBadge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #34d399;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.chatCodeCopyBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #cbd5e1;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: Inter, system-ui, sans-serif;
+}
+
+.chatCodeCopyBtn:hover {
+  background: rgba(52, 211, 153, 0.18);
+  border-color: rgba(52, 211, 153, 0.5);
+  color: #ffffff;
+}
+
+.chatCodeBlockPre {
+  margin: 0;
+  padding: 14px 16px;
+  overflow-x: auto;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: #e2e8f0;
+  background: transparent;
+}
+
+.chatCodeBlockContent {
+  font-family: inherit;
+  white-space: pre;
+}
+
+/* Custom sleek scrollbar for code blocks */
+.chatCodeBlockPre::-webkit-scrollbar {
+  height: 6px;
+}
+
+.chatCodeBlockPre::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.chatCodeBlockPre::-webkit-scrollbar-thumb {
+  background: rgba(52, 211, 153, 0.3);
+  border-radius: 3px;
+}
+
+.chatCodeBlockPre::-webkit-scrollbar-thumb:hover {
+  background: rgba(52, 211, 153, 0.6);
+}
