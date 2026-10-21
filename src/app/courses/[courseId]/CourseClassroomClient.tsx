@@ -977,7 +977,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                 <>
                   
             {/* Dynamic Anti-Piracy Watermark: Moves periodically to stop screen capture */}
-            {user && (
+            {currentUser && (
               <div
                 style={{
                   position: "absolute",
@@ -998,7 +998,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                   transition: "all 3.5s ease-in-out",
                 }}
               >
-                🔒 {user.email || "Enrolled Student"} | {user.id ? user.id.slice(0, 8) : "ClimbUP"}
+                🔒 {currentUser.email || "Enrolled Student"} | {currentUser.id ? currentUser.id.slice(0, 8) : "ClimbUP"}
               </div>
             )}
                   <video
