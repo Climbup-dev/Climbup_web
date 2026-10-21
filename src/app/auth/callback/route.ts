@@ -92,15 +92,15 @@ export async function GET(request: Request) {
       ).toString()
     );
   } else if (user?.app_metadata?.provider === "google") {
-    await supabase.from("users").upsert(
+    await supabase.from("profiles").upsert(
       {
-        user_id: user.id,
+        id: user.id,
         full_name: getMetadataName(user),
         email: user.email || "",
-        profile_image: getMetadataImage(user),
-        reputation: 0,
+        avatar_url: getMetadataImage(user),
+        role: "student",
       },
-      { onConflict: "user_id" }
+      { onConflict: "id" }
     );
   }
 

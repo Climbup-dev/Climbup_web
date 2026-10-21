@@ -50,7 +50,8 @@ interface AuthContextValue {
 }
 
 interface UserProfileRow {
-  profile_image: string | null;
+  profile_image?: string | null;
+  avatar_url?: string | null;
   role: string | null;
   full_name: string | null;
 }
@@ -146,9 +147,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       try {
         const { data, error } = await supabase
-          .from("users")
-          .select("profile_image, role, full_name")
-          .eq("user_id", user.id)
+          .from("profiles")
+          .select("avatar_url, role, full_name")
+          .eq("id", user.id)
           .maybeSingle();
 
         if (!mountedRef.current) return;
@@ -161,9 +162,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         const profile = data as UserProfileRow | null;
         const databaseImage =
-          typeof profile?.profile_image === "string"
-            ? profile.profile_image.trim()
-            : "";
+          (typeof profile?.avatar_url === "string" ? profile.avatar_url.trim() : "") ||
+          (typeof profile?.profile_image === "string" ? profile.profile_image.trim() : "");
         setProfileImage(databaseImage || fallbackImage);
         setNeedsAcademicSetup(false);
         setUserAcademicProfile(null);
@@ -186,15 +186,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (provider !== "google") return;
 
       try {
-        await supabase.from("users").upsert(
+        await supabase.from("profiles").upsert(
           {
-            user_id: user.id,
+            id: user.id,
             full_name: getMetadataName(user),
             email: user.email || "",
-            profile_image: getMetadataImage(user),
-            reputation: 0,
+            avatar_url: getMetadataImage(user),
+            role: "student",
           },
-          { onConflict: "user_id" }
+          { onConflict: "id" }
         );
       } catch {
         // Google auth must still succeed even if profile sync is unavailable.
@@ -650,15 +650,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const metadataImage = getMetadataImage(finalUser);
 
         // 3. Profile creation must not be reported as an OTP failure.
-        const { error: profileError } = await supabase.from("users").upsert(
+        const { error: profileError } = await supabase.from("profiles").upsert(
           {
-            user_id: finalUser.id,
+            id: finalUser.id,
             full_name: fullName,
             email: cleanEmail,
-            profile_image: metadataImage,
-            reputation: 0,
+            avatar_url: metadataImage,
+            role: "student",
           },
-          { onConflict: "user_id" }
+          { onConflict: "id" }
         );
 
         if (profileError) {
