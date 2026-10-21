@@ -129,6 +129,94 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
     );
   }, [activeLesson?.videoUrl, activeLesson?.id, authToken]);
 
+  // Anti-Piracy In-Memory Blob Stream (Prevents browser extensions from intercepting raw server URLs)
+  const [blobStreamUrl, setBlobStreamUrl] = useState<string | null>(null);
+  const [isBufferingBlob, setIsBufferingBlob] = useState<boolean>(false);
+  const [blobLoadingProgress, setBlobLoadingProgress] = useState<number>(0);
+
+  useEffect(() => {
+    let active = true;
+    let objectUrl: string | null = null;
+
+    if (!resolvedVideo.isDirectVideo || !resolvedVideo.embedUrl) {
+      setBlobStreamUrl(null);
+      setIsBufferingBlob(false);
+      return;
+    }
+
+    const initSecureBlobStream = async () => {
+      try {
+        setIsBufferingBlob(true);
+        setBlobLoadingProgress(15);
+
+        const res = await fetch(resolvedVideo.embedUrl, {
+          headers: {
+            "X-ClimbUp-Player": "internal-web-v2",
+            ...(authToken ? { Authorization: `Bearer ${authToken}` } : {})
+          }
+        });
+
+        if (!res.ok) {
+          if (active) {
+            setBlobStreamUrl(resolvedVideo.embedUrl);
+            setIsBufferingBlob(false);
+          }
+          return;
+        }
+
+        const totalBytes = +(res.headers.get("Content-Length") || 0);
+        if (!res.body) {
+          const b = await res.blob();
+          if (active) {
+            objectUrl = URL.createObjectURL(b);
+            setBlobStreamUrl(objectUrl);
+            setIsBufferingBlob(false);
+          }
+          return;
+        }
+
+        const reader = res.body.getReader();
+        const chunks: Uint8Array[] = [];
+        let loaded = 0;
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          if (value) {
+            chunks.push(value);
+            loaded += value.length;
+            if (totalBytes > 0 && active) {
+              setBlobLoadingProgress(Math.min(95, Math.round((loaded / totalBytes) * 100)));
+            }
+          }
+        }
+
+        if (active) {
+          const fullBlob = new Blob(chunks, { type: "video/mp4" });
+          objectUrl = URL.createObjectURL(fullBlob);
+          setBlobStreamUrl(objectUrl);
+          setBlobLoadingProgress(100);
+          setIsBufferingBlob(false);
+        }
+      } catch (err) {
+        console.warn("Secure in-memory stream notice:", err);
+        if (active) {
+          setBlobStreamUrl(resolvedVideo.embedUrl);
+          setIsBufferingBlob(false);
+        }
+      }
+    };
+
+    initSecureBlobStream();
+
+    return () => {
+      active = false;
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+    };
+  }, [resolvedVideo.embedUrl, resolvedVideo.isDirectVideo, authToken]);
+
   // Video Speed & Quality Controls State
   const [playbackSpeed, setPlaybackSpeed] = useState<number>(1);
   const [selectedQuality, setSelectedQuality] = useState<string>("Auto (1080p)");
@@ -1008,11 +1096,41 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                 {currentUser.email ? (currentUser.email.length > 22 ? currentUser.email.slice(0, 20) + "..." : currentUser.email) : "Student"} • {currentUser.id ? currentUser.id.slice(0, 6) : ""}
               </div>
             )}
+                  {isBufferingBlob && !blobStreamUrl && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        background: "rgba(2, 21, 38, 0.9)",
+                        backdropFilter: "blur(8px)",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        zIndex: 30,
+                        gap: "12px"
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: "42px",
+                          height: "42px",
+                          borderRadius: "50%",
+                          border: "3px solid rgba(56, 211, 153, 0.2)",
+                          borderTopColor: "#38d399",
+                          animation: "spin 1s linear infinite"
+                        }}
+                      />
+                      <span style={{ fontSize: "13px", fontWeight: 600, color: "#6ee7b7", letterSpacing: "0.3px" }}>
+                        🔒 Establishing Private In-Memory Stream ({blobLoadingProgress}%)...
+                      </span>
+                    </div>
+                  )}
                   <video
                     key={activeLesson?.id ? `${activeLesson.id}_${authToken ? "auth" : "anon"}` : (activeLesson?.videoUrl || "player")}
                     ref={videoRef}
                     id="classroom-video-player-html5"
-                    src={resolvedVideo.embedUrl}
+                    src={blobStreamUrl || resolvedVideo.embedUrl}
                     controls
                     autoPlay
                     controlsList="nodownload"
