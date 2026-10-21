@@ -1,23 +1,64 @@
 import { NextResponse } from "next/server";
 import { google } from "googleapis";
 import { Readable } from "stream";
+import { createClient } from "@/lib/supabase/server";
+import { checkRateLimit, getClientIp, rateLimitResponse } from "@/lib/rateLimit";
 
-// Target Folder ID provided by user
-const TARGET_FOLDER_ID = "1VDrNYA5GE6l9h21D2Co0HuuuD87Ain6d";
+const TARGET_FOLDER_ID = process.env.GOOGLE_DRIVE_FOLDER_ID || "1VDrNYA5GE6l9h21D2Co0HuuuD87Ain6d";
+const MAX_UPLOAD_BYTES = 50 * 1024 * 1024; // 50 MB
 
 export async function POST(req: Request) {
   try {
-    // 1. Authenticate with OAuth2 using the 5TB Admin Account credentials
+    // 1. Rate Limiting Protection (15 uploads per minute per IP)
+    const clientIp = getClientIp(req);
+    const rl = checkRateLimit(`drive-upload:${clientIp}`, { maxRequests: 15, windowMs: 60000 });
+    if (!rl.success) {
+      return rateLimitResponse(rl.resetMs);
+    }
+
+    // 2. Verify user authentication against Supabase session
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: "Unauthorized. Please log in to upload resources." },
+        { status: 401 }
+      );
+    }
+
+    // 3. Authenticate with OAuth2 using Admin Account credentials
     const clientId = process.env.GOOGLE_ADMIN_CLIENT_ID;
     const clientSecret = process.env.GOOGLE_ADMIN_CLIENT_SECRET;
     const refreshToken = process.env.GOOGLE_ADMIN_REFRESH_TOKEN;
 
     if (!clientId || !clientSecret || !refreshToken) {
       return NextResponse.json(
-        { error: "Server is not configured with Google OAuth credentials." },
+        { error: "Server is not configured with Google Drive storage credentials." },
         { status: 500 }
       );
     }
+
+    // 4. Parse the multipart form data
+    const formData = await req.formData();
+    const file = formData.get("file") as File | null;
+
+    if (!file) {
+      return NextResponse.json({ error: "No file provided" }, { status: 400 });
+    }
+
+    if (file.size > MAX_UPLOAD_BYTES) {
+      return NextResponse.json(
+        { error: "File exceeds maximum allowed upload limit of 50 MB." },
+        { status: 413 }
+      );
+    }
+
+    // Sanitize filename to prevent directory traversal or control characters
+    const sanitizedFileName = (file.name || "upload.bin")
+      .replace(/[\\/]/g, "_")
+      .replace(/[\x00-\x1f\x80-\x9f]/g, "")
+      .trim();
 
     const oauth2Client = new google.auth.OAuth2(
       clientId,
@@ -31,29 +72,21 @@ export async function POST(req: Request) {
 
     const drive = google.drive({ version: "v3", auth: oauth2Client });
 
-    // 2. Parse the multipart form data
-    const formData = await req.formData();
-    const file = formData.get("file") as File;
-
-    if (!file) {
-      return NextResponse.json({ error: "No file provided" }, { status: 400 });
-    }
-
-    // 3. Convert Web File to a Node.js Stream for Google API
+    // 5. Convert Web File to a Node.js Stream
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
     const stream = new Readable();
     stream.push(buffer);
     stream.push(null);
 
-    // 4. Upload to Google Drive target folder
+    // 6. Upload to Google Drive target folder
     const fileMetadata = {
-      name: file.name,
+      name: sanitizedFileName,
       parents: [TARGET_FOLDER_ID],
     };
 
     const media = {
-      mimeType: file.type,
+      mimeType: file.type || "application/octet-stream",
       body: stream,
     };
 
@@ -64,19 +97,20 @@ export async function POST(req: Request) {
       supportsAllDrives: true,
     });
 
-    // 5. Optionally, make the file accessible to anyone with the link
-    // so students can view the notes later.
-    try {
-      await drive.permissions.create({
-        fileId: response.data.id as string,
-        supportsAllDrives: true,
-        requestBody: {
-          role: 'reader',
-          type: 'anyone',
-        }
-      });
-    } catch (permError) {
-      console.warn("Could not set public permissions on file", permError);
+    // 7. Make file viewable by students
+    if (response.data.id) {
+      try {
+        await drive.permissions.create({
+          fileId: response.data.id,
+          supportsAllDrives: true,
+          requestBody: {
+            role: "reader",
+            type: "anyone",
+          },
+        });
+      } catch (permError) {
+        console.warn("Could not set reader permissions on drive file:", permError);
+      }
     }
 
     return NextResponse.json({
@@ -84,13 +118,14 @@ export async function POST(req: Request) {
       fileId: response.data.id,
       webViewLink: response.data.webViewLink,
       webContentLink: response.data.webContentLink,
-      message: "File securely uploaded to centralized Google Drive.",
+      message: "File securely uploaded to centralized Google Drive storage.",
     });
 
-  } catch (error: any) {
-    console.error("Drive upload error:", error);
+  } catch (error: unknown) {
+    const errorMsg = error instanceof Error ? error.message : "Unknown error";
+    console.error("Drive upload error:", errorMsg);
     return NextResponse.json(
-      { error: error.message || "Failed to upload file to Google Drive" },
+      { error: "Failed to upload file to Google Drive. Please try again later." },
       { status: 500 }
     );
   }

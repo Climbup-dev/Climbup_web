@@ -9,7 +9,7 @@ export interface VideoInfo {
   type: VideoType;
   embedUrl: string;
   isDirectVideo: boolean;
-  driveFallbackUrl?: string;
+  // driveFallbackUrl removed for security
 }
 
 const DEFAULT_CLOUD_RUN_URL = "https://teacher-lecture-video-rag-28929614461.asia-south1.run.app";
@@ -99,7 +99,7 @@ export function getVideoTypeAndEmbedUrl(
           type: "direct",
           embedUrl: `${backendBase}/api/lessons/${lessonId}/stream${tokenQuery}`,
           isDirectVideo: true,
-          driveFallbackUrl,
+          
         };
       }
       // Otherwise stream through the direct Drive stream endpoint
@@ -107,7 +107,7 @@ export function getVideoTypeAndEmbedUrl(
         type: "direct",
         embedUrl: `${backendBase}/api/stream/drive/${driveId}${tokenQuery}`,
         isDirectVideo: true,
-        driveFallbackUrl,
+        
       };
     }
   }

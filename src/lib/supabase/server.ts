@@ -57,7 +57,7 @@ export function createAdminClient() {
 function allowLocalSupabaseTlsInspection() {
   if (
     process.env.NODE_ENV === "development" &&
-    process.env.CLIMBUP_STRICT_SUPABASE_TLS !== "true"
+    process.env.CLIMBUP_INSECURE_DEV_TLS === "true"
   ) {
     // Intercept the process warning to prevent Next.js from throwing an error overlay
     const originalEmitWarning = process.emitWarning;

@@ -1,12 +1,15 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
+import type { User } from "@supabase/supabase-js";
 
-export async function updateSession(request: NextRequest) {
+export async function updateSession(
+  request: NextRequest
+): Promise<{ response: NextResponse; user: User | null }> {
   let supabaseResponse = NextResponse.next({ request });
 
   if (!isSupabaseConfigured()) {
-    return supabaseResponse;
+    return { response: supabaseResponse, user: null };
   }
 
   const supabase = createServerClient(
@@ -35,17 +38,17 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
+  let user: User | null = null;
   try {
-    await supabase.auth.getUser();
+    const { data } = await supabase.auth.getUser();
+    user = data.user;
   } catch (error) {
     if (process.env.NODE_ENV !== "production") {
       const message =
         error instanceof Error ? error.message : "Unknown auth refresh error";
       console.warn(`Supabase session refresh skipped: ${message}`);
-    } else {
-      console.warn(`Supabase session refresh skipped due to timeout or error`);
     }
   }
 
-  return supabaseResponse;
+  return { response: supabaseResponse, user };
 }

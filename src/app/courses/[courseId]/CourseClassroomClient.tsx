@@ -60,6 +60,41 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
   const [sidebarTab, setSidebarTab] = useState<"curriculum" | "rag">("curriculum");
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoPlaybackError, setVideoPlaybackError] = useState(false);
+  // Anti-Piracy Dynamic Watermark State
+  const [watermarkPos, setWatermarkPos] = useState({ top: "12%", left: "12%" });
+  useEffect(() => {
+    const positions = [
+      { top: "12%", left: "10%" },
+      { top: "12%", left: "60%" },
+      { top: "45%", left: "35%" },
+      { top: "75%", left: "12%" },
+      { top: "75%", left: "65%" },
+    ];
+    let idx = 0;
+    const interval = setInterval(() => {
+      idx = (idx + 1) % positions.length;
+      setWatermarkPos(positions[idx]);
+    }, 4500);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Anti-DevTools & Anti-Save Shortcut Blocker
+  useEffect(() => {
+    const handleKeyBlock = (e: KeyboardEvent) => {
+      if (
+        e.key === "F12" ||
+        (e.ctrlKey && e.shiftKey && ["I", "i", "J", "j", "C", "c"].includes(e.key)) ||
+        (e.ctrlKey && ["u", "U", "s", "S"].includes(e.key))
+      ) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      }
+    };
+    window.addEventListener("keydown", handleKeyBlock);
+    return () => window.removeEventListener("keydown", handleKeyBlock);
+  }, []);
+
   const [useDrivePlayer, setUseDrivePlayer] = useState(false);
 
   // Supabase session access token for authorized video byte streaming
@@ -940,6 +975,32 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
             {activeLesson?.videoUrl ? (
               (resolvedVideo.isDirectVideo && !useDrivePlayer) ? (
                 <>
+                  
+            {/* Dynamic Anti-Piracy Watermark: Moves periodically to stop screen capture */}
+            {user && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: watermarkPos.top,
+                  left: watermarkPos.left,
+                  pointerEvents: "none",
+                  userSelect: "none",
+                  zIndex: 35,
+                  opacity: 0.35,
+                  color: "#ffffff",
+                  fontSize: "11px",
+                  fontWeight: 600,
+                  letterSpacing: "0.5px",
+                  background: "rgba(0, 0, 0, 0.55)",
+                  padding: "3px 8px",
+                  borderRadius: "4px",
+                  border: "1px solid rgba(255, 255, 255, 0.15)",
+                  transition: "all 3.5s ease-in-out",
+                }}
+              >
+                🔒 {user.email || "Enrolled Student"} | {user.id ? user.id.slice(0, 8) : "ClimbUP"}
+              </div>
+            )}
                   <video
                     key={activeLesson?.id ? `${activeLesson.id}_${authToken ? "auth" : "anon"}` : (activeLesson?.videoUrl || "player")}
                     ref={videoRef}
@@ -958,7 +1019,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                     onLoadedData={() => setVideoPlaybackError(false)}
                     onError={(e) => {
                       const err = e.currentTarget.error;
-                      if (err && (err.code === 4 || err.code === 2)) {
+                      if (err) {
                         setVideoPlaybackError(true);
                       }
                     }}
@@ -989,19 +1050,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                           <RefreshCw size={14} style={{ display: "inline-block", marginRight: "6px" }} />
                           Reload Video
                         </button>
-                        {resolvedVideo.driveFallbackUrl && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setUseDrivePlayer(true);
-                              setVideoPlaybackError(false);
-                            }}
-                            className="retryVideoBtn"
-                            style={{ background: "#4f46e5", color: "#fff", border: "none" }}
-                          >
-                            Play via Drive Web Player
-                          </button>
-                        )}
+                        /* Drive Web Player fallback removed for anti-piracy security */
                       </div>
                     </div>
                   )}
