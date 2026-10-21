@@ -60,21 +60,21 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
   const [sidebarTab, setSidebarTab] = useState<"curriculum" | "rag">("curriculum");
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoPlaybackError, setVideoPlaybackError] = useState(false);
-  // Anti-Piracy Dynamic Watermark State
-  const [watermarkPos, setWatermarkPos] = useState({ top: "12%", left: "12%" });
+  // Subtle, Non-Distracting Anti-Piracy Watermark (Drifts gently every 14s)
+  const [watermarkPos, setWatermarkPos] = useState({ top: "6%", left: "5%" });
   useEffect(() => {
     const positions = [
-      { top: "12%", left: "10%" },
-      { top: "12%", left: "60%" },
-      { top: "45%", left: "35%" },
-      { top: "75%", left: "12%" },
-      { top: "75%", left: "65%" },
+      { top: "6%", left: "5%" },
+      { top: "6%", left: "70%" },
+      { top: "86%", left: "70%" },
+      { top: "86%", left: "5%" },
+      { top: "50%", left: "78%" },
     ];
     let idx = 0;
     const interval = setInterval(() => {
       idx = (idx + 1) % positions.length;
       setWatermarkPos(positions[idx]);
-    }, 4500);
+    }, 14000);
     return () => clearInterval(interval);
   }, []);
 
@@ -976,7 +976,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
               (resolvedVideo.isDirectVideo && !useDrivePlayer) ? (
                 <>
                   
-            {/* Dynamic Anti-Piracy Watermark: Moves periodically to stop screen capture */}
+            {/* Subtle, Non-Distracting Anti-Piracy Watermark */}
             {currentUser && (
               <div
                 style={{
@@ -985,20 +985,19 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                   left: watermarkPos.left,
                   pointerEvents: "none",
                   userSelect: "none",
-                  zIndex: 35,
-                  opacity: 0.35,
+                  zIndex: 25,
+                  opacity: 0.18,
                   color: "#ffffff",
-                  fontSize: "11px",
-                  fontWeight: 600,
-                  letterSpacing: "0.5px",
-                  background: "rgba(0, 0, 0, 0.55)",
-                  padding: "3px 8px",
-                  borderRadius: "4px",
-                  border: "1px solid rgba(255, 255, 255, 0.15)",
-                  transition: "all 3.5s ease-in-out",
+                  fontSize: "10px",
+                  fontWeight: 500,
+                  letterSpacing: "0.4px",
+                  textShadow: "0 1px 2px rgba(0, 0, 0, 0.8)",
+                  padding: "2px 6px",
+                  borderRadius: "3px",
+                  transition: "all 5s ease-in-out",
                 }}
               >
-                🔒 {currentUser.email || "Enrolled Student"} | {currentUser.id ? currentUser.id.slice(0, 8) : "ClimbUP"}
+                {currentUser.email ? (currentUser.email.length > 22 ? currentUser.email.slice(0, 20) + "..." : currentUser.email) : "Student"} • {currentUser.id ? currentUser.id.slice(0, 6) : ""}
               </div>
             )}
                   <video
