@@ -1144,7 +1144,6 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                           <RefreshCw size={14} style={{ display: "inline-block", marginRight: "6px" }} />
                           Reload Video
                         </button>
-                        /* Drive Web Player fallback removed for anti-piracy security */
                       </div>
                     </div>
                   )}
