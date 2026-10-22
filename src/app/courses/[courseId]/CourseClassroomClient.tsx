@@ -521,7 +521,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
             width: "100%",
             background: "rgba(11, 20, 38, 0.85)",
             backdropFilter: "blur(20px)",
-            border: "1px solid rgba(52, 211, 153, 0.2)",
+            border: "1px solid rgba(37, 99, 235, 0.2)",
             borderRadius: "20px",
             padding: "36px 28px",
             textAlign: "center",
@@ -532,7 +532,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
             style={{
               width: "44px",
               height: "44px",
-              border: "3px solid rgba(52, 211, 153, 0.15)",
+              border: "3px solid rgba(37, 99, 235, 0.15)",
               borderTopColor: "#34d399",
               borderRightColor: "#10b981",
               borderRadius: "50%",
@@ -558,7 +558,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
           maxWidth: "480px",
           width: "100%",
           background: "rgba(11, 18, 33, 0.95)",
-          border: "1px solid rgba(52, 211, 153, 0.3)",
+          border: "1px solid rgba(37, 99, 235, 0.3)",
           borderRadius: "20px",
           padding: "40px 32px",
           boxShadow: "0 24px 60px rgba(0,0,0,0.8), 0 0 40px rgba(16, 185, 129, 0.1)",
@@ -567,8 +567,8 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
             width: "60px",
             height: "60px",
             borderRadius: "50%",
-            background: "rgba(52, 211, 153, 0.12)",
-            border: "1px solid rgba(52, 211, 153, 0.3)",
+            background: "rgba(37, 99, 235, 0.12)",
+            border: "1px solid rgba(37, 99, 235, 0.3)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -656,7 +656,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
             transform: "translate(-50%, -50%)",
             width: "500px",
             height: "500px",
-            background: "radial-gradient(circle, rgba(52, 211, 153, 0.08) 0%, transparent 70%)",
+            background: "radial-gradient(circle, rgba(37, 99, 235, 0.08) 0%, transparent 70%)",
             filter: "blur(60px)",
             pointerEvents: "none"
           }}
@@ -668,7 +668,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
             width: "100%",
             background: "rgba(11, 20, 38, 0.85)",
             backdropFilter: "blur(20px)",
-            border: "1px solid rgba(52, 211, 153, 0.25)",
+            border: "1px solid rgba(37, 99, 235, 0.25)",
             borderRadius: "24px",
             padding: "44px 36px",
             textAlign: "center",
@@ -683,7 +683,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
               style={{
                 position: "absolute",
                 inset: 0,
-                border: "3px solid rgba(52, 211, 153, 0.15)",
+                border: "3px solid rgba(37, 99, 235, 0.15)",
                 borderTopColor: "#34d399",
                 borderRightColor: "#10b981",
                 borderRadius: "50%",
@@ -695,11 +695,11 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                 position: "absolute",
                 inset: "8px",
                 borderRadius: "50%",
-                background: "rgba(52, 211, 153, 0.1)",
+                background: "rgba(37, 99, 235, 0.1)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                boxShadow: "0 0 20px rgba(52, 211, 153, 0.2)"
+                boxShadow: "0 0 20px rgba(37, 99, 235, 0.2)"
               }}
             >
               <Sparkles size={28} color="#34d399" />
@@ -745,8 +745,8 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
             <span
               style={{
                 padding: "6px 12px",
-                background: "rgba(52, 211, 153, 0.08)",
-                border: "1px solid rgba(52, 211, 153, 0.2)",
+                background: "rgba(37, 99, 235, 0.08)",
+                border: "1px solid rgba(37, 99, 235, 0.2)",
                 borderRadius: "20px",
                 fontSize: "12px",
                 color: "#6ee7b7",
@@ -1060,9 +1060,10 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
             <div style={{
               fontSize: "13px",
               fontWeight: 700,
-              color: "#9ef8dc",
+              color: "#1e3a8a",
               padding: "8px 10px",
-              background: "rgba(255, 255, 255, 0.05)",
+              background: "#f1f5f9",
+              border: "1px solid #e2e8f0",
               borderRadius: "8px",
               marginBottom: "6px",
             }}>
@@ -1097,8 +1098,8 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                       justifyContent: "space-between",
                       padding: "10px 12px",
                       borderRadius: "8px",
-                      background: isCurrent ? "rgba(56, 211, 153, 0.18)" : "transparent",
-                      border: `1px solid ${isCurrent ? "rgba(56, 211, 153, 0.35)" : "transparent"}`,
+                      background: isCurrent ? "#eff6ff" : "transparent",
+                      border: `1px solid ${isCurrent ? "#bfdbfe" : "transparent"}`,
                       cursor: "pointer",
                       transition: "all 0.15s ease",
                     }}
@@ -1112,17 +1113,17 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                         style={{ cursor: "pointer", display: "grid", placeItems: "center" }}
                       >
                         {isDone ? (
-                          <CheckCircle2 size={16} color="#38d399" />
+                          <CheckCircle2 size={16} color="#2563eb" />
                         ) : (
-                          <Circle size={16} color="rgba(255,255,255,0.4)" />
+                          <Circle size={16} color="#94a3b8" />
                         )}
                       </span>
-                      <span style={{ fontSize: "13px", color: isCurrent ? "#fff" : "rgba(255, 255, 255, 0.8)", fontWeight: isCurrent ? 700 : 500 }}>
+                      <span style={{ fontSize: "13px", color: isCurrent ? "#1d4ed8" : "#334155", fontWeight: isCurrent ? 700 : 500 }}>
                         {lesson.title}
                       </span>
                     </div>
 
-                    <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.5)", whiteSpace: "nowrap" }}>
+                    <span style={{ fontSize: "11px", color: "#64748b", whiteSpace: "nowrap" }}>
                       {lesson.duration}
                     </span>
                   </div>
@@ -1155,7 +1156,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
   );
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#021526", color: "#fff" }}>
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#f4f8fc", color: "#0f172a" }}>
       <Navbar onLogin={() => { setAuthMode("login"); setAuthOpen(true); }} onSignUp={() => { setAuthMode("register"); setAuthOpen(true); }} />
       <MobileNavTabs />
 
@@ -1173,11 +1174,11 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
         {/* Progress & Enrollment Action */}
         <div className="classroomProgressBadge">
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.7)" }}>
-              Progress: <strong style={{ color: "#38d399" }}>{progressPercent}%</strong> ({completedLessonIds.length}/{totalLessonsCount} completed)
+            <span style={{ fontSize: "12px", color: "#475569" }}>
+              Progress: <strong style={{ color: "#2563eb" }}>{progressPercent}%</strong> ({completedLessonIds.length}/{totalLessonsCount} completed)
             </span>
-            <div style={{ width: "90px", height: "8px", background: "rgba(255,255,255,0.1)", borderRadius: "99px", overflow: "hidden" }}>
-              <div style={{ width: `${progressPercent}%`, height: "100%", background: "linear-gradient(90deg, #38d399, #00c78c)", transition: "width 0.3s ease" }} />
+            <div style={{ width: "90px", height: "8px", background: "#e2e8f0", borderRadius: "99px", overflow: "hidden" }}>
+              <div style={{ width: `${progressPercent}%`, height: "100%", background: "linear-gradient(90deg, #3b82f6, #2563eb)", transition: "width 0.3s ease" }} />
             </div>
           </div>
 
@@ -1194,7 +1195,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                 fontSize: "13px",
                 padding: "8px 18px",
                 cursor: "pointer",
-                boxShadow: "0 0 16px rgba(56, 211, 153, 0.4)",
+                boxShadow: "0 0 16px rgba(37, 99, 235, 0.4)",
               }}
             >
               Enroll Now (Free)
@@ -1245,7 +1246,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                           className={`playerDropdownItem ${playbackSpeed === s ? "active" : ""}`}
                         >
                           <span>{s === 1 ? "1.0x (Normal)" : `${s}x`}</span>
-                          {playbackSpeed === s && <CheckCircle2 size={12} color="#38d399" />}
+                          {playbackSpeed === s && <CheckCircle2 size={12} color="#2563eb" />}
                         </button>
                       ))}
                     </div>
@@ -1276,7 +1277,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                           className={`playerDropdownItem ${selectedQuality === q ? "active" : ""}`}
                         >
                           <span>{q}</span>
-                          {selectedQuality === q && <CheckCircle2 size={12} color="#38d399" />}
+                          {selectedQuality === q && <CheckCircle2 size={12} color="#2563eb" />}
                         </button>
                       ))}
                     </div>
@@ -1406,7 +1407,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                 border: "1px solid #38d399",
                 borderRadius: "8px",
                 padding: "8px 14px",
-                color: "#38d399",
+                color: "#2563eb",
                 fontSize: "13px",
                 fontWeight: 700,
                 display: "flex",
@@ -1438,7 +1439,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
             >
               {activeLesson && completedLessonIds.includes(activeLesson.id) ? (
                 <>
-                  <CheckCircle2 size={16} color="#38d399" /> Completed
+                  <CheckCircle2 size={16} color="#2563eb" /> Completed
                 </>
               ) : (
                 <>
@@ -1489,20 +1490,20 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                   {course.description}
                 </p>
 
-                <h4 style={{ fontSize: "16px", fontWeight: 700, color: "#38d399", marginBottom: "10px" }}>
+                <h4 style={{ fontSize: "16px", fontWeight: 700, color: "#2563eb", marginBottom: "10px" }}>
                   What You Will Master:
                 </h4>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "10px", marginBottom: "24px" }}>
                   {course.skillsGained.map((skill) => (
                     <div key={skill} style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "14px", color: "rgba(255,255,255,0.85)" }}>
-                      <CheckCircle2 size={16} color="#38d399" /> {skill}
+                      <CheckCircle2 size={16} color="#2563eb" /> {skill}
                     </div>
                   ))}
                 </div>
 
                 <div style={{
                   background: "rgba(7, 48, 73, 0.5)",
-                  border: "1px solid rgba(56, 211, 153, 0.25)",
+                  border: "1px solid rgba(37, 99, 235, 0.25)",
                   borderRadius: "14px",
                   padding: "18px",
                   display: "flex",
@@ -1563,7 +1564,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                                 alignItems: "center",
                                 gap: "5px"
                               }}>
-                                <ShieldCheck size={13} color="#38d399" /> AI Rubric Evaluated
+                                <ShieldCheck size={13} color="#2563eb" /> AI Rubric Evaluated
                               </span>
                             </div>
                             <h3 className="assignmentTitle">
@@ -1600,7 +1601,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                         {/* 3. Progressive 3-Tier Problem Breakdown */}
                         {currentAssignment.problems && currentAssignment.problems.length > 0 ? (
                           <div style={{ marginBottom: "28px" }}>
-                            <div style={{ fontSize: "12.5px", fontWeight: 800, color: "#38d399", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "14px", display: "flex", alignItems: "center", gap: "8px" }}>
+                            <div style={{ fontSize: "12.5px", fontWeight: 800, color: "#2563eb", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "14px", display: "flex", alignItems: "center", gap: "8px" }}>
                               <Zap size={16} /> Progressive Implementation Challenges
                             </div>
                             <div className="assignmentProblemsContainer">
@@ -1623,7 +1624,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                                       <div className="problemCriteriaGrid">
                                         {prob.acceptance_criteria.map((crit: string, cIdx: number) => (
                                           <div key={cIdx} className="criterionItem">
-                                            <CheckCircle2 size={15} color="#38d399" style={{ flexShrink: 0, marginTop: "2px" }} />
+                                            <CheckCircle2 size={15} color="#2563eb" style={{ flexShrink: 0, marginTop: "2px" }} />
                                             <span>{crit}</span>
                                           </div>
                                         ))}
@@ -1636,13 +1637,13 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                           </div>
                         ) : currentAssignment.instructions && currentAssignment.instructions.length > 0 ? (
                           <div style={{ marginBottom: "26px" }}>
-                            <h4 style={{ fontSize: "13px", fontWeight: 700, color: "#38d399", textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 12px", display: "flex", alignItems: "center", gap: "7px" }}>
+                            <h4 style={{ fontSize: "13px", fontWeight: 700, color: "#2563eb", textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 12px", display: "flex", alignItems: "center", gap: "7px" }}>
                               <CheckCircle2 size={16} /> Key Objectives & Acceptance Criteria
                             </h4>
                             <div style={{ display: "grid", gap: "10px" }}>
                               {currentAssignment.instructions.map((inst: string, i: number) => (
                                 <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: "12px", fontSize: "14px", color: "rgba(255, 255, 255, 0.88)", lineHeight: "1.55", background: "rgba(255, 255, 255, 0.03)", padding: "10px 14px", borderRadius: "10px", border: "1px solid rgba(255, 255, 255, 0.06)" }}>
-                                  <CheckCircle2 size={16} color="#38d399" style={{ flexShrink: 0, marginTop: "2px" }} />
+                                  <CheckCircle2 size={16} color="#2563eb" style={{ flexShrink: 0, marginTop: "2px" }} />
                                   <span>{inst}</span>
                                 </div>
                               ))}
@@ -1654,7 +1655,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                         {(currentAssignment.starter_code || currentAssignment.starterCode) && (
                           <div className="starterCodeContainer">
                             <div className="starterCodeHeader">
-                              <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12.5px", fontWeight: 700, color: "#38d399" }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12.5px", fontWeight: 700, color: "#2563eb" }}>
                                 <Code2 size={15} /> Starter Code Boilerplate:
                               </div>
                               <button
@@ -1668,7 +1669,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                               >
                                 {copiedStarter ? (
                                   <>
-                                    <Check size={12} color="#38d399" /> Copied!
+                                    <Check size={12} color="#2563eb" /> Copied!
                                   </>
                                 ) : (
                                   <>
@@ -1682,7 +1683,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                               margin: 0,
                               padding: "16px 20px",
                               fontSize: "13px",
-                              color: "#9ef8dc",
+                              color: "#93c5fd",
                               fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
                               overflowX: "auto",
                               lineHeight: "1.6",
@@ -1697,11 +1698,11 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                           <div className="aiScorecardContainer">
                             <div className="scorecardTopRow">
                               <div>
-                                <span style={{ fontSize: "11px", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", color: "#38d399", display: "block", marginBottom: "4px" }}>
+                                <span style={{ fontSize: "11px", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", color: "#2563eb", display: "block", marginBottom: "4px" }}>
                                   AI Rubric Evaluation Report
                                 </span>
                                 <h4 style={{ fontSize: "20px", fontWeight: 800, color: "#fff", margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
-                                  <CheckCircle2 size={20} color="#38d399" />
+                                  <CheckCircle2 size={20} color="#2563eb" />
                                   Grade: {feedback.score ?? 88} / {maxPts}
                                 </h4>
                               </div>
@@ -1716,7 +1717,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                                     className="videoRevisitPill"
                                     title="Click to jump classroom video to review key concept"
                                   >
-                                    <Play size={13} fill="#38d399" /> Review at [{feedback.video_revisit_timestamp}]
+                                    <Play size={13} fill="#2563eb" /> Review at [{feedback.video_revisit_timestamp}]
                                   </button>
                                 )}
                               </div>
@@ -1727,7 +1728,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                               <div className="pillarCard">
                                 <div className="pillarHeader">
                                   <span>Core Logic & Accuracy</span>
-                                  <span style={{ color: "#38d399" }}>{pillarBreakdown.logic} / 50</span>
+                                  <span style={{ color: "#2563eb" }}>{pillarBreakdown.logic} / 50</span>
                                 </div>
                                 <div className="pillarBarBg">
                                   <div className="pillarBarFill" style={{ width: `${Math.min(100, (pillarBreakdown.logic / 50) * 100)}%` }} />
@@ -1737,7 +1738,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                               <div className="pillarCard">
                                 <div className="pillarHeader">
                                   <span>Syntax & Code Quality</span>
-                                  <span style={{ color: "#38d399" }}>{pillarBreakdown.syntax_quality} / 25</span>
+                                  <span style={{ color: "#2563eb" }}>{pillarBreakdown.syntax_quality} / 25</span>
                                 </div>
                                 <div className="pillarBarBg">
                                   <div className="pillarBarFill" style={{ width: `${Math.min(100, (pillarBreakdown.syntax_quality / 25) * 100)}%` }} />
@@ -1747,7 +1748,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                               <div className="pillarCard">
                                 <div className="pillarHeader">
                                   <span>Edge Cases & Resilience</span>
-                                  <span style={{ color: "#38d399" }}>{pillarBreakdown.edge_cases} / 15</span>
+                                  <span style={{ color: "#2563eb" }}>{pillarBreakdown.edge_cases} / 15</span>
                                 </div>
                                 <div className="pillarBarBg">
                                   <div className="pillarBarFill" style={{ width: `${Math.min(100, (pillarBreakdown.edge_cases / 15) * 100)}%` }} />
@@ -1757,7 +1758,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                               <div className="pillarCard">
                                 <div className="pillarHeader">
                                   <span>Architecture & Approach</span>
-                                  <span style={{ color: "#38d399" }}>{pillarBreakdown.approach_architecture} / 10</span>
+                                  <span style={{ color: "#2563eb" }}>{pillarBreakdown.approach_architecture} / 10</span>
                                 </div>
                                 <div className="pillarBarBg">
                                   <div className="pillarBarFill" style={{ width: `${Math.min(100, (pillarBreakdown.approach_architecture / 10) * 100)}%` }} />
@@ -1770,13 +1771,13 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "14px", marginBottom: "20px" }}>
                                 {feedback.strengths && feedback.strengths.length > 0 && (
                                   <div style={{ background: "rgba(16, 185, 129, 0.08)", border: "1px solid rgba(16, 185, 129, 0.25)", borderRadius: "12px", padding: "14px 18px" }}>
-                                    <div style={{ fontSize: "12.5px", fontWeight: 800, color: "#38d399", marginBottom: "8px", display: "flex", alignItems: "center", gap: "6px" }}>
+                                    <div style={{ fontSize: "12.5px", fontWeight: 800, color: "#2563eb", marginBottom: "8px", display: "flex", alignItems: "center", gap: "6px" }}>
                                       <CheckCircle2 size={15} /> Key Strengths
                                     </div>
                                     <div style={{ display: "grid", gap: "6px" }}>
                                       {feedback.strengths.map((str: string, sIdx: number) => (
                                         <div key={sIdx} style={{ fontSize: "13px", color: "rgba(255, 255, 255, 0.9)", display: "flex", alignItems: "flex-start", gap: "8px" }}>
-                                          <span style={{ color: "#38d399" }}>✔</span> {str}
+                                          <span style={{ color: "#2563eb" }}>✔</span> {str}
                                         </div>
                                       ))}
                                     </div>
@@ -1802,14 +1803,14 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
 
                             {/* Actionable Advice */}
                             <p style={{ margin: "0 0 16px", fontSize: "14px", color: "rgba(255, 255, 255, 0.92)", lineHeight: "1.65", background: "rgba(255, 255, 255, 0.03)", padding: "12px 16px", borderRadius: "10px", border: "1px solid rgba(255, 255, 255, 0.06)" }}>
-                              <strong style={{ color: "#38d399" }}>Mentor Advice: </strong> {feedback.actionable_advice || feedback.feedback}
+                              <strong style={{ color: "#2563eb" }}>Mentor Advice: </strong> {feedback.actionable_advice || feedback.feedback}
                             </p>
 
                             {/* Ideal Model Snippet if available */}
                             {feedback.ideal_model_snippet && (
-                              <div style={{ borderRadius: "10px", overflow: "hidden", border: "1px solid rgba(56, 211, 153, 0.25)", background: "#020712" }}>
-                                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 14px", background: "rgba(16, 185, 129, 0.12)", borderBottom: "1px solid rgba(56, 211, 153, 0.2)" }}>
-                                  <span style={{ fontSize: "12px", fontWeight: 700, color: "#38d399", display: "flex", alignItems: "center", gap: "6px" }}>
+                              <div style={{ borderRadius: "10px", overflow: "hidden", border: "1px solid rgba(37, 99, 235, 0.25)", background: "#020712" }}>
+                                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 14px", background: "rgba(16, 185, 129, 0.12)", borderBottom: "1px solid rgba(37, 99, 235, 0.2)" }}>
+                                  <span style={{ fontSize: "12px", fontWeight: 700, color: "#2563eb", display: "flex", alignItems: "center", gap: "6px" }}>
                                     <Code2 size={13} /> Ideal Production Pattern
                                   </span>
                                   <button
@@ -1824,7 +1825,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                                     {copiedSnippet ? "Copied!" : "Copy Snippet"}
                                   </button>
                                 </div>
-                                <pre style={{ margin: 0, padding: "14px 16px", fontSize: "12.5px", color: "#9ef8dc", fontFamily: "monospace", overflowX: "auto" }}>
+                                <pre style={{ margin: 0, padding: "14px 16px", fontSize: "12.5px", color: "#93c5fd", fontFamily: "monospace", overflowX: "auto" }}>
                                   <code>{feedback.ideal_model_snippet}</code>
                                 </pre>
                               </div>
@@ -1854,7 +1855,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                               <span style={{ fontFamily: "monospace", fontSize: "11.5px", color: "#94a3b8" }}>
                                 solution.tsx / solution.py
                               </span>
-                              <span style={{ fontSize: "11px", color: "#38d399", fontWeight: 700 }}>
+                              <span style={{ fontSize: "11px", color: "#2563eb", fontWeight: 700 }}>
                                 {submissionCode.length} chars
                               </span>
                             </div>
@@ -1880,7 +1881,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                               style={{
                                 width: "100%",
                                 background: "rgba(2, 21, 38, 0.85)",
-                                border: "1px solid rgba(56, 211, 153, 0.3)",
+                                border: "1px solid rgba(37, 99, 235, 0.3)",
                                 borderRadius: "10px",
                                 padding: "12px 14px",
                                 color: "#fff",
@@ -1906,7 +1907,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                                 style={{
                                   width: "100%",
                                   background: "rgba(2, 21, 38, 0.85)",
-                                  border: "1px solid rgba(56, 211, 153, 0.3)",
+                                  border: "1px solid rgba(37, 99, 235, 0.3)",
                                   borderRadius: "10px",
                                   padding: "11px 14px",
                                   color: "#fff",
@@ -1929,7 +1930,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                                 style={{
                                   width: "100%",
                                   background: "rgba(2, 21, 38, 0.85)",
-                                  border: "1px solid rgba(56, 211, 153, 0.3)",
+                                  border: "1px solid rgba(37, 99, 235, 0.3)",
                                   borderRadius: "10px",
                                   padding: "11px 14px",
                                   color: "#fff",
@@ -1958,7 +1959,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                                 display: "inline-flex",
                                 alignItems: "center",
                                 gap: "9px",
-                                boxShadow: "0 6px 22px rgba(56, 211, 153, 0.35)",
+                                boxShadow: "0 6px 22px rgba(37, 99, 235, 0.35)",
                                 opacity: submitting ? 0.75 : 1,
                                 transition: "all 0.2s ease",
                               }}
@@ -1968,7 +1969,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                             </button>
 
                             <div style={{ fontSize: "12px", color: "rgba(255, 255, 255, 0.55)", display: "flex", alignItems: "center", gap: "6px" }}>
-                              <ShieldCheck size={14} color="#38d399" />
+                              <ShieldCheck size={14} color="#2563eb" />
                               Static Semantic Analysis • Zero Server Execution
                             </div>
                           </div>
@@ -1977,8 +1978,8 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                     );
                   })()
                 ) : (
-                  <div style={{ color: "rgba(255,255,255,0.7)", padding: "40px", textAlign: "center", background: "rgba(15, 23, 42, 0.5)", borderRadius: "16px", border: "1px dashed rgba(56, 211, 153, 0.25)" }}>
-                    <Sparkles size={28} color="#38d399" style={{ margin: "0 auto 12px", display: "block" }} />
+                  <div style={{ color: "#475569", padding: "40px", textAlign: "center", background: "rgba(15, 23, 42, 0.5)", borderRadius: "16px", border: "1px dashed rgba(37, 99, 235, 0.25)" }}>
+                    <Sparkles size={28} color="#2563eb" style={{ margin: "0 auto 12px", display: "block" }} />
                     <h4 style={{ color: "#fff", margin: "0 0 6px" }}>No Assignment Active Yet</h4>
                     <p style={{ margin: 0, fontSize: "13.5px" }}>The teacher is preparing the synthesis milestone for this lecture.</p>
                   </div>
@@ -1991,7 +1992,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
               <div className="mcqWorkspaceCard">
                 {mcqLoading ? (
                   <div style={{ textAlign: "center", padding: "48px 20px" }}>
-                    <RefreshCw size={28} color="#38d399" className="animate-spin" style={{ margin: "0 auto 16px", display: "block" }} />
+                    <RefreshCw size={28} color="#2563eb" className="animate-spin" style={{ margin: "0 auto 16px", display: "block" }} />
                     <h4 style={{ color: "#fff", margin: "0 0 6px", fontSize: "16px" }}>Generating Randomized Practice Arena...</h4>
                     <p style={{ color: "rgba(255, 255, 255, 0.6)", fontSize: "13px", margin: 0 }}>
                       Retrieving cheat-proof questions synthesized directly from lecture audio and video.
@@ -2003,11 +2004,11 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                     <div className="mcqHeroBar">
                       <div>
                         <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
-                          <span style={{ fontSize: "11px", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", color: "#38d399", background: "rgba(56, 211, 153, 0.12)", border: "1px solid rgba(56, 211, 153, 0.3)", padding: "3px 10px", borderRadius: "999px" }}>
+                          <span style={{ fontSize: "11px", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", color: "#2563eb", background: "rgba(37, 99, 235, 0.12)", border: "1px solid rgba(37, 99, 235, 0.3)", padding: "3px 10px", borderRadius: "999px" }}>
                             Dynamic MCQ Quiz
                           </span>
                           <span style={{ fontSize: "11px", color: "#94a3b8", display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                            <ShieldCheck size={12} color="#38d399" /> Zero Leakage Verified
+                            <ShieldCheck size={12} color="#2563eb" /> Zero Leakage Verified
                           </span>
                         </div>
                         <h3 style={{ fontSize: "20px", fontWeight: 800, color: "#fff", margin: 0 }}>
@@ -2017,9 +2018,9 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
 
                       <div className="mcqPillsGroup">
                         <span style={{
-                          background: "rgba(56, 211, 153, 0.15)",
-                          color: "#38d399",
-                          border: "1px solid rgba(56, 211, 153, 0.35)",
+                          background: "rgba(37, 99, 235, 0.15)",
+                          color: "#2563eb",
+                          border: "1px solid rgba(37, 99, 235, 0.35)",
                           padding: "6px 14px",
                           borderRadius: "999px",
                           fontSize: "12.5px",
@@ -2087,7 +2088,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                         <div>
                           <div className="mcqQuestionPromptCard">
                             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px", flexWrap: "wrap", gap: "8px" }}>
-                              <span style={{ fontSize: "12.5px", color: "#38d399", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                              <span style={{ fontSize: "12.5px", color: "#2563eb", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.06em" }}>
                                 Question {activeQuizQuestionIdx + 1} of {mcqQuizQuestions.length}
                               </span>
                               {q.topic_tag && (
@@ -2143,7 +2144,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                               padding: "20px 24px",
                               marginBottom: "24px",
                             }}>
-                              <div style={{ color: "#38d399", fontWeight: 800, fontSize: "13.5px", marginBottom: "6px", display: "flex", alignItems: "center", gap: "6px" }}>
+                              <div style={{ color: "#2563eb", fontWeight: 800, fontSize: "13.5px", marginBottom: "6px", display: "flex", alignItems: "center", gap: "6px" }}>
                                 <CheckCircle2 size={16} /> Pedagogical Rationale & Video Reference:
                               </div>
                               <p style={{ margin: "0 0 10px", fontSize: "13.5px", color: "rgba(255,255,255,0.9)", lineHeight: "1.6" }}>
@@ -2155,7 +2156,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                                   onClick={() => handleTimestampJump(resItem.timestamp_ref, 60)}
                                   className="videoRevisitPill"
                                 >
-                                  <Play size={12} fill="#38d399" /> Jump to Video Explanation at [{resItem.timestamp_ref}] →
+                                  <Play size={12} fill="#2563eb" /> Jump to Video Explanation at [{resItem.timestamp_ref}] →
                                 </button>
                               )}
                             </div>
@@ -2196,7 +2197,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                                   fontSize: "14px",
                                   padding: "11px 26px",
                                   cursor: "pointer",
-                                  boxShadow: "0 4px 18px rgba(56, 211, 153, 0.35)",
+                                  boxShadow: "0 4px 18px rgba(37, 99, 235, 0.35)",
                                   display: "flex",
                                   alignItems: "center",
                                   gap: "8px",
@@ -2305,13 +2306,13 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                           width: "42px",
                           height: "42px",
                           borderRadius: "10px",
-                          background: "rgba(56, 211, 153, 0.12)",
-                          border: "1px solid rgba(56, 211, 153, 0.25)",
+                          background: "rgba(37, 99, 235, 0.12)",
+                          border: "1px solid rgba(37, 99, 235, 0.25)",
                           display: "grid",
                           placeItems: "center",
                           flexShrink: 0,
                         }}>
-                          {res.fileType === "github" ? <Code2 size={20} color="#38d399" /> : <FolderDown size={20} color="#38d399" />}
+                          {res.fileType === "github" ? <Code2 size={20} color="#2563eb" /> : <FolderDown size={20} color="#2563eb" />}
                         </div>
                         <div>
                           <div style={{ fontWeight: 700, fontSize: "14.5px", color: "#fff", marginBottom: "3px" }}>
@@ -2328,9 +2329,9 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                         target="_blank"
                         rel="noreferrer"
                         style={{
-                          background: "rgba(56, 211, 153, 0.12)",
-                          color: "#38d399",
-                          border: "1px solid rgba(56, 211, 153, 0.3)",
+                          background: "rgba(37, 99, 235, 0.12)",
+                          color: "#2563eb",
+                          border: "1px solid rgba(37, 99, 235, 0.3)",
                           borderRadius: "8px",
                           padding: "8px 16px",
                           fontSize: "12.5px",
@@ -2360,7 +2361,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                 </h3>
                 <div style={{
                   background: "rgba(7, 48, 73, 0.4)",
-                  border: "1px solid rgba(56, 211, 153, 0.2)",
+                  border: "1px solid rgba(37, 99, 235, 0.2)",
                   borderRadius: "14px",
                   padding: "16px",
                   marginBottom: "20px",
@@ -2371,7 +2372,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                     style={{
                       width: "100%",
                       background: "rgba(2, 21, 38, 0.8)",
-                      border: "1px solid rgba(56, 211, 153, 0.3)",
+                      border: "1px solid rgba(37, 99, 235, 0.3)",
                       borderRadius: "8px",
                       padding: "10px 14px",
                       color: "#fff",
@@ -2401,13 +2402,13 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                 <div style={{ display: "grid", gap: "12px" }}>
                   <div style={{ background: "rgba(255, 255, 255, 0.03)", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "10px", padding: "14px" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
-                      <strong style={{ fontSize: "14px", color: "#38d399" }}>Karthik S.</strong>
+                      <strong style={{ fontSize: "14px", color: "#2563eb" }}>Karthik S.</strong>
                       <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.5)" }}>2 hours ago</span>
                     </div>
                     <p style={{ margin: "0 0 6px", fontSize: "13px", color: "rgba(255,255,255,0.85)" }}>
                       How do I handle Supabase session refresh in Vercel Edge middleware without timeout?
                     </p>
-                    <div style={{ fontSize: "12px", color: "#9ef8dc" }}>
+                    <div style={{ fontSize: "12px", color: "#93c5fd" }}>
                       ★ Answered by Instructor Alex: <em>&quot;Use AbortSignal.timeout(3000) inside global fetch so it fails gracefully.&quot;</em>
                     </div>
                   </div>
@@ -2419,12 +2420,12 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
             {activeTab === "certificate" && (
               <div style={{
                 background: "radial-gradient(circle at center, rgba(7, 48, 73, 0.8), rgba(2, 21, 38, 0.95))",
-                border: "1px solid rgba(56, 211, 153, 0.35)",
+                border: "1px solid rgba(37, 99, 235, 0.35)",
                 borderRadius: "20px",
                 padding: "40px 24px",
                 textAlign: "center",
               }}>
-                <Award size={56} color="#38d399" style={{ margin: "0 auto 16px" }} />
+                <Award size={56} color="#2563eb" style={{ margin: "0 auto 16px" }} />
                 <h3 style={{ fontSize: "24px", fontWeight: 800, color: "#fff", marginBottom: "8px" }}>
                   Official Course Certificate of Completion
                 </h3>
@@ -2438,14 +2439,14 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                   background: "rgba(255, 255, 255, 0.05)",
                   borderRadius: "12px",
                   padding: "16px",
-                  border: "1px solid rgba(56, 211, 153, 0.2)",
+                  border: "1px solid rgba(37, 99, 235, 0.2)",
                 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", marginBottom: "8px" }}>
                     <span>Curriculum Completion:</span>
-                    <strong style={{ color: "#38d399" }}>{progressPercent}%</strong>
+                    <strong style={{ color: "#2563eb" }}>{progressPercent}%</strong>
                   </div>
-                  <div style={{ width: "100%", height: "8px", background: "rgba(255,255,255,0.1)", borderRadius: "99px", overflow: "hidden" }}>
-                    <div style={{ width: `${progressPercent}%`, height: "100%", background: "#38d399" }} />
+                  <div style={{ width: "100%", height: "8px", background: "#e2e8f0", borderRadius: "99px", overflow: "hidden" }}>
+                    <div style={{ width: `${progressPercent}%`, height: "100%", background: "#2563eb" }} />
                   </div>
                 </div>
 
@@ -2478,7 +2479,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
             {activeTab === "syllabus" && (
               <div style={{
                 background: "linear-gradient(180deg, rgba(13, 22, 38, 0.85) 0%, rgba(9, 15, 28, 0.95) 100%)",
-                border: "1px solid rgba(56, 211, 153, 0.22)",
+                border: "1px solid rgba(37, 99, 235, 0.22)",
                 borderRadius: "18px",
                 overflow: "hidden",
                 boxShadow: "0 14px 40px rgba(0, 0, 0, 0.35)",
@@ -2488,7 +2489,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                   borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
                   fontWeight: 700,
                   fontSize: "15px",
-                  color: "#38d399",
+                  color: "#2563eb",
                   display: "flex",
                   alignItems: "center",
                   gap: "8px"
@@ -2503,10 +2504,10 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
             {activeTab === "rag" && (
               <div style={{
                 background: "linear-gradient(180deg, rgba(13, 22, 38, 0.92) 0%, rgba(6, 11, 20, 0.98) 100%)",
-                border: "1.5px solid rgba(56, 211, 153, 0.35)",
+                border: "1.5px solid rgba(37, 99, 235, 0.35)",
                 borderRadius: "20px",
                 overflow: "hidden",
-                boxShadow: "0 20px 50px rgba(0, 0, 0, 0.6), 0 0 35px rgba(56, 211, 153, 0.12)",
+                boxShadow: "0 20px 50px rgba(0, 0, 0, 0.6), 0 0 35px rgba(37, 99, 235, 0.12)",
                 height: "680px",
               }}>
                 {renderAiTutor("680px")}
@@ -2523,19 +2524,19 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                 width: "28px",
                 height: "28px",
                 borderRadius: "8px",
-                background: "rgba(56, 211, 153, 0.15)",
+                background: "#eff6ff",
                 display: "grid",
                 placeItems: "center",
-                color: "#38d399",
-                border: "1px solid rgba(56, 211, 153, 0.3)"
+                color: "#2563eb",
+                border: "1px solid #bfdbfe"
               }}>
                 <FileCheck2 size={15} />
               </div>
               <div>
-                <h3 style={{ fontSize: "14px", fontWeight: 700, color: "#fff", margin: 0, letterSpacing: "-0.01em" }}>
+                <h3 style={{ fontSize: "14px", fontWeight: 800, color: "#0f172a", margin: 0, letterSpacing: "-0.01em" }}>
                   Course Syllabus
                 </h3>
-                <span style={{ fontSize: "11px", color: "rgba(255, 255, 255, 0.55)" }}>
+                <span style={{ fontSize: "11px", color: "#64748b" }}>
                   {course.modules?.length || 0} Modules • {completedLessonIds.length} Completed
                 </span>
               </div>
@@ -2546,10 +2547,10 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
               onClick={() => setActiveTab("rag")}
               title="Open AI Mentor Doubt Solver below video"
               style={{
-                background: "rgba(56, 211, 153, 0.12)",
-                border: "1px solid rgba(56, 211, 153, 0.3)",
+                background: "#eff6ff",
+                border: "1px solid #bfdbfe",
                 borderRadius: "8px",
-                color: "#38d399",
+                color: "#1d4ed8",
                 fontSize: "11.5px",
                 fontWeight: 700,
                 padding: "5px 11px",
