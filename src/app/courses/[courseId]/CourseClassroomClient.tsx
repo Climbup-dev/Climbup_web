@@ -1453,10 +1453,10 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
               {[
                 { id: "assignments", label: "Assignment", icon: FileCheck2 },
                 { id: "mcqs", label: "MCQs Practice", icon: Award },
-                { id: "resources", label: "Resources", icon: FolderDown },
-                { id: "syllabus", label: "Syllabus", icon: FileCheck2, mobileOnly: true },
                 { id: "rag", label: "AI Mentor (RAG)", icon: Sparkles },
                 { id: "overview", label: "Overview", icon: BrainCircuit },
+                { id: "resources", label: "Resources", icon: FolderDown },
+                { id: "syllabus", label: "Syllabus", icon: FileCheck2, mobileOnly: true },
               ].map((tab) => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
@@ -2514,32 +2514,57 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
           </div>
         </div>
 
-        {/* Right Column: Desktop Sticky Sidebar (Curriculum Playlist OR RAG AI Chatbot) */}
+        {/* Right Column: Desktop Sticky Sidebar (Dedicated Course Syllabus Playlist) */}
         <aside className="classroomSidebarColumn">
-          {/* Sidebar Mode Switcher */}
-          <div className="sidebarTabsCapsule">
-            <button
-              type="button"
-              onClick={() => setSidebarTab("curriculum")}
-              className={`sidebarTabBtn ${sidebarTab === "curriculum" ? "active" : ""}`}
-            >
-              <FileCheck2 size={14} /> Course Syllabus
-            </button>
+          <div className="sidebarSyllabusHeader">
+            <div style={{ display: "flex", alignItems: "center", gap: "9px" }}>
+              <div style={{
+                width: "28px",
+                height: "28px",
+                borderRadius: "8px",
+                background: "rgba(56, 211, 153, 0.15)",
+                display: "grid",
+                placeItems: "center",
+                color: "#38d399",
+                border: "1px solid rgba(56, 211, 153, 0.3)"
+              }}>
+                <FileCheck2 size={15} />
+              </div>
+              <div>
+                <h3 style={{ fontSize: "14px", fontWeight: 700, color: "#fff", margin: 0, letterSpacing: "-0.01em" }}>
+                  Course Syllabus
+                </h3>
+                <span style={{ fontSize: "11px", color: "rgba(255, 255, 255, 0.55)" }}>
+                  {course.modules?.length || 0} Modules • {completedLessonIds.length} Completed
+                </span>
+              </div>
+            </div>
 
             <button
               type="button"
-              onClick={() => setSidebarTab("rag")}
-              className={`sidebarTabBtn ${sidebarTab === "rag" ? "active" : ""}`}
+              onClick={() => setActiveTab("rag")}
+              title="Open AI Mentor Doubt Solver below video"
+              style={{
+                background: "rgba(56, 211, 153, 0.12)",
+                border: "1px solid rgba(56, 211, 153, 0.3)",
+                borderRadius: "8px",
+                color: "#38d399",
+                fontSize: "11.5px",
+                fontWeight: 700,
+                padding: "5px 11px",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: "5px",
+                transition: "all 0.15s ease",
+              }}
             >
-              <Sparkles size={14} /> AI Mentor
+              <Sparkles size={12} /> Ask AI
             </button>
           </div>
 
-          {/* SIDEBAR TAB A: Curriculum List */}
-          {sidebarTab === "curriculum" && renderCurriculumList()}
-
-          {/* SIDEBAR TAB B: Live EduRAG Video AI Tutor */}
-          {sidebarTab === "rag" && renderAiTutor("100%")}
+          {/* Dedicated Course Curriculum Playlist */}
+          {renderCurriculumList()}
         </aside>
       </div>
 

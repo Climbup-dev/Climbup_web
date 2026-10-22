@@ -1211,3 +1211,19 @@
 .mcqReviewItem.isWrong {
   border-left: 4px solid #ef4444;
 }
+
+
+/* Dedicated Sidebar Syllabus Header */
+.sidebarSyllabusHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  background: rgba(10, 16, 30, 0.95);
+  border-bottom: 1px solid rgba(56, 211, 153, 0.2);
+  gap: 10px;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  backdrop-filter: blur(12px);
+}
