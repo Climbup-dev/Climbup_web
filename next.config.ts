@@ -103,10 +103,6 @@ const nextConfig: NextConfig = {
       source: '/api/assignments/:path*',
       destination: `${ragServer}/api/assignments/:path*`,
     });
-    rewritesList.push({
-      source: '/api/admin/:path*',
-      destination: `${ragServer}/api/admin/:path*`,
-    });
     return rewritesList;
   },
   images: {
