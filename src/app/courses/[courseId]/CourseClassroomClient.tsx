@@ -211,6 +211,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
           maxMaxBufferLength: 120,
           maxBufferSize: 60 * 1000 * 1000,
           xhrSetup: (xhr, url) => {
+            xhr.setRequestHeader("X-Climbup-Player", "authorized-hls-player-v3");
             if (token && !url.includes("st=") && !url.includes("token=")) {
               const sep = url.includes("?") ? "&" : "?";
               xhr.open("GET", `${url}${sep}st=${encodeURIComponent(token)}`, true);
