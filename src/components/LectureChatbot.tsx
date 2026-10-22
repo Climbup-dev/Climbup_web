@@ -41,21 +41,25 @@ const QUICK_STARTERS = [
   {
     icon: Zap,
     label: 'Core Concept',
+    shortDesc: 'Intuitive concept analogy & summary',
     query: 'Explain the main concept of this lecture in simple words with an intuitive analogy.'
   },
   {
     icon: Code2,
     label: 'Code / Implementation',
+    shortDesc: 'Step-by-step code walkthrough',
     query: 'Show me the step-by-step code or implementation demonstrated in this lecture.'
   },
   {
     icon: Clock,
     label: 'Key Timestamps',
+    shortDesc: 'Jump to key moments & chapters',
     query: 'What are the most important video timestamps and what is covered at each point?'
   },
   {
     icon: Lightbulb,
     label: 'Practical Pro Tip',
+    shortDesc: 'Interview tips & key takeaways',
     query: 'What is the most crucial practical takeaway and interview tip from this class?'
   }
 ];
@@ -648,7 +652,7 @@ export const LectureChatbot: React.FC<LectureChatbotProps> = ({
                       </div>
                       <div className="quickStarterTextBox">
                         <span className="quickStarterLabel">{item.label}</span>
-                        <span className="quickStarterSnippet">{item.query}</span>
+                        <span className="quickStarterSnippet">{item.shortDesc || item.query}</span>
                       </div>
                       <ArrowRight size={13} className="quickStarterArrow" />
                     </button>
