@@ -173,18 +173,33 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
       if (isDisposed || !videoRef.current) return;
 
       const hlsUrl = `/api/lessons/${lessonId}/hls/master.m3u8${token ? `?st=${encodeURIComponent(token)}` : ""}`;
+      const progressiveFallback = `/api/lessons/${lessonId}/stream${token ? `?st=${encodeURIComponent(token)}` : ""}`;
 
       if (isDisposed || !videoRef.current) return;
+
+      const fallbackToDirectStream = () => {
+        if (isDisposed || !videoRef.current) return;
+        if (hlsInstanceRef.current) {
+          try {
+            hlsInstanceRef.current.destroy();
+          } catch {}
+          hlsInstanceRef.current = null;
+        }
+        setVideoPlaybackError(false);
+        videoRef.current.src = progressiveFallback;
+        videoRef.current.load();
+        videoRef.current.play().catch(() => {});
+      };
 
       if (Hls.isSupported()) {
         const hls = new Hls({
           enableWorker: true,
           lowLatencyMode: false,
-          manifestLoadingTimeOut: 30000,
-          manifestLoadingMaxRetry: 6,
-          manifestLoadingRetryDelay: 2000,
-          levelLoadingMaxRetry: 5,
-          fragLoadingMaxRetry: 5,
+          manifestLoadingTimeOut: 5000,
+          manifestLoadingMaxRetry: 1,
+          manifestLoadingRetryDelay: 500,
+          levelLoadingMaxRetry: 2,
+          fragLoadingMaxRetry: 2,
           xhrSetup: (xhr, url) => {
             if (token && !url.includes("st=") && !url.includes("token=")) {
               const sep = url.includes("?") ? "&" : "?";
@@ -204,20 +219,24 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
 
         hls.on(Hls.Events.ERROR, (_evt, data) => {
           if (data.fatal) {
-            console.warn("[HLS Security] Playback notice:", data.type, data.details);
-            if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
-              console.log("[HLS Security] Retrying network stream recovery...");
-              hls.startLoad();
+            console.warn("[Video Security] HLS event notice:", data.type, data.details);
+            if (data.details === "manifestLoadError" || ((data.response?.code ?? 0) >= 400)) {
+              fallbackToDirectStream();
             } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
               hls.recoverMediaError();
             } else {
-              setVideoPlaybackError(true);
+              fallbackToDirectStream();
             }
           }
         });
       } else if (videoRef.current.canPlayType("application/vnd.apple.mpegurl")) {
         videoRef.current.src = hlsUrl;
         videoRef.current.load();
+        videoRef.current.onerror = () => {
+          fallbackToDirectStream();
+        };
+      } else {
+        fallbackToDirectStream();
       }
     }
 
