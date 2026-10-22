@@ -89,7 +89,7 @@ export default function HeroSection() {
       <div className="heroBackground" aria-hidden="true">
         <Image
           src="/hero-bg-v2.webp"
-          alt="ClimbUP Learning Platform Background"
+          alt="PractiQ Learning Platform Background"
           className="heroBgImage"
           fill
           priority

@@ -743,7 +743,7 @@ export default function AuthModal({
           ? "Create your account"
           : mode === "forgot"
             ? "Forgot password"
-            : "Sign in to ClimbUP";
+            : "Sign in to PractiQ";
 
   const modalDescription =
     step === "otp"
@@ -781,7 +781,7 @@ export default function AuthModal({
             <div className="sidebar-content">
               <Image
                 src="/logo.png"
-                alt="ClimbUP logo"
+                alt="PractiQ logo"
                 width={80}
                 height={80}
                 priority
@@ -796,7 +796,7 @@ export default function AuthModal({
                   <span key={`l2-${i}`} style={{ animationDelay: `${0.3 + (13 + i) * 0.04}s` }}>{char === " " ? "\u00A0" : char}</span>
                 ))}
                 <br/>
-                {Array.from("Climb Higher.").map((char, i) => (
+                {Array.from("Practice Smarter.").map((char, i) => (
                   <span key={`l3-${i}`} style={{ animationDelay: `${0.3 + (27 + i) * 0.04}s` }}>{char === " " ? "\u00A0" : char}</span>
                 ))}
               </h2>
@@ -819,7 +819,7 @@ export default function AuthModal({
               <Image
                 className="auth-logo-image"
                 src="/logo.png"
-                alt="ClimbUP logo"
+                alt="PractiQ logo"
                 width={64}
                 height={64}
                 priority

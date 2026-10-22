@@ -579,7 +579,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
             Student Login Required
           </h2>
           <p style={{ color: "#94a3b8", fontSize: "14.5px", lineHeight: "1.6", marginBottom: "26px" }}>
-            Course lectures, assignments, and interactive AI mentoring are reserved for registered ClimbUP students. Please log in or sign up to continue.
+            Course lectures, assignments, and interactive AI mentoring are reserved for registered PractiQ students. Please log in or sign up to continue.
           </p>
           <div style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap" }}>
             <button
@@ -587,14 +587,14 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
               onClick={() => { setAuthMode("login"); setAuthOpen(true); }}
               style={{
                 padding: "12px 24px",
-                background: "linear-gradient(135deg, #a7f3d0, #34d399 50%, #059669)",
-                color: "#021526",
+                background: "linear-gradient(135deg, #3b82f6, #2563eb 50%, #1d4ed8)",
+                color: "#ffffff",
                 fontWeight: 700,
                 fontSize: "14.5px",
                 borderRadius: "10px",
                 border: "none",
                 cursor: "pointer",
-                boxShadow: "0 4px 16px rgba(16, 185, 129, 0.35)"
+                boxShadow: "0 4px 16px rgba(37, 99, 235, 0.35)"
               }}
             >
               Sign In to Classroom
@@ -1379,7 +1379,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                   {resolvedVideo.type === "drive" && (
                     <div
                       className="classroomIframePopoutBlocker"
-                      title="ClimbUP Protected Video"
+                      title="PractiQ Protected Video"
                       onClick={(e) => {
                         e.stopPropagation();
                         e.preventDefault();

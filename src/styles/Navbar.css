@@ -8,9 +8,9 @@
   align-items: center;
   justify-content: space-between;
   gap: 24px;
-  background: rgba(9, 15, 26, 0.85);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  background: rgba(255, 255, 255, 0.95);
+  border-bottom: 1px solid #e2e8f0;
+  box-shadow: 0 2px 14px rgba(15, 23, 42, 0.05);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
@@ -30,7 +30,7 @@ body.reading-mode .navbar {
   display: flex;
   align-items: center;
   gap: 10px;
-  color: #fff;
+  color: #0f172a;
   font-size: 20px;
   font-weight: 800;
   letter-spacing: -0.02em;
@@ -38,10 +38,9 @@ body.reading-mode .navbar {
 }
 
 .brand span {
-  background: linear-gradient(135deg, #ffffff 40%, #93c5fd 100%);
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: #0f172a;
+  font-weight: 800;
+  letter-spacing: -0.02em;
 }
 
 .brand img {
@@ -59,7 +58,7 @@ body.reading-mode .navbar {
 
 .navLinks a {
   position: relative;
-  color: #94a3b8;
+  color: #475569;
   font-size: 14.5px;
   font-weight: 600;
   text-decoration: none;
@@ -68,11 +67,11 @@ body.reading-mode .navbar {
 }
 
 .navLinks a:hover {
-  color: #ffffff;
+  color: #0f172a;
 }
 
 .navLinks .active {
-  color: #3b82f6;
+  color: #2563eb;
   font-weight: 700;
 }
 
@@ -82,10 +81,10 @@ body.reading-mode .navbar {
   left: 0;
   bottom: -6px;
   width: 100%;
-  height: 2px;
+  height: 2.5px;
   border-radius: 99px;
-  background: #3b82f6;
-  box-shadow: 0 0 10px rgba(59, 130, 246, 0.6);
+  background: #2563eb;
+  box-shadow: 0 0 10px rgba(37, 99, 235, 0.4);
 }
 
 .navActions {
@@ -106,24 +105,24 @@ body.reading-mode .navbar {
 }
 
 .loginBtn {
-  color: #e2e8f0;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #0f172a;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
 }
 
 .signupBtn {
   color: #ffffff;
   border: 0;
-  background: linear-gradient(135deg, #60a5fa, #2563eb, #1d4ed8);
+  background: linear-gradient(135deg, #3b82f6, #2563eb 45%, #1d4ed8);
   box-shadow: 0 2px 14px rgba(37, 99, 235, 0.35);
 }
 
 .logoutBtn {
   height: 34px;
   padding: 0 14px;
-  color: #fff;
-  background: rgba(255, 255, 255, 0.07);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #0f172a;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
 }
 
 .loginBtn:hover, .signupBtn:hover, .logoutBtn:hover:not(:disabled) {
@@ -131,16 +130,17 @@ body.reading-mode .navbar {
 }
 
 .loginBtn:hover {
-  background: rgba(255, 255, 255, 0.09);
-  border-color: rgba(255, 255, 255, 0.2);
+  background: #f8fafc;
+  border-color: #94a3b8;
 }
 
 .signupBtn:hover {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
   box-shadow: 0 4px 18px rgba(37, 99, 235, 0.5);
 }
 
 .authStatus {
-  color: #94a3b8;
+  color: #64748b;
   font-size: 13px;
   font-weight: 600;
 }
@@ -156,9 +156,9 @@ body.reading-mode .navbar {
   display: flex;
   align-items: center;
   gap: 9px;
-  color: #fff;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #0f172a;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
   border-radius: 999px;
   font: inherit;
   cursor: pointer;
@@ -166,8 +166,8 @@ body.reading-mode .navbar {
 }
 
 .profileTrigger:hover, .profileTrigger[aria-expanded="true"] {
-  background: rgba(255, 255, 255, 0.09);
-  border-color: rgba(59, 130, 246, 0.4);
+  background: #f8fafc;
+  border-color: #2563eb;
 }
 
 .userAvatar {
@@ -181,7 +181,7 @@ body.reading-mode .navbar {
   font-size: 12.5px;
   font-weight: 800;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .userAvatar img {
@@ -193,7 +193,7 @@ body.reading-mode .navbar {
 .userNameText {
   font-size: 13.5px;
   font-weight: 600;
-  color: #f1f5f9;
+  color: #0f172a;
   max-width: 160px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -201,7 +201,7 @@ body.reading-mode .navbar {
 }
 
 .profileChevron {
-  color: #94a3b8;
+  color: #64748b;
   transition: transform 180ms ease;
   flex-shrink: 0;
 }
@@ -216,11 +216,11 @@ body.reading-mode .navbar {
   right: 0;
   width: 240px;
   padding: 6px;
-  color: #fff;
-  background: #0a1528;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #0f172a;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
   border-radius: 12px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.04);
   backdrop-filter: blur(20px);
   transform-origin: top right;
   animation: profile-pop 160ms cubic-bezier(0.22, 1, 0.36, 1) both;
@@ -231,19 +231,19 @@ body.reading-mode .navbar {
   gap: 2px;
   padding: 8px 10px 10px;
   margin-bottom: 6px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .profileDropdownHeader strong {
   font-size: 13.5px;
-  color: #fff;
+  color: #0f172a;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .profileDropdownHeader span {
-  color: #94a3b8;
+  color: #64748b;
   font-size: 12px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -257,7 +257,7 @@ body.reading-mode .navbar {
   display: flex;
   align-items: center;
   gap: 10px;
-  color: #cbd5e1;
+  color: #334155;
   background: transparent;
   border: 0;
   border-radius: 8px;
@@ -270,18 +270,18 @@ body.reading-mode .navbar {
 }
 
 .profileDropdown a:hover, .profileDropdown a:focus-visible {
-  color: #60a5fa;
-  background: rgba(59, 130, 246, 0.12);
+  color: #1d4ed8;
+  background: #eff6ff;
   outline: 0;
 }
 
 .profileDropdown .profileLogout {
-  color: #f87171;
+  color: #dc2626;
 }
 
 .profileDropdown .profileLogout:hover:not(:disabled), .profileDropdown .profileLogout:focus-visible {
-  color: #fca5a5;
-  background: rgba(239, 68, 68, 0.1);
+  color: #b91c1c;
+  background: #fef2f2;
   outline: 0;
 }
 
@@ -295,7 +295,7 @@ body.reading-mode .navbar {
   display: none !important;
   background: transparent;
   border: none;
-  color: #cbd5e1;
+  color: #0f172a;
   padding: 6px;
   border-radius: 8px;
   cursor: pointer;
@@ -303,8 +303,8 @@ body.reading-mode .navbar {
 }
 
 .mobileMenuBtn:hover {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.08);
+  color: #2563eb;
+  background: #eff6ff;
 }
 
 .desktopAuthButtons {
@@ -336,7 +336,7 @@ body.reading-mode .navbar {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(6, 13, 26, 0.98);
+  background: #ffffff;
   backdrop-filter: blur(20px);
   z-index: 300;
   display: flex;
@@ -360,7 +360,7 @@ body.reading-mode .navbar {
 .mobileMenuCloseBtn {
   background: transparent;
   border: none;
-  color: #fff;
+  color: #0f172a;
   cursor: pointer;
   padding: 6px;
 }
@@ -372,7 +372,7 @@ body.reading-mode .navbar {
 }
 
 .mobileNavLinks a {
-  color: #cbd5e1;
+  color: #0f172a;
   font-size: 22px;
   font-weight: 700;
   text-decoration: none;
@@ -381,7 +381,7 @@ body.reading-mode .navbar {
 
 .mobileNavLinks a:active,
 .mobileNavLinks a.active {
-  color: #3b82f6;
+  color: #2563eb;
 }
 
 .mobileAuthButtons {

@@ -87,7 +87,7 @@ export default function MyCoursesPage() {
       <div className="myCoursesBackgroundWrapper" aria-hidden="true">
         <Image
           src="/hero-bg-v2.webp"
-          alt="ClimbUP My Courses Background"
+          alt="PractiQ My Courses Background"
           className="myCoursesBgImage"
           fill
           priority

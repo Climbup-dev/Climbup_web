@@ -79,7 +79,7 @@ function CoursesContent() {
       <div className="coursesBackgroundWrapper" aria-hidden="true">
         <Image
           src="/hero-bg-v2.webp"
-          alt="ClimbUP Courses Background"
+          alt="PractiQ Courses Background"
           className="coursesBgImage"
           fill
           priority

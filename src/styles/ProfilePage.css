@@ -1,11 +1,11 @@
-/* ClimbUP - Student Profile Page Styling */
+/* PractiQ - Student Profile Page Styling (White & Royal Blue Theme) */
 
 .profilePageWrapper {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: var(--page-bg, #060d1a);
-  color: #fff;
+  background: #f4f8fc;
+  color: #0f172a;
 }
 
 .profileMain {
@@ -18,8 +18,8 @@
 
 /* Profile Card Header */
 .profileHeaderCard {
-  background: linear-gradient(145deg, rgba(12, 28, 56, 0.8) 0%, rgba(6, 14, 30, 0.96) 100%);
-  border: 1px solid rgba(59, 130, 246, 0.3);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
   border-radius: 20px;
   padding: 30px 34px;
   margin-bottom: 32px;
@@ -28,14 +28,14 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 24px;
-  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.42), 0 0 25px rgba(37, 99, 235, 0.12);
+  box-shadow: 0 4px 24px rgba(15, 23, 42, 0.06);
   transition: border-color 200ms ease, box-shadow 200ms ease;
   transform: translateZ(0);
 }
 
 .profileHeaderCard:hover {
-  border-color: rgba(59, 130, 246, 0.5);
-  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.5), 0 0 35px rgba(37, 99, 235, 0.18);
+  border-color: #2563eb;
+  box-shadow: 0 8px 30px rgba(15, 23, 42, 0.1);
 }
 
 .profileUserGroup {
@@ -50,14 +50,14 @@
   height: 78px;
   border-radius: 50%;
   overflow: hidden;
-  border: 2px solid #3b82f6;
+  border: 2px solid #2563eb;
   background: #dbeafe;
   color: #1e3a8a;
   display: grid;
   place-items: center;
   font-size: 24px;
   font-weight: 800;
-  box-shadow: 0 0 20px rgba(37, 99, 235, 0.35);
+  box-shadow: 0 0 20px rgba(37, 99, 235, 0.2);
   flex-shrink: 0;
 }
 
@@ -73,24 +73,24 @@
   font-size: clamp(22px, 3vw, 28px);
   font-weight: 800;
   margin: 0;
-  color: #fff;
+  color: #0f172a;
   letter-spacing: -0.02em;
 }
 
 .profileStudentBadge {
-  background: rgba(37, 99, 235, 0.16);
-  color: #60a5fa;
+  background: #eff6ff;
+  color: #1d4ed8;
   padding: 3px 10px;
   border-radius: 6px;
   font-size: 11px;
   font-weight: 700;
-  border: 1px solid rgba(59, 130, 246, 0.35);
+  border: 1px solid #bfdbfe;
 }
 
 .profileMetaRow {
   display: flex;
   gap: 18px;
-  color: rgba(255, 255, 255, 0.65);
+  color: #64748b;
   font-size: 13px;
   flex-wrap: wrap;
 }
@@ -118,20 +118,20 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
   transition: transform 160ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 160ms ease;
   white-space: nowrap;
 }
 
 .hubBtn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.5);
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.45);
 }
 
 .signOutBtn {
-  background: rgba(239, 68, 68, 0.12);
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  color: #fca5a5;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
   font-weight: 700;
   font-size: 13px;
   padding: 10px 16px;
@@ -144,8 +144,8 @@
 }
 
 .signOutBtn:hover {
-  background: rgba(239, 68, 68, 0.22);
-  color: #fff;
+  background: #fee2e2;
+  color: #b91c1c;
   transform: translateY(-1px);
 }
 
@@ -158,28 +158,29 @@
 }
 
 .profileStatCard {
-  background: rgba(10, 21, 40, 0.55);
-  border: 1px solid rgba(59, 130, 246, 0.2);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
   border-radius: 14px;
   padding: 20px 22px;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
   transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1), border-color 180ms ease;
 }
 
 .profileStatCard:hover {
   transform: translateY(-3px);
-  border-color: rgba(59, 130, 246, 0.45);
+  border-color: #2563eb;
 }
 
 .statCardHeader {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.6);
+  color: #64748b;
   font-weight: 500;
 }
 
 .statCardValue {
   font-size: 30px;
   font-weight: 800;
-  color: #60a5fa;
+  color: #2563eb;
   margin: 6px 0 2px;
   line-height: 1.1;
   letter-spacing: -0.02em;
@@ -187,7 +188,7 @@
 
 .statCardSub {
   font-size: 12px;
-  color: #93c5fd;
+  color: #64748b;
 }
 
 /* Active Progress Rows */
@@ -195,12 +196,12 @@
   font-size: 20px;
   font-weight: 800;
   margin: 0 0 18px;
-  color: #fff;
+  color: #0f172a;
 }
 
 .progressItemCard {
-  background: rgba(10, 21, 40, 0.5);
-  border: 1px solid rgba(59, 130, 246, 0.2);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
   border-radius: 14px;
   padding: 18px 22px;
   display: flex;
@@ -209,25 +210,26 @@
   flex-wrap: wrap;
   gap: 16px;
   margin-bottom: 14px;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
   transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
 }
 
 .progressItemCard:hover {
   transform: translateY(-2px);
-  border-color: rgba(59, 130, 246, 0.45);
-  background: rgba(10, 21, 40, 0.7);
+  border-color: #2563eb;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
 }
 
 .progressItemTitle {
   font-size: 16.5px;
   font-weight: 700;
   margin: 0 0 6px;
-  color: #fff;
+  color: #0f172a;
 }
 
 .progressItemMeta {
   font-size: 12.5px;
-  color: rgba(255, 255, 255, 0.65);
+  color: #64748b;
 }
 
 .progressItemRight {
@@ -238,9 +240,9 @@
 }
 
 .openCourseBtn {
-  background: rgba(37, 99, 235, 0.16);
-  color: #60a5fa;
-  border: 1px solid rgba(59, 130, 246, 0.35);
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
   padding: 8px 14px;
   border-radius: 8px;
   font-size: 12px;
@@ -251,7 +253,8 @@
 }
 
 .openCourseBtn:hover {
-  background: rgba(37, 99, 235, 0.3);
-  color: #fff;
+  background: #2563eb;
+  color: #ffffff;
+  border-color: #2563eb;
   transform: translateX(2px);
 }

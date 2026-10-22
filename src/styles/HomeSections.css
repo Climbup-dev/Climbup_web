@@ -1,13 +1,13 @@
 .homeSections {
-  color: #f0f6ff;
-  background: #060d1a;
+  color: #0f172a;
+  background: #ffffff;
   font-family: Inter, system-ui, sans-serif;
 }
 
 .startupSection {
   position: relative;
   padding: 106px 0;
-  border-top: 1px solid rgba(147, 197, 253, 0.12);
+  border-top: 1px solid #e2e8f0;
 }
 
 .sectionContainer {
@@ -30,26 +30,24 @@
 .sectionLabel {
   display: inline-flex;
   margin-bottom: 16px;
-  color: #60a5fa;
+  color: #2563eb;
   font-size: 12px;
   font-weight: 900;
   letter-spacing: 0.13em;
   text-transform: uppercase;
 }
 
-.sectionIntro h2,
-.visionPanel h2 {
+.sectionIntro h2 {
   margin: 0;
-  color: #fff;
+  color: #0f172a;
   font-size: clamp(34px, 4.5vw, 58px);
   line-height: 1.07;
   letter-spacing: -0.04em;
 }
 
-.sectionIntro > p,
-.visionPanel p {
+.sectionIntro > p {
   margin: 20px 0 0;
-  color: rgba(226, 238, 255, 0.82);
+  color: #475569;
   font-size: 17px;
   line-height: 1.75;
 }
@@ -57,9 +55,9 @@
 /* SHOWCASE SECTION (ZIG-ZAG) */
 
 .showcaseSection {
-  background:
-    radial-gradient(circle at 50% 0%, rgba(37, 99, 235, 0.12), transparent 35%),
-    #081120;
+  background: #f4f8fc;
+  border-top: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .showcaseList {
@@ -93,8 +91,9 @@
   align-items: center;
   width: 48px;
   height: 48px;
-  color: #bfdbfe;
-  background: rgba(37, 99, 235, 0.14);
+  color: #1d4ed8;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
   border-radius: 14px;
   font-size: 14px;
   font-weight: 900;
@@ -102,7 +101,7 @@
 }
 
 .showcaseContent h3 {
-  color: #fff;
+  color: #0f172a;
   font-size: 40px;
   font-weight: 900;
   line-height: 1.1;
@@ -111,7 +110,7 @@
 }
 
 .showcaseContent p {
-  color: rgba(226, 238, 255, 0.75);
+  color: #475569;
   font-size: 17px;
   line-height: 1.6;
   margin: 0 0 32px;
@@ -130,13 +129,13 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  color: rgba(226, 238, 255, 0.9);
+  color: #334155;
   font-size: 16px;
   font-weight: 600;
 }
 
 .showcaseFeatures li svg {
-  color: #3b82f6;
+  color: #2563eb;
 }
 
 .showcaseAction {
@@ -145,21 +144,21 @@
   align-items: center;
   gap: 12px;
   padding: 14px 28px;
-  background: rgba(37, 99, 235, 0.12);
-  border: 1px solid rgba(59, 130, 246, 0.35);
+  background: #2563eb;
+  border: none;
   border-radius: 99px;
-  color: #60a5fa;
+  color: #ffffff;
   font-size: 16px;
   font-weight: 700;
   cursor: pointer;
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.28);
   transition: all 0.2s ease;
 }
 
 .showcaseAction:hover {
-  background: rgba(37, 99, 235, 0.22);
-  border-color: rgba(59, 130, 246, 0.55);
+  background: #1d4ed8;
   transform: translateY(-2px);
-  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.4);
 }
 
 .showcaseAction span {
@@ -194,45 +193,42 @@
   display: block;
   object-fit: contain;
   animation: floatAnimation 6s ease-in-out infinite;
-  filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.4)) drop-shadow(0 10px 20px rgba(37, 99, 235, 0.2));
+  filter: drop-shadow(0 20px 40px rgba(15, 23, 42, 0.12));
   transition: filter 0.4s ease;
   z-index: 2;
 }
 
 .showcaseImageWrapper:hover .showcaseImage {
-  filter: drop-shadow(0 30px 50px rgba(0, 0, 0, 0.5)) drop-shadow(0 15px 30px rgba(37, 99, 235, 0.4));
+  filter: drop-shadow(0 28px 55px rgba(15, 23, 42, 0.18)) drop-shadow(0 10px 25px rgba(37, 99, 235, 0.2));
 }
-
-
-
 
 /* VISION */
 
 .visionSection {
   padding-bottom: 120px;
-  background:
-    radial-gradient(circle at 50% 20%, rgba(37, 99, 235, 0.2), transparent 34%),
-    #060d1a;
+  background: #ffffff;
 }
 
 .visionPanel {
   padding: clamp(34px, 6vw, 70px);
   text-align: center;
-  background:
-    linear-gradient(120deg, rgba(11, 26, 52, 0.95), rgba(37, 99, 235, 0.18)),
-    rgba(8, 16, 32, 0.92);
-  border: 1px solid rgba(147, 197, 253, 0.25);
+  background: linear-gradient(135deg, #0b1528 0%, #1e3a8a 50%, #2563eb 100%);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 32px;
-  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.28);
+  box-shadow: 0 30px 90px rgba(15, 23, 42, 0.2);
 }
 
 .visionPanel h2 {
   font-size: clamp(34px, 5vw, 64px);
+  color: #ffffff;
 }
 
 .visionPanel p {
   max-width: 720px;
-  margin-inline: auto;
+  margin: 20px auto 0;
+  color: #e2e8f0;
+  font-size: 17px;
+  line-height: 1.75;
 }
 
 /* RESPONSIVE */
@@ -249,78 +245,20 @@
   }
 
   .showcaseContent {
-    display: contents;
-  }
-
-  .showcaseNumber { order: 1; }
-  .showcaseContent h3 { order: 2; }
-  .showcaseContent p { 
-    order: 3;
-    margin-bottom: 16px;
+    max-width: 100%;
+    margin-bottom: 40px;
   }
 
   .showcaseImageWrapper {
-    order: 4;
-    max-width: 100%;
-    margin: 32px 0 40px;
-  }
-  
-  .showcaseFeatures { order: 5; }
-  .showcaseAction { 
-    order: 6;
-    align-self: flex-start;
-  }
-}
-
-@media (max-width: 640px) {
-  .startupSection {
-    padding: 70px 0;
+    width: 100%;
   }
 
-  .sectionContainer {
-    width: min(100% - 32px, 1180px);
-  }
-
-  .sectionIntro {
-    margin-bottom: 34px;
-  }
-
-  .sectionIntro h2,
-  .visionPanel h2 {
-    font-size: 32px;
-  }
-
-  .sectionIntro > p,
-  .visionPanel p {
-    font-size: 15px;
+  .showcaseImage {
+    width: 100%;
+    margin-left: 0;
   }
 
   .showcaseList {
     gap: 80px;
-    margin-top: 40px;
-  }
-
-
-  .showcaseContent h3 {
-    font-size: 28px;
-  }
-
-
-  .visionSection {
-    padding-bottom: 80px;
-  }
-
-  .visionPanel {
-    border-radius: 24px;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .showcaseImageWrapper {
-    transition: none;
-  }
-
-  .showcaseImageWrapper:hover {
-    transform: none;
   }
 }

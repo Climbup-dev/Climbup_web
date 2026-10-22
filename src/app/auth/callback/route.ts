@@ -37,7 +37,7 @@ function getMetadataName(user: User): string {
     return name.trim();
   }
 
-  return user.email?.split("@")[0] || "ClimbUP member";
+  return user.email?.split("@")[0] || "PractiQ member";
 }
 
 function getMetadataImage(user: User): string | null {

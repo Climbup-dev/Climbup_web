@@ -1,10 +1,10 @@
 :root {
-  --page-bg: #070d18;
-  --page-text: #ffffff;
+  --page-bg: #f4f8fc;
+  --page-text: #0f172a;
   --accent: #2563eb;
-  --accent-soft: #93c5fd;
-  --danger: #f87171;
-  color-scheme: dark;
+  --accent-soft: #dbeafe;
+  --danger: #ef4444;
+  color-scheme: light;
 
   /* Global 60fps Smooth Motion Tokens (Zero Layout Thrashing) */
   --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
@@ -65,12 +65,16 @@ video {
 }
 
 ::-webkit-scrollbar-track {
-  background: #040914;
+  background: #f1f5f9;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(37, 99, 235, 0.6);
+  background: rgba(37, 99, 235, 0.45);
   border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(37, 99, 235, 0.7);
 }
 
 #toast-container {
@@ -91,11 +95,11 @@ video {
   display: flex;
   align-items: center;
   gap: 11px;
-  color: #fff;
-  background: linear-gradient(145deg, rgba(11, 26, 52, 0.98), rgba(6, 14, 28, 0.99));
-  border: 1px solid rgba(147, 197, 253, 0.25);
+  color: #0f172a;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
   border-radius: 14px;
-  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.36);
+  box-shadow: 0 14px 40px rgba(15, 23, 42, 0.12);
   pointer-events: auto;
   animation: toast-in 240ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }

@@ -106,9 +106,9 @@ export default function Navbar({ onLogin, onSignUp }: NavbarProps) {
 
   return (
     <nav className="navbar" aria-label="Main navigation">
-      <Link className="brand" href="/" aria-label="ClimbUP Courses home">
-        <Image src="/logo-transparent.png" alt="ClimbUP logo" width={38} height={38} priority />
-        <span>ClimbUP</span>
+      <Link className="brand" href="/" aria-label="PractiQ Courses home">
+        <Image src="/logo-transparent.png" alt="PractiQ logo" width={38} height={38} priority />
+        <span>PractiQ</span>
       </Link>
 
       <div className="navLinks" aria-label="Main sections">
@@ -209,8 +209,8 @@ export default function Navbar({ onLogin, onSignUp }: NavbarProps) {
         <div className="mobileMenuOverlay">
           <div className="mobileMenuHeader">
             <Link className="brand mobileBrand" href="/" onClick={closeMenu}>
-              <Image src="/logo-transparent.png" alt="ClimbUP logo" width={38} height={38} />
-              <span>ClimbUP</span>
+              <Image src="/logo-transparent.png" alt="PractiQ logo" width={38} height={38} />
+              <span>PractiQ</span>
             </Link>
             <button className="mobileMenuCloseBtn" onClick={closeMenu}>
               <X size={26} />

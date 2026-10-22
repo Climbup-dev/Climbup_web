@@ -542,7 +542,7 @@ export const LectureChatbot: React.FC<LectureChatbotProps> = ({
           </div>
           <div>
             <div className="chatHeaderTitleRow">
-              <h3 className="chatTitle">ClimbUP AI Mentor</h3>
+              <h3 className="chatTitle">PractiQ AI Mentor</h3>
               <span className="chatOnlineBadge">Live</span>
             </div>
             <p className="chatSubtitle">

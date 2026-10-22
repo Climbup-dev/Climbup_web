@@ -1,127 +1,118 @@
 .auth-modal-overlay {
   background:
-    radial-gradient(circle at 78% 18%, rgba(37, 99, 235, 0.22), transparent 30%),
-    rgba(4, 9, 18, 0.78);
-  backdrop-filter: blur(16px) saturate(120%);
-  -webkit-backdrop-filter: blur(16px) saturate(120%);
-  animation: climbup-overlay-in 450ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    radial-gradient(circle at 78% 18%, rgba(37, 99, 235, 0.15), transparent 30%),
+    rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(12px) saturate(120%);
+  -webkit-backdrop-filter: blur(12px) saturate(120%);
+  animation: climbup-overlay-in 350ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .auth-modal {
-  color: #fff;
-  background:
-    linear-gradient(145deg, rgba(12, 28, 56, 0.97), rgba(6, 14, 30, 0.98) 64%),
-    #060d1a;
-  border: 1px solid rgba(147, 197, 253, 0.24);
-  box-shadow: 0 34px 100px rgba(0, 0, 0, 0.48), 0 0 55px rgba(37, 99, 235, 0.18);
-  animation: climbup-modal-in 450ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  color: #0f172a;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 34px 100px rgba(15, 23, 42, 0.25), 0 0 45px rgba(37, 99, 235, 0.1);
+  animation: climbup-modal-in 350ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .auth-modal::before {
   height: 3px;
   background: linear-gradient(90deg, #93c5fd, #2563eb, #1d4ed8);
-  box-shadow: 0 0 22px rgba(37, 99, 235, 0.72);
-}
-
-.auth-modal::after {
-  content: "";
-  position: absolute;
-  top: -110px;
-  right: -100px;
-  width: 260px;
-  height: 260px;
-  pointer-events: none;
-  background: radial-gradient(circle, rgba(37, 99, 235, 0.18), transparent 68%);
+  box-shadow: 0 0 16px rgba(37, 99, 235, 0.5);
 }
 
 .auth-modal-close {
   z-index: 2;
-  color: #bfdbfe;
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(147, 197, 253, 0.22);
+  color: #64748b;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
 }
 
 .auth-modal-close:hover:not(:disabled) {
-  color: #ffffff;
-  background: #2563eb;
-  border-color: #2563eb;
+  color: #0f172a;
+  background: #e2e8f0;
+  border-color: #cbd5e1;
 }
 
 .auth-logo-image {
-  background: #fff;
-  padding: 5px;
-  filter: drop-shadow(0 10px 24px rgba(37, 99, 235, 0.35));
+  background: transparent;
+  padding: 0;
+  filter: drop-shadow(0 4px 12px rgba(37, 99, 235, 0.25));
 }
 
-.auth-title { color: #fff; }
-.auth-description, .auth-password-hint, .auth-terms { color: rgba(255, 255, 255, 0.66); }
-.auth-label { color: rgba(255, 255, 255, 0.86); }
+.auth-title { color: #0f172a; }
+.auth-description, .auth-password-hint, .auth-terms { color: #64748b; }
+.auth-label { color: #334155; }
 
 .auth-trust-tags span {
-  color: #93c5fd;
-  background: rgba(37, 99, 235, 0.1);
-  border-color: rgba(147, 197, 253, 0.25);
+  color: #1d4ed8;
+  background: #eff6ff;
+  border-color: #bfdbfe;
 }
 
-.auth-trust-tags span::before { color: #3b82f6; }
+.auth-trust-tags span::before { color: #2563eb; }
 
 .auth-input {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.065);
-  border-color: rgba(147, 197, 253, 0.2);
+  color: #0f172a;
+  background: #ffffff;
+  border-color: #cbd5e1;
 }
 
 .auth-input:-webkit-autofill,
 .auth-input:-webkit-autofill:hover, 
 .auth-input:-webkit-autofill:focus, 
 .auth-input:-webkit-autofill:active {
-  -webkit-box-shadow: 0 0 0 30px #091322 inset !important;
-  -webkit-text-fill-color: #fff !important;
+  -webkit-box-shadow: 0 0 0 30px #ffffff inset !important;
+  -webkit-text-fill-color: #0f172a !important;
   transition: background-color 5000s ease-in-out 0s;
 }
 
-.auth-input::placeholder { color: rgba(255, 255, 255, 0.38); }
+.auth-input::placeholder { color: #94a3b8; }
 .auth-input:hover:not(:disabled) { 
-  border-color: rgba(147, 197, 253, 0.45); 
-  background: rgba(255, 255, 255, 0.08); 
+  border-color: #94a3b8; 
+  background: #ffffff; 
 }
 .auth-input:focus { 
   border-color: #2563eb; 
-  background: rgba(255, 255, 255, 0.1); 
-  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.18), 0 0 22px rgba(37, 99, 235, 0.15); 
+  background: #ffffff; 
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15); 
 }
-.auth-input:disabled { color: rgba(255, 255, 255, 0.55); background: rgba(255, 255, 255, 0.035); }
+.auth-input:disabled { color: #94a3b8; background: #f1f5f9; }
 
 .auth-primary-button {
   color: #ffffff;
-  background: linear-gradient(135deg, #60a5fa, #2563eb, #1d4ed8);
-  box-shadow: 0 12px 28px rgba(37, 99, 235, 0.35);
+  background: linear-gradient(135deg, #3b82f6, #2563eb, #1d4ed8);
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.32);
 }
 
-.auth-primary-button:hover:not(:disabled) { box-shadow: 0 16px 34px rgba(37, 99, 235, 0.5); }
-.auth-primary-button:focus-visible, .auth-google-button:focus-visible, .auth-text-button:focus-visible, .auth-modal-close:focus-visible { outline-color: rgba(147, 197, 253, 0.7); }
-.auth-divider { color: rgba(255, 255, 255, 0.38); }
-.auth-divider::before, .auth-divider::after { background: rgba(147, 197, 253, 0.18); }
-.auth-text-button, .auth-terms a { color: #93c5fd; }
-.auth-text-button:hover:not(:disabled) { color: #3b82f6; }
+.auth-primary-button:hover:not(:disabled) { 
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.45); 
+}
+
+.auth-primary-button:focus-visible, .auth-google-button:focus-visible, .auth-text-button:focus-visible, .auth-modal-close:focus-visible { outline-color: #2563eb; }
+.auth-divider { color: #94a3b8; }
+.auth-divider::before, .auth-divider::after { background: #e2e8f0; }
+.auth-text-button, .auth-terms a { color: #2563eb; }
+.auth-text-button:hover:not(:disabled) { color: #1d4ed8; }
 
 .auth-google-button {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.07);
-  border-color: rgba(147, 197, 253, 0.22);
+  color: #0f172a;
+  background: #ffffff;
+  border-color: #cbd5e1;
 }
 
 .auth-google-button:hover:not(:disabled) {
-  background: rgba(147, 197, 253, 0.1);
-  border-color: rgba(147, 197, 253, 0.45);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
+  background: #f8fafc;
+  border-color: #94a3b8;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
 }
 
-.auth-error { color: #fecaca; background: rgba(127, 29, 29, 0.32); border-color: rgba(248, 113, 113, 0.34); }
-.auth-success { color: #bbf7d0; background: rgba(20, 83, 45, 0.32); border-color: rgba(74, 222, 128, 0.3); }
+.auth-error { color: #b91c1c; background: #fef2f2; border-color: #fecaca; }
+.auth-success { color: #15803d; background: #f0fdf4; border-color: #bbf7d0; }
 
-.auth-modal-overlay-closing { animation: climbup-overlay-out 350ms cubic-bezier(0.4, 0, 0.2, 1) both; }
-.auth-modal-closing { animation: climbup-modal-out 350ms cubic-bezier(0.4, 0, 0.2, 1) both; }
+.auth-modal-overlay-closing { animation: climbup-overlay-out 300ms cubic-bezier(0.4, 0, 0.2, 1) both; }
+.auth-modal-closing { animation: climbup-modal-out 300ms cubic-bezier(0.4, 0, 0.2, 1) both; }
 
 .oauth-popup-status {
   min-height: 100vh;
@@ -130,16 +121,16 @@
   place-content: center;
   justify-items: center;
   gap: 14px;
-  color: #fff;
-  background: radial-gradient(circle at 70% 20%, rgba(37, 99, 235, 0.25), transparent 34%), linear-gradient(145deg, #0e1e38, #070e1c 64%, #040812);
+  color: #0f172a;
+  background: #f4f8fc;
   font-family: Inter, system-ui, sans-serif;
   text-align: center;
 }
 
-.oauth-popup-status h1 { margin: 0; font-size: 25px; }
-.oauth-popup-status p { max-width: 360px; margin: 0; color: rgba(255, 255, 255, 0.68); line-height: 1.6; }
-.oauth-popup-mark { width: 64px; height: 64px; display: grid; place-items: center; color: #ffffff; background: #2563eb; border-radius: 50%; font-size: 28px; font-weight: 900; box-shadow: 0 0 34px rgba(37, 99, 235, 0.5); }
-.oauth-popup-status button { margin-top: 8px; min-height: 44px; padding: 0 20px; color: #ffffff; background: linear-gradient(135deg, #60a5fa, #2563eb); border: 0; border-radius: 12px; font: inherit; font-weight: 800; cursor: pointer; }
+.oauth-popup-status h1 { margin: 0; font-size: 25px; color: #0f172a; }
+.oauth-popup-status p { max-width: 360px; margin: 0; color: #475569; line-height: 1.6; }
+.oauth-popup-mark { width: 64px; height: 64px; display: grid; place-items: center; color: #ffffff; background: #2563eb; border-radius: 50%; font-size: 28px; font-weight: 900; box-shadow: 0 0 24px rgba(37, 99, 235, 0.35); }
+.oauth-popup-status button { margin-top: 8px; min-height: 44px; padding: 0 20px; color: #ffffff; background: linear-gradient(135deg, #3b82f6, #2563eb); border: 0; border-radius: 12px; font: inherit; font-weight: 800; cursor: pointer; }
 
 @keyframes climbup-overlay-in { from { opacity: 0; } to { opacity: 1; } }
 @keyframes climbup-modal-in { from { opacity: 0; transform: translateY(22px) scale(0.965); } to { opacity: 1; transform: translateY(0) scale(1); } }
