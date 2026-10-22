@@ -91,6 +91,18 @@ const nextConfig: NextConfig = {
       source: '/api/rag/:path*',
       destination: `${ragServer}/api/:path*`,
     });
+    rewritesList.push({
+      source: '/api/lessons/:lessonId/mcqs/:path*',
+      destination: `${ragServer}/api/lessons/:lessonId/mcqs/:path*`,
+    });
+    rewritesList.push({
+      source: '/api/lessons/:lessonId/assignment',
+      destination: `${ragServer}/api/lessons/:lessonId/assignment`,
+    });
+    rewritesList.push({
+      source: '/api/assignments/:path*',
+      destination: `${ragServer}/api/assignments/:path*`,
+    });
     return rewritesList;
   },
   images: {
