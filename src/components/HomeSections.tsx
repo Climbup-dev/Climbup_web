@@ -64,8 +64,8 @@ export default function HomeSections() {
         <div className="sectionContainer" style={{ maxWidth: "1240px", margin: "0 auto" }}>
           <div className="sectionIntro" style={{ textAlign: "center", marginBottom: "36px" }}>
             <span style={{
-              color: "#38d399",
-              background: "rgba(56, 211, 153, 0.12)",
+              color: "#60a5fa",
+              background: "rgba(37, 99, 235, 0.14)",
               padding: "4px 14px",
               borderRadius: "99px",
               fontSize: "12px",
@@ -96,8 +96,8 @@ export default function HomeSections() {
               <div
                 key={course.id}
                 style={{
-                  background: "linear-gradient(145deg, rgba(7, 48, 73, 0.7), rgba(2, 21, 38, 0.9))",
-                  border: "1px solid rgba(56, 211, 153, 0.25)",
+                  background: "linear-gradient(145deg, rgba(10, 21, 40, 0.85), rgba(6, 14, 28, 0.95))",
+                  border: "1px solid rgba(59, 130, 246, 0.25)",
                   borderRadius: "18px",
                   overflow: "hidden",
                   display: "flex",
@@ -118,16 +118,16 @@ export default function HomeSections() {
                   <div style={{
                     position: "absolute",
                     inset: 0,
-                    background: "linear-gradient(to top, rgba(2, 21, 38, 0.95), transparent)",
+                    background: "linear-gradient(to top, rgba(6, 14, 28, 0.95), transparent)",
                   }} />
 
                   <span style={{
                     position: "absolute",
                     top: "12px",
                     left: "12px",
-                    background: "rgba(2, 21, 38, 0.85)",
-                    color: "#38d399",
-                    border: "1px solid rgba(56, 211, 153, 0.4)",
+                    background: "rgba(6, 16, 34, 0.85)",
+                    color: "#60a5fa",
+                    border: "1px solid rgba(59, 130, 246, 0.4)",
                     padding: "3px 10px",
                     borderRadius: "8px",
                     fontSize: "11px",
@@ -188,13 +188,13 @@ export default function HomeSections() {
                     color: "rgba(255,255,255,0.7)",
                   }}>
                     <span style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                      <Clock size={14} color="#38d399" /> {course.duration}
+                      <Clock size={14} color="#3b82f6" /> {course.duration}
                     </span>
                     <span style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                      <Layers size={14} color="#38d399" /> {course.totalLessons} Lessons
+                      <Layers size={14} color="#3b82f6" /> {course.totalLessons} Lessons
                     </span>
                     <span style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                      <FileCheck size={14} color="#38d399" /> {course.assignments.length} Assignments
+                      <FileCheck size={14} color="#3b82f6" /> {course.assignments.length} Assignments
                     </span>
                   </div>
 
@@ -209,10 +209,10 @@ export default function HomeSections() {
                         gap: "8px",
                         width: "100%",
                         padding: "11px",
-                        background: "rgba(56, 211, 153, 0.12)",
-                        border: "1px solid rgba(56, 211, 153, 0.4)",
+                        background: "rgba(37, 99, 235, 0.14)",
+                        border: "1px solid rgba(59, 130, 246, 0.4)",
                         borderRadius: "10px",
-                        color: "#38d399",
+                        color: "#60a5fa",
                         fontWeight: 700,
                         fontSize: "14px",
                         textDecoration: "none",
@@ -232,10 +232,10 @@ export default function HomeSections() {
                         gap: "8px",
                         width: "100%",
                         padding: "11px",
-                        background: "rgba(56, 211, 153, 0.12)",
-                        border: "1px solid rgba(56, 211, 153, 0.4)",
+                        background: "rgba(37, 99, 235, 0.14)",
+                        border: "1px solid rgba(59, 130, 246, 0.4)",
                         borderRadius: "10px",
-                        color: "#38d399",
+                        color: "#60a5fa",
                         fontWeight: 700,
                         fontSize: "14px",
                         cursor: "pointer",
@@ -258,13 +258,13 @@ export default function HomeSections() {
                 alignItems: "center",
                 gap: "8px",
                 padding: "12px 28px",
-                background: "linear-gradient(135deg, #38d399, #00c78c)",
-                color: "#021526",
+                background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+                color: "#ffffff",
                 fontWeight: 800,
                 fontSize: "15px",
                 borderRadius: "12px",
                 textDecoration: "none",
-                boxShadow: "0 0 25px rgba(56, 211, 153, 0.35)",
+                boxShadow: "0 0 25px rgba(37, 99, 235, 0.35)",
               }}
             >
               Browse All Peer Courses <ArrowRight size={16} />

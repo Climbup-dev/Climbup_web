@@ -60,7 +60,7 @@
   left: -50%;
   width: 200%;
   height: 200%;
-  background: radial-gradient(circle at center, rgba(56, 211, 153, 0.15) 0%, transparent 50%);
+  background: radial-gradient(circle at center, rgba(37, 99, 235, 0.18) 0%, transparent 50%);
   animation: pulse-glow 8s infinite alternate ease-in-out;
 }
 
@@ -86,12 +86,12 @@
   0% {
     opacity: 0;
     transform: scale(0.85) translateY(15px);
-    filter: drop-shadow(0 0px 0px rgba(56, 211, 153, 0));
+    filter: drop-shadow(0 0px 0px rgba(37, 99, 235, 0));
   }
   100% {
     opacity: 1;
     transform: scale(1) translateY(0);
-    filter: drop-shadow(0 10px 20px rgba(56, 211, 153, 0.3));
+    filter: drop-shadow(0 10px 20px rgba(37, 99, 235, 0.35));
   }
 }
 
@@ -217,8 +217,8 @@
   display: inline-flex;
   align-items: center;
   padding: 6px 12px;
-  color: #047857;
-  background: #d1fae5;
+  color: #1d4ed8;
+  background: #dbeafe;
   border-radius: 999px;
   font-size: 0.75rem;
   font-weight: 700;
@@ -295,14 +295,14 @@
   min-height: 50px;
   padding: 12px 20px;
   color: #ffffff;
-  background: linear-gradient(135deg, #10b981, #059669);
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
   border: none;
   border-radius: 12px;
   font-family: inherit;
   font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.25);
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.28);
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   margin-top: 8px;
   position: relative;
@@ -311,12 +311,12 @@
 
 .auth-primary-button:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 12px 25px rgba(16, 185, 129, 0.35);
+  box-shadow: 0 12px 25px rgba(37, 99, 235, 0.4);
 }
 
 .auth-primary-button:active:not(:disabled) {
   transform: translateY(1px);
-  box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2);
 }
 
 .auth-primary-button:disabled {
@@ -466,7 +466,7 @@
   
   .auth-brand.mobile-only img {
     border-radius: 16px;
-    filter: drop-shadow(0 8px 16px rgba(56, 211, 153, 0.2));
+    filter: drop-shadow(0 8px 16px rgba(37, 99, 235, 0.25));
   }
   
   .auth-title, .auth-description {

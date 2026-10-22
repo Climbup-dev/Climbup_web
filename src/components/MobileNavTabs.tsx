@@ -30,10 +30,10 @@ export default function MobileNavTabs() {
             z-index: 150;
             width: 100%;
             padding: 8px 12px calc(8px + env(safe-area-inset-bottom, 0px));
-            background: rgba(2, 21, 38, 0.95);
+            background: rgba(6, 13, 26, 0.95);
             backdrop-filter: blur(14px);
             -webkit-backdrop-filter: blur(14px);
-            border-top: 1px solid rgba(56, 211, 153, 0.2);
+            border-top: 1px solid rgba(59, 130, 246, 0.25);
             box-shadow: 0 -4px 25px rgba(0, 0, 0, 0.5);
           }
           .mobileNavTabsGrid {
@@ -62,10 +62,10 @@ export default function MobileNavTabs() {
             -webkit-tap-highlight-color: transparent;
           }
           .mobileNavTabBtn.active {
-            color: #38d399;
-            background: linear-gradient(135deg, rgba(56, 211, 153, 0.18), rgba(16, 185, 129, 0.08));
-            border-color: rgba(56, 211, 153, 0.35);
-            box-shadow: 0 4px 14px rgba(56, 211, 153, 0.15);
+            color: #60a5fa;
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.22), rgba(59, 130, 246, 0.1));
+            border-color: rgba(59, 130, 246, 0.4);
+            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.2);
             font-weight: 700;
           }
           .mobileNavTabIcon {

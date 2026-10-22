@@ -102,7 +102,7 @@ function CoursesContent() {
           {/* Search Bar */}
           <div className="searchContainer">
             <div className="searchBarWrapper">
-              <Search size={18} color="#34d399" style={{ marginRight: "10px", flexShrink: 0 }} />
+              <Search size={18} color="#60a5fa" style={{ marginRight: "10px", flexShrink: 0 }} />
               <input
                 type="text"
                 className="searchInput"
@@ -142,7 +142,7 @@ function CoursesContent() {
               height: "44px",
               borderRadius: "50%",
               border: "3px solid rgba(52, 211, 153, 0.15)",
-              borderTopColor: "#34d399",
+              borderTopColor: "#60a5fa",
               animation: "spin 0.9s linear infinite",
               marginBottom: "18px"
             }} />
@@ -155,7 +155,7 @@ function CoursesContent() {
           </div>
         ) : filteredCourses.length === 0 ? (
           <div className="coursesEmptyState">
-            <BookOpen size={48} color="#38d399" style={{ margin: "0 auto 16px", opacity: 0.6 }} />
+            <BookOpen size={48} color="#3b82f6" style={{ margin: "0 auto 16px", opacity: 0.6 }} />
             <h3>No courses found</h3>
             <p>
               Try adjusting your search query to find courses.
@@ -235,13 +235,13 @@ function CoursesContent() {
                   {/* Course stats row */}
                   <div className="cardStatsRow">
                     <span className="cardStatItem">
-                      <Clock size={14} color="#38d399" /> {course.duration}
+                      <Clock size={14} color="#3b82f6" /> {course.duration}
                     </span>
                     <span className="cardStatItem">
-                      <Layers size={14} color="#38d399" /> {course.totalLessons} Lessons
+                      <Layers size={14} color="#3b82f6" /> {course.totalLessons} Lessons
                     </span>
                     <span className="cardStatItem">
-                      <FileCheck size={14} color="#38d399" /> {course.assignments.length} Assignments
+                      <FileCheck size={14} color="#3b82f6" /> {course.assignments.length} Assignments
                     </span>
                   </div>
 

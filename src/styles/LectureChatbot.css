@@ -10,7 +10,7 @@
   border-radius: 16px;
   overflow: hidden;
   border: 1.5px solid rgba(52, 211, 153, 0.4);
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.75), 0 0 30px rgba(16, 185, 129, 0.16);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.75), 0 0 30px rgba(37, 99, 235, 0.16);
   font-family: Inter, system-ui, -apple-system, sans-serif;
   backdrop-filter: blur(20px);
 }
@@ -44,12 +44,12 @@
   width: 36px;
   height: 36px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
   border: 1px solid rgba(255, 255, 255, 0.3);
   display: grid;
   place-items: center;
   color: #ffffff;
-  box-shadow: 0 0 16px rgba(16, 185, 129, 0.65);
+  box-shadow: 0 0 16px rgba(37, 99, 235, 0.65);
   flex-shrink: 0;
 }
 
@@ -64,7 +64,7 @@
 .chatOnlineBadge {
   font-size: 10px;
   font-weight: 700;
-  color: #34d399;
+  color: #60a5fa;
   background: rgba(52, 211, 153, 0.18);
   border: 1px solid rgba(52, 211, 153, 0.45);
   padding: 1px 6px;
@@ -83,7 +83,7 @@
 }
 
 .chatLessonPill {
-  color: #34d399;
+  color: #60a5fa;
   font-weight: 600;
   background: rgba(52, 211, 153, 0.12);
   padding: 1px 7px;
@@ -99,8 +99,8 @@
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: #34d399;
-  box-shadow: 0 0 10px #34d399;
+  background: #60a5fa;
+  box-shadow: 0 0 10px #60a5fa;
   animation: chatDotPulse 2s infinite ease-in-out;
   flex-shrink: 0;
 }
@@ -138,9 +138,9 @@
 }
 
 .langBtn.active {
-  background: linear-gradient(135deg, #10b981, #059669);
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
   color: #ffffff;
-  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.45);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.45);
 }
 
 .clearChatBtn {
@@ -172,7 +172,7 @@
   border: 1.5px solid rgba(52, 211, 153, 0.4);
   border-radius: 14px;
   padding: 18px 20px;
-  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.45), 0 0 24px rgba(16, 185, 129, 0.12);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.45), 0 0 24px rgba(37, 99, 235, 0.12);
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -196,7 +196,7 @@
   gap: 6px;
   font-size: 11px;
   font-weight: 700;
-  color: #34d399;
+  color: #60a5fa;
   background: rgba(52, 211, 153, 0.16);
   border: 1px solid rgba(52, 211, 153, 0.4);
   padding: 3px 9px;
@@ -211,15 +211,15 @@
   gap: 6px;
   font-size: 11px;
   font-weight: 600;
-  color: #a7f3d0;
+  color: #93c5fd;
 }
 
 .welcomeLivePulse {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #34d399;
-  box-shadow: 0 0 8px #34d399;
+  background: #60a5fa;
+  box-shadow: 0 0 8px #60a5fa;
   animation: chatDotPulse 1.8s infinite ease-in-out;
 }
 
@@ -246,7 +246,7 @@
 }
 
 .welcomeLessonIcon {
-  color: #34d399;
+  color: #60a5fa;
   flex-shrink: 0;
 }
 
@@ -277,7 +277,7 @@
 .welcomeFeatureTag {
   font-size: 11px;
   font-weight: 600;
-  color: #a7f3d0;
+  color: #93c5fd;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(52, 211, 153, 0.25);
   padding: 4px 10px;
@@ -300,7 +300,7 @@
   gap: 6px;
   font-size: 12px;
   font-weight: 700;
-  color: #34d399;
+  color: #60a5fa;
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
@@ -330,7 +330,7 @@
   border-color: rgba(52, 211, 153, 0.65);
   color: #ffffff;
   transform: translateX(3px);
-  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.25);
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25);
 }
 
 .quickStarterIconBox {
@@ -340,7 +340,7 @@
   background: rgba(52, 211, 153, 0.2);
   display: grid;
   place-items: center;
-  color: #34d399;
+  color: #60a5fa;
   flex-shrink: 0;
 }
 
@@ -355,7 +355,7 @@
 .quickStarterLabel {
   font-size: 12px;
   font-weight: 700;
-  color: #34d399;
+  color: #60a5fa;
 }
 
 .quickStarterSnippet {
@@ -367,7 +367,7 @@
 }
 
 .quickStarterArrow {
-  color: #34d399;
+  color: #60a5fa;
   opacity: 0.6;
   flex-shrink: 0;
   transition: transform 0.18s ease, opacity 0.18s ease;
@@ -388,7 +388,7 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  background: radial-gradient(circle at top right, rgba(16, 185, 129, 0.06) 0%, transparent 60%);
+  background: radial-gradient(circle at top right, rgba(37, 99, 235, 0.06) 0%, transparent 60%);
 }
 
 /* Message Wrapper */
@@ -416,12 +416,12 @@
 }
 
 .messageWrapper.student .senderMeta {
-  color: #a7f3d0;
+  color: #93c5fd;
   align-self: flex-end;
 }
 
 .messageWrapper.ai .senderMeta {
-  color: #34d399;
+  color: #60a5fa;
   align-self: flex-start;
 }
 
@@ -460,10 +460,10 @@
 }
 
 .chatBubble.student {
-  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
   border: 1px solid rgba(52, 211, 153, 0.55);
   color: #ffffff;
-  box-shadow: 0 4px 18px rgba(5, 150, 105, 0.4);
+  box-shadow: 0 4px 18px rgba(29, 78, 216, 0.4);
 }
 
 .chatBubble.ai {
@@ -493,7 +493,7 @@
 .chatHeading {
   font-size: 13px;
   font-weight: 700;
-  color: #34d399;
+  color: #60a5fa;
   letter-spacing: 0.02em;
   margin: 12px 0 8px;
   display: flex;
@@ -520,7 +520,7 @@
 }
 
 .chatBulletIcon {
-  color: #34d399;
+  color: #60a5fa;
   font-weight: 800;
   margin-top: 1px;
   font-size: 12px;
@@ -535,7 +535,7 @@
 .chatCode {
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(52, 211, 153, 0.25);
-  color: #a7f3d0;
+  color: #93c5fd;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 12px;
   padding: 1px 6px;
@@ -552,7 +552,7 @@
   border-radius: 7px;
   background: rgba(52, 211, 153, 0.18);
   border: 1px solid rgba(52, 211, 153, 0.55);
-  color: #34d399;
+  color: #60a5fa;
   font-size: 12px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-weight: 700;
@@ -564,14 +564,14 @@
 
 .chatTimestampBtn:hover {
   background: rgba(52, 211, 153, 0.35);
-  border-color: #34d399;
+  border-color: #60a5fa;
   transform: translateY(-1px);
   box-shadow: 0 3px 10px rgba(52, 211, 153, 0.35);
 }
 
 .tsPlayTriangle {
   font-size: 9px;
-  color: #34d399;
+  color: #60a5fa;
 }
 
 /* Suggested Question Action Chips */
@@ -603,7 +603,7 @@
   border-color: rgba(52, 211, 153, 0.6);
   color: #ffffff;
   transform: translateX(3px);
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
 }
 
 .questionNumBadge {
@@ -611,7 +611,7 @@
   height: 20px;
   border-radius: 6px;
   background: rgba(52, 211, 153, 0.25);
-  color: #34d399;
+  color: #60a5fa;
   font-size: 11px;
   font-weight: 700;
   display: grid;
@@ -620,7 +620,7 @@
 }
 
 .questionArrowIcon {
-  color: #34d399;
+  color: #60a5fa;
   opacity: 0.7;
   flex-shrink: 0;
   transition: transform 0.18s ease, opacity 0.18s ease;
@@ -636,11 +636,11 @@
   display: inline-block;
   width: 7px;
   height: 14px;
-  background: #34d399;
+  background: #60a5fa;
   margin-left: 2px;
   vertical-align: middle;
   border-radius: 1px;
-  box-shadow: 0 0 6px #34d399;
+  box-shadow: 0 0 6px #60a5fa;
   animation: cursorBlink 0.8s infinite;
 }
 
@@ -661,9 +661,9 @@
   gap: 12px;
   padding: 16px 20px;
   border-radius: 14px;
-  background: linear-gradient(135deg, rgba(6, 78, 59, 0.5) 0%, rgba(13, 27, 49, 0.98) 100%);
+  background: linear-gradient(135deg, rgba(30, 58, 138, 0.5) 0%, rgba(13, 27, 49, 0.98) 100%);
   border: 1.5px solid rgba(52, 211, 153, 0.75);
-  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.6), 0 0 30px rgba(16, 185, 129, 0.3);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.6), 0 0 30px rgba(37, 99, 235, 0.3);
   min-width: 320px;
   max-width: 94%;
   animation: thinkingFadeIn 0.3s ease-out;
@@ -685,7 +685,7 @@
   width: 44px;
   height: 44px;
   border-radius: 12px;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
   display: grid;
   place-items: center;
   color: #ffffff;
@@ -759,7 +759,7 @@
 .thinkingLabel {
   font-size: 13px;
   font-weight: 800;
-  color: #34d399;
+  color: #60a5fa;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   text-shadow: 0 0 12px rgba(52, 211, 153, 0.5);
@@ -776,9 +776,9 @@
 
 .audioBar {
   width: 3px;
-  background: #34d399;
+  background: #60a5fa;
   border-radius: 2px;
-  box-shadow: 0 0 6px #34d399;
+  box-shadow: 0 0 6px #60a5fa;
 }
 
 .bar1 { animation: audioWave 0.8s infinite ease-in-out; }
@@ -802,8 +802,8 @@
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: #34d399;
-  box-shadow: 0 0 8px #34d399;
+  background: #60a5fa;
+  box-shadow: 0 0 8px #60a5fa;
   animation: dotBounce 1.4s infinite ease-in-out;
 }
 
@@ -813,7 +813,7 @@
 
 @keyframes dotBounce {
   0%, 80%, 100% { transform: scale(0.6); opacity: 0.35; }
-  40% { transform: scale(1.25); opacity: 1; box-shadow: 0 0 12px #34d399; }
+  40% { transform: scale(1.25); opacity: 1; box-shadow: 0 0 12px #60a5fa; }
 }
 
 .thinkingStepText {
@@ -840,8 +840,8 @@
 .thinkingShimmerBeam {
   width: 55%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, #34d399, #10b981, transparent);
-  box-shadow: 0 0 14px #34d399;
+  background: linear-gradient(90deg, transparent, #60a5fa, #2563eb, transparent);
+  box-shadow: 0 0 14px #60a5fa;
   animation: shimmerSweep 1.6s infinite ease-in-out;
 }
 
@@ -876,7 +876,7 @@
 }
 
 .chatInputContainer:focus-within {
-  border-color: #34d399;
+  border-color: #60a5fa;
   box-shadow: 0 0 18px rgba(52, 211, 153, 0.32), inset 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
@@ -906,7 +906,7 @@
 }
 
 .chatSendBtn.active {
-  background: linear-gradient(135deg, #34d399, #059669);
+  background: linear-gradient(135deg, #60a5fa, #1d4ed8);
   color: #021526;
   cursor: pointer;
   box-shadow: 0 2px 10px rgba(52, 211, 153, 0.4);
@@ -960,7 +960,7 @@
   gap: 6px;
   font-size: 11.5px;
   font-weight: 700;
-  color: #34d399;
+  color: #60a5fa;
   letter-spacing: 0.05em;
   text-transform: uppercase;
 }
@@ -1037,13 +1037,13 @@
 .chatProTipCard {
   margin: 12px 0;
   padding: 13px 16px;
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.16) 0%, rgba(5, 150, 105, 0.08) 100%);
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.16) 0%, rgba(29, 78, 216, 0.08) 100%);
   border: 1.5px solid rgba(52, 211, 153, 0.45);
   border-radius: 12px;
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.12);
+  box-shadow: 0 4px 20px rgba(37, 99, 235, 0.12);
   animation: fadeInProTip 0.25s ease-out;
 }
 
@@ -1062,7 +1062,7 @@
 }
 
 .chatProTipBody .chatBold {
-  color: #a7f3d0;
+  color: #93c5fd;
   font-weight: 700;
 }
 
@@ -1082,7 +1082,7 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.22) 0%, rgba(5, 150, 105, 0.15) 100%);
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.22) 0%, rgba(29, 78, 216, 0.15) 100%);
   border: 1px solid rgba(52, 211, 153, 0.55);
   color: #6ee7b7 !important;
   font-weight: 700;
@@ -1093,15 +1093,15 @@
   margin: 0 3px;
   vertical-align: middle;
   transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.15);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.15);
 }
 
 .chatTimestampBtn:hover {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
   color: #021526 !important;
-  border-color: #34d399;
+  border-color: #60a5fa;
   transform: translateY(-1px) scale(1.04);
-  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.45);
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.45);
 }
 
 .chatTimestampBtn:active {
@@ -1164,7 +1164,7 @@
 }
 
 .chatBulletIcon {
-  color: #34d399;
+  color: #60a5fa;
   font-size: 9px;
   margin-top: 5px;
   flex-shrink: 0;
@@ -1270,20 +1270,20 @@
 }
 
 .chatEvidenceChip:hover {
-  background: rgba(16, 185, 129, 0.18);
-  border-color: #34d399;
+  background: rgba(37, 99, 235, 0.18);
+  border-color: #60a5fa;
   transform: translateY(-1.5px);
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
 }
 
 .evidencePlayTriangle {
   font-size: 8px;
-  color: #34d399;
+  color: #60a5fa;
 }
 
 .evidenceTime {
   font-weight: 700;
-  color: #a7f3d0;
+  color: #93c5fd;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
@@ -1301,7 +1301,7 @@
 
 .evidenceScoreBadge {
   font-size: 10px;
-  color: #34d399;
+  color: #60a5fa;
   background: rgba(52, 211, 153, 0.15);
   padding: 1px 5px;
   border-radius: 4px;
@@ -1338,7 +1338,7 @@
 .contextPillsLabel {
   font-size: 11px;
   font-weight: 700;
-  color: #34d399;
+  color: #60a5fa;
   white-space: nowrap;
   letter-spacing: 0.3px;
 }
@@ -1363,9 +1363,9 @@
 }
 
 .contextPillBtn:hover {
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.25) 0%, rgba(5, 150, 105, 0.18) 100%);
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.25) 0%, rgba(29, 78, 216, 0.18) 100%);
   border-color: rgba(52, 211, 153, 0.5);
-  color: #a7f3d0;
+  color: #93c5fd;
   transform: translateY(-1px);
 }
 
@@ -1375,7 +1375,7 @@
   position: relative;
   background: radial-gradient(120% 120% at 50% 0%, #0d1a33 0%, #070d1a 60%, #040810 100%) !important;
   border: 1.5px solid rgba(52, 211, 153, 0.35) !important;
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), 0 0 35px rgba(16, 185, 129, 0.12) !important;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), 0 0 35px rgba(37, 99, 235, 0.12) !important;
 }
 
 .chatbotContainer::before {
@@ -1385,7 +1385,7 @@
   left: 0;
   right: 0;
   height: 2px;
-  background: linear-gradient(90deg, transparent, #34d399, #10b981, transparent);
+  background: linear-gradient(90deg, transparent, #60a5fa, #2563eb, transparent);
   opacity: 0.8;
   pointer-events: none;
 }
@@ -1393,7 +1393,7 @@
 .chatTimestampBtn {
   background: rgba(52, 211, 153, 0.15) !important;
   border: 1px solid rgba(52, 211, 153, 0.45) !important;
-  color: #34d399 !important;
+  color: #60a5fa !important;
   font-weight: 700 !important;
   padding: 3px 9px !important;
   border-radius: 6px !important;
@@ -1406,14 +1406,14 @@
 
 .chatTimestampBtn:hover {
   background: rgba(52, 211, 153, 0.32) !important;
-  border-color: #34d399 !important;
+  border-color: #60a5fa !important;
   transform: translateY(-1px) scale(1.03) !important;
   box-shadow: 0 0 12px rgba(52, 211, 153, 0.4) !important;
 }
 
 .chatTimestampBtn .tsPlayTriangle {
   font-size: 10px;
-  color: #10b981;
+  color: #2563eb;
   transition: transform 0.15s ease;
 }
 
@@ -1423,7 +1423,7 @@
 
 .quickStarterBtn:hover {
   border-color: rgba(52, 211, 153, 0.6) !important;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 20px rgba(16, 185, 129, 0.15) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 20px rgba(37, 99, 235, 0.15) !important;
   transform: translateY(-2px) !important;
 }
 
@@ -1469,12 +1469,12 @@
 }
 
 .chatMessagesScroll::-webkit-scrollbar-thumb {
-  background: rgba(56, 211, 153, 0.25) !important;
+  background: rgba(59, 130, 246, 0.25) !important;
   border-radius: 999px !important;
 }
 
 .chatMessagesScroll::-webkit-scrollbar-thumb:hover {
-  background: rgba(56, 211, 153, 0.55) !important;
+  background: rgba(59, 130, 246, 0.55) !important;
 }
 
 /* Welcome Hero Card Container */
@@ -1541,7 +1541,7 @@
   border-color: rgba(52, 211, 153, 0.5) !important;
   color: #ffffff !important;
   transform: translateX(2px) !important;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2) !important;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2) !important;
 }
 
 .quickStarterTextBox {
@@ -1556,7 +1556,7 @@
 .quickStarterLabel {
   font-size: 12px !important;
   font-weight: 700 !important;
-  color: #34d399 !important;
+  color: #60a5fa !important;
   white-space: nowrap !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;

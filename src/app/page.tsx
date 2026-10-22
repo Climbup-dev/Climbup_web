@@ -12,7 +12,7 @@ const HeroSection = dynamic(() => import("@/components/HeroSection"), {
     <div 
       style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "100%", minHeight: "100vh", backgroundColor: "#021526" }}
     >
-      <div style={{ width: "40px", height: "40px", border: "3px solid rgba(56, 211, 153, 0.1)", borderTopColor: "#38d399", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
+      <div style={{ width: "40px", height: "40px", border: "3px solid rgba(59, 130, 246, 0.15)", borderTopColor: "#3b82f6", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
     </div>
   ),
 });

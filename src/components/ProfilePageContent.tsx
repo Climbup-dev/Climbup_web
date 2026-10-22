@@ -129,10 +129,10 @@ export default function ProfilePageContent() {
               </div>
               <div className="profileMetaRow">
                 <span className="profileMetaItem">
-                  <Mail size={14} color="#38d399" /> {currentUser?.email || "student@example.com"}
+                  <Mail size={14} color="#60a5fa" /> {currentUser?.email || "student@example.com"}
                 </span>
                 <span className="profileMetaItem">
-                  <Calendar size={14} color="#38d399" /> {accountDate}
+                  <Calendar size={14} color="#60a5fa" /> {accountDate}
                 </span>
               </div>
             </div>
@@ -216,12 +216,12 @@ export default function ProfilePageContent() {
 
                   <div className="progressItemRight">
                     <div style={{ flexGrow: 1 }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", marginBottom: "4px", color: "#38d399" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", marginBottom: "4px", color: "#60a5fa" }}>
                         <span>Progress</span>
                         <strong>{progress}%</strong>
                       </div>
                       <div style={{ width: "100%", height: "6px", background: "rgba(255,255,255,0.1)", borderRadius: "99px", overflow: "hidden" }}>
-                        <div style={{ width: `${progress}%`, height: "100%", background: "#38d399", borderRadius: "99px" }} />
+                        <div style={{ width: `${progress}%`, height: "100%", background: "#3b82f6", borderRadius: "99px" }} />
                       </div>
                     </div>
 

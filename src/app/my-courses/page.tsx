@@ -114,13 +114,13 @@ export default function MyCoursesPage() {
               display: "inline-flex",
               alignItems: "center",
               gap: "6px",
-              background: "rgba(56, 211, 153, 0.12)",
-              border: "1px solid rgba(56, 211, 153, 0.3)",
+              background: "rgba(59, 130, 246, 0.12)",
+              border: "1px solid rgba(59, 130, 246, 0.3)",
               padding: "3px 10px",
               borderRadius: "99px",
               fontSize: "11px",
               fontWeight: 700,
-              color: "#34d399",
+              color: "#60a5fa",
               marginBottom: "8px",
               textTransform: "uppercase",
               letterSpacing: "0.04em"
@@ -129,8 +129,8 @@ export default function MyCoursesPage() {
                 width: "6px",
                 height: "6px",
                 borderRadius: "50%",
-                background: "#34d399",
-                boxShadow: "0 0 6px #34d399"
+                background: "#60a5fa",
+                boxShadow: "0 0 6px #60a5fa"
               }} />
               Campus Engineering Collective
             </div>
@@ -200,7 +200,7 @@ export default function MyCoursesPage() {
               height: "44px",
               borderRadius: "50%",
               border: "3px solid rgba(52, 211, 153, 0.15)",
-              borderTopColor: "#34d399",
+              borderTopColor: "#60a5fa",
               animation: "spin 0.9s linear infinite",
               marginBottom: "18px"
             }} />
@@ -213,7 +213,7 @@ export default function MyCoursesPage() {
           </div>
         ) : !currentUser ? (
           <div className="enrolledEmptyState">
-            <Lock size={36} color="#34d399" style={{ margin: "0 auto 12px" }} />
+            <Lock size={36} color="#60a5fa" style={{ margin: "0 auto 12px" }} />
             <h3>Student Login Required</h3>
             <p>Please log in or create an account to view your enrolled courses and projects.</p>
             <button
@@ -227,7 +227,7 @@ export default function MyCoursesPage() {
           </div>
         ) : displayedCourses.length === 0 ? (
           <div className="enrolledEmptyState">
-            <BookOpen size={36} color="#34d399" style={{ margin: "0 auto 12px" }} />
+            <BookOpen size={36} color="#60a5fa" style={{ margin: "0 auto 12px" }} />
             <h3>
               {filterTab === "completed" 
                 ? "No completed courses yet" 

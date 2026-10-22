@@ -6,7 +6,7 @@
   overflow-x: hidden;
   display: flex;
   flex-direction: column;
-  background: #090d16;
+  background: #060d1a;
   color: #fff;
   font-family: Inter, system-ui, -apple-system, sans-serif;
 }
@@ -17,7 +17,7 @@
   inset: 0;
   z-index: 0;
   overflow: hidden;
-  background: #090d16;
+  background: #060d1a;
   pointer-events: none;
 }
 
@@ -35,9 +35,9 @@
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse 60% 50% at 20% 40%, rgba(16, 185, 129, 0.15), transparent 70%),
-    radial-gradient(ellipse 50% 50% at 80% 60%, rgba(14, 165, 233, 0.1), transparent 70%),
-    linear-gradient(180deg, rgba(9, 13, 22, 0.4) 0%, #090d16 100%);
+    radial-gradient(ellipse 60% 50% at 20% 40%, rgba(37, 99, 235, 0.18), transparent 70%),
+    radial-gradient(ellipse 50% 50% at 80% 60%, rgba(29, 78, 216, 0.12), transparent 70%),
+    linear-gradient(180deg, rgba(6, 13, 26, 0.4) 0%, #060d1a 100%);
 }
 
 .coursesGridPattern {
@@ -55,7 +55,7 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: radial-gradient(circle at 50% 20%, rgba(52, 211, 153, 0.08), transparent 50%);
+  background: radial-gradient(circle at 50% 20%, rgba(59, 130, 246, 0.1), transparent 50%);
 }
 
 /* Header Banner */
@@ -109,9 +109,9 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: rgba(56, 211, 153, 0.1);
-  border: 1px solid rgba(56, 211, 153, 0.3);
-  color: #38d399;
+  background: rgba(37, 99, 235, 0.12);
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  color: #60a5fa;
   font-size: 12px;
   font-weight: 700;
   padding: 4px 12px;
@@ -139,7 +139,7 @@
 .searchBarWrapper {
   display: flex;
   align-items: center;
-  background: rgba(15, 23, 42, 0.85);
+  background: rgba(10, 21, 40, 0.85);
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 14px;
   padding: 8px 16px;
@@ -148,9 +148,9 @@
 }
 
 .searchBarWrapper:focus-within {
-  border-color: rgba(56, 211, 153, 0.7);
-  box-shadow: 0 0 0 3px rgba(56, 211, 153, 0.18), 0 8px 24px rgba(0, 0, 0, 0.45);
-  background: rgba(15, 23, 42, 0.95);
+  border-color: rgba(59, 130, 246, 0.7);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18), 0 8px 24px rgba(0, 0, 0, 0.45);
+  background: rgba(10, 21, 40, 0.95);
 }
 
 .searchInput {
@@ -191,7 +191,7 @@
 
 /* Individual Course Card */
 .courseCard {
-  background: rgba(15, 23, 42, 0.85);
+  background: rgba(10, 21, 40, 0.85);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 18px;
   overflow: hidden;
@@ -213,11 +213,11 @@
 
 .courseCard:hover {
   transform: translateY(-6px);
-  background: rgba(15, 23, 42, 0.95);
-  border-color: rgba(56, 211, 153, 0.45);
+  background: rgba(10, 21, 40, 0.95);
+  border-color: rgba(59, 130, 246, 0.45);
   box-shadow: 
     0 20px 45px -12px rgba(0, 0, 0, 0.7),
-    0 0 25px rgba(56, 211, 153, 0.12);
+    0 0 25px rgba(37, 99, 235, 0.18);
 }
 
 /* Card Thumbnail Container */
@@ -226,7 +226,7 @@
   height: 195px;
   width: 100%;
   overflow: hidden;
-  background: #010a12;
+  background: #040914;
 }
 
 .cardThumbnailImage {
@@ -241,7 +241,7 @@
 .thumbnailOverlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgba(2, 21, 38, 0.98) 0%, transparent 60%);
+  background: linear-gradient(to top, rgba(6, 13, 26, 0.98) 0%, transparent 60%);
   pointer-events: none;
 }
 
@@ -249,9 +249,9 @@
   position: absolute;
   top: 14px;
   left: 14px;
-  background: rgba(2, 21, 38, 0.88);
-  color: #38d399;
-  border: 1px solid rgba(56, 211, 153, 0.4);
+  background: rgba(6, 16, 34, 0.9);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.4);
   padding: 4px 10px;
   border-radius: 8px;
   font-size: 11px;
@@ -323,7 +323,7 @@
 }
 
 .courseCard:hover .cardTitle {
-  color: #a7f3d0;
+  color: #93c5fd;
 }
 
 .cardTagline {
@@ -343,9 +343,9 @@
 }
 
 .cardSkillBadge {
-  background: rgba(56, 211, 153, 0.08);
-  color: #9ef8dc;
-  border: 1px solid rgba(56, 211, 153, 0.2);
+  background: rgba(37, 99, 235, 0.1);
+  color: #bfdbfe;
+  border: 1px solid rgba(59, 130, 246, 0.25);
   border-radius: 6px;
   padding: 2px 8px;
   font-size: 11px;
@@ -391,7 +391,7 @@
   height: 32px;
   border-radius: 50%;
   overflow: hidden;
-  border: 1px solid rgba(56, 211, 153, 0.3);
+  border: 1px solid rgba(59, 130, 246, 0.35);
 }
 
 .cardInstructorName {
@@ -405,29 +405,29 @@
   align-items: center;
   gap: 6px;
   padding: 9px 16px;
-  background: linear-gradient(135deg, #38d399, #00c78c);
-  color: #021526;
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: #ffffff;
   font-weight: 700;
   font-size: 13px;
   border-radius: 10px;
   text-decoration: none;
-  box-shadow: 0 2px 12px rgba(56, 211, 153, 0.25);
+  box-shadow: 0 2px 12px rgba(37, 99, 235, 0.3);
   transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 180ms ease;
   white-space: nowrap;
 }
 
 .cardEnterBtn:hover {
   transform: translateX(2px) scale(1.02);
-  box-shadow: 0 4px 18px rgba(56, 211, 153, 0.45);
+  box-shadow: 0 4px 18px rgba(37, 99, 235, 0.5);
 }
 
 /* Empty State */
 .coursesEmptyState {
   text-align: center;
   padding: 70px 20px;
-  background: rgba(7, 48, 73, 0.25);
+  background: rgba(10, 21, 40, 0.4);
   border-radius: 20px;
-  border: 1px dashed rgba(56, 211, 153, 0.3);
+  border: 1px dashed rgba(59, 130, 246, 0.3);
 }
 
 .coursesEmptyState h3 {
@@ -443,9 +443,9 @@
 }
 
 .resetFiltersBtn {
-  background: rgba(56, 211, 153, 0.16);
-  border: 1px solid rgba(56, 211, 153, 0.4);
-  color: #38d399;
+  background: rgba(37, 99, 235, 0.16);
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  color: #60a5fa;
   border-radius: 8px;
   padding: 8px 18px;
   font-weight: 700;
@@ -455,7 +455,7 @@
 }
 
 .resetFiltersBtn:hover {
-  background: rgba(56, 211, 153, 0.28);
+  background: rgba(37, 99, 235, 0.28);
   transform: translateY(-1px);
 }
 

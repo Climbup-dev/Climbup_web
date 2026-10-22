@@ -1,13 +1,13 @@
 .homeSections {
-  color: #eafcf6;
-  background: #010a12;
+  color: #f0f6ff;
+  background: #060d1a;
   font-family: Inter, system-ui, sans-serif;
 }
 
 .startupSection {
   position: relative;
   padding: 106px 0;
-  border-top: 1px solid rgba(158, 248, 220, 0.1);
+  border-top: 1px solid rgba(147, 197, 253, 0.12);
 }
 
 .sectionContainer {
@@ -30,7 +30,7 @@
 .sectionLabel {
   display: inline-flex;
   margin-bottom: 16px;
-  color: #76e7c2;
+  color: #60a5fa;
   font-size: 12px;
   font-weight: 900;
   letter-spacing: 0.13em;
@@ -49,7 +49,7 @@
 .sectionIntro > p,
 .visionPanel p {
   margin: 20px 0 0;
-  color: rgba(234, 252, 246, 0.82);
+  color: rgba(226, 238, 255, 0.82);
   font-size: 17px;
   line-height: 1.75;
 }
@@ -58,8 +58,8 @@
 
 .showcaseSection {
   background:
-    radial-gradient(circle at 50% 0%, rgba(56, 211, 153, 0.08), transparent 35%),
-    #03111c;
+    radial-gradient(circle at 50% 0%, rgba(37, 99, 235, 0.12), transparent 35%),
+    #081120;
 }
 
 .showcaseList {
@@ -93,8 +93,8 @@
   align-items: center;
   width: 48px;
   height: 48px;
-  color: #9ef8dc;
-  background: rgba(56, 211, 153, 0.1);
+  color: #bfdbfe;
+  background: rgba(37, 99, 235, 0.14);
   border-radius: 14px;
   font-size: 14px;
   font-weight: 900;
@@ -111,7 +111,7 @@
 }
 
 .showcaseContent p {
-  color: rgba(234, 252, 246, 0.75);
+  color: rgba(226, 238, 255, 0.75);
   font-size: 17px;
   line-height: 1.6;
   margin: 0 0 32px;
@@ -130,13 +130,13 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  color: rgba(234, 252, 246, 0.9);
+  color: rgba(226, 238, 255, 0.9);
   font-size: 16px;
   font-weight: 600;
 }
 
 .showcaseFeatures li svg {
-  color: #38d399;
+  color: #3b82f6;
 }
 
 .showcaseAction {
@@ -145,10 +145,10 @@
   align-items: center;
   gap: 12px;
   padding: 14px 28px;
-  background: rgba(56, 211, 153, 0.1);
-  border: 1px solid rgba(56, 211, 153, 0.25);
+  background: rgba(37, 99, 235, 0.12);
+  border: 1px solid rgba(59, 130, 246, 0.35);
   border-radius: 99px;
-  color: #38d399;
+  color: #60a5fa;
   font-size: 16px;
   font-weight: 700;
   cursor: pointer;
@@ -156,10 +156,10 @@
 }
 
 .showcaseAction:hover {
-  background: rgba(56, 211, 153, 0.15);
-  border-color: rgba(56, 211, 153, 0.4);
+  background: rgba(37, 99, 235, 0.22);
+  border-color: rgba(59, 130, 246, 0.55);
   transform: translateY(-2px);
-  box-shadow: 0 10px 24px rgba(56, 211, 153, 0.15);
+  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.2);
 }
 
 .showcaseAction span {
@@ -194,13 +194,13 @@
   display: block;
   object-fit: contain;
   animation: floatAnimation 6s ease-in-out infinite;
-  filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.4)) drop-shadow(0 10px 20px rgba(56, 211, 153, 0.15));
+  filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.4)) drop-shadow(0 10px 20px rgba(37, 99, 235, 0.2));
   transition: filter 0.4s ease;
   z-index: 2;
 }
 
 .showcaseImageWrapper:hover .showcaseImage {
-  filter: drop-shadow(0 30px 50px rgba(0, 0, 0, 0.5)) drop-shadow(0 15px 30px rgba(56, 211, 153, 0.35));
+  filter: drop-shadow(0 30px 50px rgba(0, 0, 0, 0.5)) drop-shadow(0 15px 30px rgba(37, 99, 235, 0.4));
 }
 
 
@@ -211,17 +211,17 @@
 .visionSection {
   padding-bottom: 120px;
   background:
-    radial-gradient(circle at 50% 20%, rgba(56, 211, 153, 0.15), transparent 34%),
-    #010a12;
+    radial-gradient(circle at 50% 20%, rgba(37, 99, 235, 0.2), transparent 34%),
+    #060d1a;
 }
 
 .visionPanel {
   padding: clamp(34px, 6vw, 70px);
   text-align: center;
   background:
-    linear-gradient(120deg, rgba(7, 48, 73, 0.92), rgba(0, 199, 140, 0.16)),
-    rgba(2, 21, 38, 0.9);
-  border: 1px solid rgba(158, 248, 220, 0.2);
+    linear-gradient(120deg, rgba(11, 26, 52, 0.95), rgba(37, 99, 235, 0.18)),
+    rgba(8, 16, 32, 0.92);
+  border: 1px solid rgba(147, 197, 253, 0.25);
   border-radius: 32px;
   box-shadow: 0 30px 90px rgba(0, 0, 0, 0.28);
 }

@@ -87,7 +87,7 @@ const CodeBlock: React.FC<{ code: string; language: string }> = ({ code, languag
     <div className="chatCodeBlockContainer">
       <div className="chatCodeBlockHeader">
         <div className="chatCodeBlockLangBadge">
-          <Code2 size={13} style={{ color: '#34d399' }} />
+          <Code2 size={13} style={{ color: '#60a5fa' }} />
           <span>{language.toUpperCase() || 'CODE'}</span>
         </div>
         <button
@@ -98,8 +98,8 @@ const CodeBlock: React.FC<{ code: string; language: string }> = ({ code, languag
         >
           {copied ? (
             <>
-              <Check size={12} style={{ color: '#34d399' }} />
-              <span style={{ color: '#34d399' }}>Copied!</span>
+              <Check size={12} style={{ color: '#60a5fa' }} />
+              <span style={{ color: '#60a5fa' }}>Copied!</span>
             </>
           ) : (
             <>
@@ -296,7 +296,7 @@ const StructuredMessageContent: React.FC<StructuredMessageContentProps> = ({
       }
       elements.push(
         <h4 key={`heading-${lineIdx}`} className="chatHeading">
-          <Sparkles size={14} style={{ color: '#34d399' }} />
+          <Sparkles size={14} style={{ color: '#60a5fa' }} />
           <span>{headingText}</span>
         </h4>
       );
@@ -632,7 +632,7 @@ export const LectureChatbot: React.FC<LectureChatbotProps> = ({
             {/* Quick Starter Action Chips */}
             <div className="quickStartersSection">
               <div className="quickStartersHeader">
-                <Lightbulb size={13} style={{ color: '#34d399' }} />
+                <Lightbulb size={13} style={{ color: '#60a5fa' }} />
                 <span>Quick Prompt Starters</span>
               </div>
               <div className="quickStartersGrid">
@@ -701,7 +701,7 @@ export const LectureChatbot: React.FC<LectureChatbotProps> = ({
                     >
                       {copiedId === msg.id ? (
                         <>
-                          <Check size={11} style={{ color: '#34d399' }} />
+                          <Check size={11} style={{ color: '#60a5fa' }} />
                           <span>Copied!</span>
                         </>
                       ) : (
@@ -735,7 +735,7 @@ export const LectureChatbot: React.FC<LectureChatbotProps> = ({
                     {hasEvidence && (
                       <div className="chatEvidenceSection">
                         <div className="chatEvidenceHeader">
-                          <BookOpen size={11} style={{ color: '#34d399' }} />
+                          <BookOpen size={11} style={{ color: '#60a5fa' }} />
                           <span>Video Grounding Citations:</span>
                         </div>
                         <div className="chatEvidenceChipsGrid">
