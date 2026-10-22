@@ -179,16 +179,16 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
 
       const fallbackToDirectStream = () => {
         if (isDisposed || !videoRef.current) return;
+        // Strictly prevent exposing raw unencrypted MP4 URLs in the DOM (blocks downloader extensions)
         if (hlsInstanceRef.current) {
           try {
-            hlsInstanceRef.current.destroy();
-          } catch {}
-          hlsInstanceRef.current = null;
+            hlsInstanceRef.current.startLoad();
+          } catch {
+            setVideoPlaybackError(true);
+          }
+        } else {
+          setVideoPlaybackError(true);
         }
-        setVideoPlaybackError(false);
-        videoRef.current.src = progressiveFallback;
-        videoRef.current.load();
-        videoRef.current.play().catch(() => {});
       };
 
       if (Hls.isSupported()) {
@@ -224,10 +224,10 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
         hls.on(Hls.Events.ERROR, (_evt, data) => {
           if (data.fatal) {
             console.warn("[Video Security] HLS event notice:", data.type, data.details);
-            if (data.details === "manifestLoadError" || ((data.response?.code ?? 0) >= 400)) {
-              fallbackToDirectStream();
-            } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
+            if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
               hls.recoverMediaError();
+            } else if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
+              hls.startLoad();
             } else {
               fallbackToDirectStream();
             }
