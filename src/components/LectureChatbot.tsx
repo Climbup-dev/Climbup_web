@@ -14,7 +14,11 @@ import {
   Clock, 
   BookOpen,
   Volume2,
-  Code2
+  VolumeX,
+  Code2,
+  AlertTriangle,
+  Layers,
+  HelpCircle
 } from 'lucide-react';
 import { useLectureRAG } from '@/hooks/useLectureRAG';
 import { parseTimestampToSeconds, parseInlineFormatted } from '@/utils/ragHelpers';
@@ -36,37 +40,35 @@ const THINKING_STEPS = [
 const QUICK_STARTERS = [
   {
     icon: Zap,
-    label: 'Key Concepts',
-    query: 'Summarize the core topics and concepts taught in this video lecture.'
+    label: 'Core Concept',
+    query: 'Explain the main concept of this lecture in simple words with an intuitive analogy.'
+  },
+  {
+    icon: Code2,
+    label: 'Code / Implementation',
+    query: 'Show me the step-by-step code or implementation demonstrated in this lecture.'
   },
   {
     icon: Clock,
-    label: 'Timestamps & Chapters',
-    query: 'What are the main sections and important timestamps in this lecture?'
+    label: 'Key Timestamps',
+    query: 'What are the most important video timestamps and what is covered at each point?'
   },
   {
     icon: Lightbulb,
-    label: 'Main Takeaway',
-    query: 'Explain the most important takeaway of this lecture in simple words.'
-  },
-  {
-    icon: BookOpen,
-    label: 'Study Notes',
-    query: 'What are the most crucial points I should write down in my study notes from this lecture?'
+    label: 'Practical Pro Tip',
+    query: 'What is the most crucial practical takeaway and interview tip from this class?'
   }
 ];
 
-/**
- * Renders structured markdown text:
- * - ### Headings
- * - --- Horizontal rules
- * - Bullet lists (* or -)
- * - Suggested Question interactive chips (if any)
- * - Inline bold, code, and clickable video timestamp buttons
- */
+const CONTEXTUAL_PROMPTS = [
+  { label: '💡 Real-world Example', query: 'Can you give a practical, real-world example of this concept?' },
+  { label: '📝 3-Bullet Summary', query: 'Please summarize the key takeaways in 3 crisp bullet points.' },
+  { label: '💻 Code Walkthrough', query: 'Can you show a step-by-step code example explaining this?' },
+  { label: '❓ Quiz Question', query: 'Ask me a quick practice question to test if I understood this topic.' }
+];
 
 /**
- * Renders a syntax-styled code block with language badge and one-click copy button
+ * Syntax-styled code block with language badge and one-click copy button
  */
 const CodeBlock: React.FC<{ code: string; language: string }> = ({ code, language }) => {
   const [copied, setCopied] = useState(false);
@@ -130,42 +132,85 @@ const StructuredMessageContent: React.FC<StructuredMessageContentProps> = ({
   let currentSuggestedQuestions: { num: string; text: string }[] = [];
   let isUnderSuggestedHeader = false;
 
+  const renderFormattedTokens = (rawText: string) => {
+    return parseInlineFormatted(rawText).map((part, pIdx) => {
+      if (part.type === 'bold') {
+        return <strong key={pIdx} className="chatBold">{part.value}</strong>;
+      }
+      if (part.type === 'code') {
+        return <code key={pIdx} className="chatCode">{part.value}</code>;
+      }
+      if (part.type === 'timestamp') {
+        return (
+          <button
+            key={pIdx}
+            type="button"
+            onClick={() => onTimestampClick(part.value)}
+            className="chatTimestampBtn"
+            title={`Jump video to ${part.value}`}
+          >
+            <span className="tsPlayTriangle">▶</span> {part.value}
+          </button>
+        );
+      }
+      return <span key={pIdx}>{part.value}</span>;
+    });
+  };
+
   const flushBullets = (keyPrefix: string) => {
     if (currentBulletGroup.length > 0) {
       const bulletsToRender = [...currentBulletGroup];
       currentBulletGroup = [];
       elements.push(
-        <ul key={`${keyPrefix}-bullets`} className="chatBulletList">
-          {bulletsToRender.map((bText, bIdx) => (
-            <li key={bIdx} className="chatBulletItem">
-              <span className="chatBulletIcon">▶</span>
-              <span>
-                {parseInlineFormatted(bText).map((part, pIdx) => {
-                  if (part.type === 'bold') {
-                    return <strong key={pIdx} className="chatBold">{part.value}</strong>;
-                  }
-                  if (part.type === 'code') {
-                    return <code key={pIdx} className="chatCode">{part.value}</code>;
-                  }
-                  if (part.type === 'timestamp') {
-                    return (
-                      <button
-                        key={pIdx}
-                        type="button"
-                        onClick={() => onTimestampClick(part.value)}
-                        className="chatTimestampBtn"
-                        title={`Jump video to ${part.value}`}
-                      >
-                        <span className="tsPlayTriangle">▶</span> {part.value}
-                      </button>
-                    );
-                  }
-                  return <span key={pIdx}>{part.value}</span>;
-                })}
-              </span>
-            </li>
-          ))}
-        </ul>
+        <div key={`${keyPrefix}-bullets-wrapper`} className="chatBulletsWrapper">
+          {bulletsToRender.map((bText, bIdx) => {
+            const isProTip = bText.includes('Pro Tip') || bText.includes('Key Insight') || bText.startsWith('💡');
+            const isCaution = bText.includes('Pitfall') || bText.includes('Warning') || bText.includes('Caution') || bText.startsWith('⚠️');
+            const isMechanism = bText.includes('Mechanism') || bText.includes('How it works') || bText.startsWith('⚙️');
+
+            if (isProTip) {
+              return (
+                <div key={bIdx} className="chatProTipCard">
+                  <div className="chatProTipIcon">💡</div>
+                  <div className="chatProTipBody">
+                    {renderFormattedTokens(bText.replace(/^💡\s*/, ''))}
+                  </div>
+                </div>
+              );
+            }
+
+            if (isCaution) {
+              return (
+                <div key={bIdx} className="chatCautionCard">
+                  <div className="chatCautionIcon">⚠️</div>
+                  <div className="chatCautionBody">
+                    {renderFormattedTokens(bText.replace(/^⚠️\s*/, ''))}
+                  </div>
+                </div>
+              );
+            }
+
+            if (isMechanism) {
+              return (
+                <div key={bIdx} className="chatMechanismCard">
+                  <div className="chatMechanismIcon">⚙️</div>
+                  <div className="chatMechanismBody">
+                    {renderFormattedTokens(bText.replace(/^⚙️\s*/, ''))}
+                  </div>
+                </div>
+              );
+            }
+
+            return (
+              <div key={bIdx} className="chatBulletItem">
+                <span className="chatBulletIcon">▶</span>
+                <span className="chatBulletText">
+                  {renderFormattedTokens(bText)}
+                </span>
+              </div>
+            );
+          })}
+        </div>
       );
     }
   };
@@ -185,7 +230,7 @@ const StructuredMessageContent: React.FC<StructuredMessageContentProps> = ({
               title="Click to ask this question"
             >
               <span className="questionNumBadge">{item.num}</span>
-              <span style={{ flex: 1 }}>{item.text}</span>
+              <span style={{ flex: 1, textAlign: 'left' }}>{item.text}</span>
               <ArrowRight size={13} className="questionArrowIcon" />
             </button>
           ))}
@@ -204,7 +249,6 @@ const StructuredMessageContent: React.FC<StructuredMessageContentProps> = ({
     // Fenced Code Block (```lang ... ```)
     if (trimmed.startsWith('```')) {
       if (inCodeBlock) {
-        // Closing code block
         const codeText = currentCodeLines.join('\n');
         elements.push(
           <CodeBlock
@@ -217,7 +261,6 @@ const StructuredMessageContent: React.FC<StructuredMessageContentProps> = ({
         codeBlockLang = '';
         inCodeBlock = false;
       } else {
-        // Opening code block
         flushBullets(`line-${lineIdx}`);
         flushSuggestedQuestions(`line-${lineIdx}`);
         codeBlockLang = trimmed.replace(/^```/, '').trim() || 'code';
@@ -239,7 +282,7 @@ const StructuredMessageContent: React.FC<StructuredMessageContentProps> = ({
       return;
     }
 
-    // Heading (e.g. ### Suggested Questions or Notes)
+    // Heading
     if (trimmed.startsWith('### ') || trimmed.startsWith('## ')) {
       flushBullets(`line-${lineIdx}`);
       flushSuggestedQuestions(`line-${lineIdx}`);
@@ -249,14 +292,14 @@ const StructuredMessageContent: React.FC<StructuredMessageContentProps> = ({
       }
       elements.push(
         <h4 key={`heading-${lineIdx}`} className="chatHeading">
-          <Lightbulb size={14} style={{ color: '#34d399' }} />
+          <Sparkles size={14} style={{ color: '#34d399' }} />
           <span>{headingText}</span>
         </h4>
       );
       return;
     }
 
-    // Numbered Item
+    // Numbered Item (e.g. Suggested Questions)
     const numMatch = trimmed.match(/^(\d+)\.\s+(.*)$/);
     if (numMatch && (isUnderSuggestedHeader || numMatch[2].includes('?'))) {
       flushBullets(`line-${lineIdx}`);
@@ -281,28 +324,7 @@ const StructuredMessageContent: React.FC<StructuredMessageContentProps> = ({
     // Regular Paragraph
     elements.push(
       <p key={`p-${lineIdx}`} className="chatParagraph">
-        {parseInlineFormatted(line).map((part, pIdx) => {
-          if (part.type === 'bold') {
-            return <strong key={pIdx} className="chatBold">{part.value}</strong>;
-          }
-          if (part.type === 'code') {
-            return <code key={pIdx} className="chatCode">{part.value}</code>;
-          }
-          if (part.type === 'timestamp') {
-            return (
-              <button
-                key={pIdx}
-                type="button"
-                onClick={() => onTimestampClick(part.value)}
-                className="chatTimestampBtn"
-                title={`Jump video to ${part.value}`}
-              >
-                <span className="tsPlayTriangle">▶</span> {part.value}
-              </button>
-            );
-          }
-          return <span key={pIdx}>{part.value}</span>;
-        })}
+        {renderFormattedTokens(line)}
       </p>
     );
   });
@@ -364,7 +386,7 @@ const TypewriterMessage: React.FC<TypewriterMessageProps> = ({
     let current = 0;
     const totalLength = text.length;
     const interval = setInterval(() => {
-      current += 2;
+      current += 8;
       if (current >= totalLength) {
         current = totalLength;
         setDisplayedLength(totalLength);
@@ -373,7 +395,7 @@ const TypewriterMessage: React.FC<TypewriterMessageProps> = ({
       } else {
         setDisplayedLength(current);
       }
-    }, 12);
+    }, 10);
 
     return () => clearInterval(interval);
   }, [messageId, shouldAnimate, text, onCompleteAnimation]);
@@ -389,7 +411,7 @@ const TypewriterMessage: React.FC<TypewriterMessageProps> = ({
           onCompleteAnimation(messageId);
         }
       }}
-      title={isTyping ? 'Click to show all' : undefined}
+      title={isTyping ? 'Click to reveal entire response immediately' : undefined}
       style={{ cursor: isTyping ? 'pointer' : 'default' }}
     >
       <StructuredMessageContent
@@ -416,6 +438,7 @@ export const LectureChatbot: React.FC<LectureChatbotProps> = ({
   const [input, setInput] = useState('');
   const [thinkingIndex, setThinkingIndex] = useState(0);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [speakingId, setSpeakingId] = useState<string | null>(null);
   const animatedSetRef = useRef<Set<string>>(new Set(['welcome']));
   const chatBottomRef = useRef<HTMLDivElement>(null);
 
@@ -454,6 +477,43 @@ export const LectureChatbot: React.FC<LectureChatbotProps> = ({
       setCopiedId(null);
     }, 2000);
   };
+
+  const handleToggleSpeak = (id: string, text: string) => {
+    if (typeof window === 'undefined' || !window.speechSynthesis) return;
+
+    if (speakingId === id) {
+      window.speechSynthesis.cancel();
+      setSpeakingId(null);
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+    // Clean text: strip markdown code blocks and symbols for clean spoken audio
+    const cleanSpeech = text
+      .replace(/```[\s\S]*?```/g, 'Code block omitted for reading.')
+      .replace(/[*#`_\[\]()]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    const utterance = new SpeechSynthesisUtterance(cleanSpeech);
+    utterance.lang = language === 'hi' ? 'hi-IN' : 'en-US';
+    utterance.rate = 1.0;
+
+    utterance.onend = () => setSpeakingId(null);
+    utterance.onerror = () => setSpeakingId(null);
+
+    setSpeakingId(id);
+    window.speechSynthesis.speak(utterance);
+  };
+
+  // Stop speech if component unmounts
+  useEffect(() => {
+    return () => {
+      if (typeof window !== 'undefined' && window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, []);
 
   const handleTimestampClick = useCallback((timeStr: string) => {
     const seconds = parseTimestampToSeconds(timeStr);
@@ -599,11 +659,12 @@ export const LectureChatbot: React.FC<LectureChatbotProps> = ({
           </div>
         )}
 
-        {/* Regular Messages Stream (Shown after initial interaction, or normal messages) */}
+        {/* Regular Messages Stream */}
         {!isWelcomeOnly && messages.map((msg, idx) => {
           const isStudent = msg.sender === 'student';
           const isLatestAi = !isStudent && idx === messages.length - 1;
           const shouldAnimate = isLatestAi && !animatedSetRef.current.has(msg.id);
+          const hasEvidence = !isStudent && Array.isArray(msg.evidence) && msg.evidence.length > 0;
 
           return (
             <div
@@ -615,24 +676,38 @@ export const LectureChatbot: React.FC<LectureChatbotProps> = ({
                 <span className="senderLabel">{isStudent ? 'You' : 'AI Mentor'}</span>
                 {msg.timestamp && <span className="senderTime">⏱ {msg.timestamp}</span>}
                 {!isStudent && (
-                  <button
-                    type="button"
-                    onClick={() => handleCopy(msg.id, msg.text)}
-                    className="copyMsgBtn"
-                    title="Copy AI explanation"
-                  >
-                    {copiedId === msg.id ? (
-                      <>
-                        <Check size={11} style={{ color: '#34d399' }} />
-                        <span>Copied!</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy size={11} />
-                        <span>Copy</span>
-                      </>
-                    )}
-                  </button>
+                  <div className="aiActionsRow">
+                    {/* Read Aloud Text-to-Speech */}
+                    <button
+                      type="button"
+                      onClick={() => handleToggleSpeak(msg.id, msg.text)}
+                      className={`speakMsgBtn ${speakingId === msg.id ? 'active' : ''}`}
+                      title={speakingId === msg.id ? 'Stop audio' : 'Read explanation aloud'}
+                    >
+                      {speakingId === msg.id ? <VolumeX size={11} /> : <Volume2 size={11} />}
+                      <span>{speakingId === msg.id ? 'Stop' : 'Listen'}</span>
+                    </button>
+
+                    {/* Copy Button */}
+                    <button
+                      type="button"
+                      onClick={() => handleCopy(msg.id, msg.text)}
+                      className="copyMsgBtn"
+                      title="Copy AI explanation"
+                    >
+                      {copiedId === msg.id ? (
+                        <>
+                          <Check size={11} style={{ color: '#34d399' }} />
+                          <span>Copied!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy size={11} />
+                          <span>Copy</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
                 )}
               </div>
 
@@ -641,15 +716,51 @@ export const LectureChatbot: React.FC<LectureChatbotProps> = ({
                 {isStudent ? (
                   <p className="chatParagraph">{msg.text}</p>
                 ) : (
-                  <TypewriterMessage
-                    messageId={msg.id}
-                    text={msg.text}
-                    isAi={true}
-                    shouldAnimate={shouldAnimate}
-                    onTimestampClick={handleTimestampClick}
-                    onSelectQuestion={handleSelectQuestion}
-                    onCompleteAnimation={handleCompleteAnimation}
-                  />
+                  <>
+                    <TypewriterMessage
+                      messageId={msg.id}
+                      text={msg.text}
+                      isAi={true}
+                      shouldAnimate={shouldAnimate}
+                      onTimestampClick={handleTimestampClick}
+                      onSelectQuestion={handleSelectQuestion}
+                      onCompleteAnimation={handleCompleteAnimation}
+                    />
+
+                    {/* Grounding Evidence / Lecture Citations Bar */}
+                    {hasEvidence && (
+                      <div className="chatEvidenceSection">
+                        <div className="chatEvidenceHeader">
+                          <BookOpen size={11} style={{ color: '#34d399' }} />
+                          <span>Video Grounding Citations:</span>
+                        </div>
+                        <div className="chatEvidenceChipsGrid">
+                          {msg.evidence!.map((ev, eIdx) => {
+                            const rawTime = ev.timestamp_label || '';
+                            const firstTime = rawTime.split(' ')[0] || '00:00';
+                            const matchPercent = Math.min(99, Math.round((ev.similarity_score || 0.85) * 100));
+
+                            return (
+                              <button
+                                key={eIdx}
+                                type="button"
+                                onClick={() => handleTimestampClick(firstTime)}
+                                className="chatEvidenceChip"
+                                title={`Jump video to ${rawTime} (${ev.topic_name || 'Lecture segment'})`}
+                              >
+                                <span className="evidencePlayTriangle">▶</span>
+                                <span className="evidenceTime">{rawTime}</span>
+                                {ev.topic_name && (
+                                  <span className="evidenceTopicPill">{ev.topic_name}</span>
+                                )}
+                                <span className="evidenceScoreBadge">{matchPercent}% match</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             </div>
@@ -705,6 +816,26 @@ export const LectureChatbot: React.FC<LectureChatbotProps> = ({
 
         <div ref={chatBottomRef} />
       </div>
+
+      {/* Contextual Fast Follow-up Action Chips (shown when chat is active and ready) */}
+      {!loading && !isWelcomeOnly && (
+        <div className="chatContextPillsRow">
+          <span className="contextPillsLabel">⚡ Quick Follow-up:</span>
+          <div className="contextPillsList">
+            {CONTEXTUAL_PROMPTS.map((cp, idx) => (
+              <button
+                key={idx}
+                type="button"
+                className="contextPillBtn"
+                onClick={() => handleSelectQuestion(cp.query)}
+                title={cp.query}
+              >
+                {cp.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Input Form with Floating Styling */}
       <form onSubmit={handleSubmit} className="chatInputForm">
