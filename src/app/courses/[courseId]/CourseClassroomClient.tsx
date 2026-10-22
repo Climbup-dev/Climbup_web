@@ -195,11 +195,15 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
         const hls = new Hls({
           enableWorker: true,
           lowLatencyMode: false,
-          manifestLoadingTimeOut: 5000,
-          manifestLoadingMaxRetry: 1,
-          manifestLoadingRetryDelay: 500,
-          levelLoadingMaxRetry: 2,
-          fragLoadingMaxRetry: 2,
+          manifestLoadingTimeOut: 25000,
+          manifestLoadingMaxRetry: 4,
+          manifestLoadingRetryDelay: 1000,
+          levelLoadingMaxRetry: 4,
+          fragLoadingMaxRetry: 6,
+          fragLoadingTimeOut: 35000,
+          maxBufferLength: 60,
+          maxMaxBufferLength: 120,
+          maxBufferSize: 60 * 1000 * 1000,
           xhrSetup: (xhr, url) => {
             if (token && !url.includes("st=") && !url.includes("token=")) {
               const sep = url.includes("?") ? "&" : "?";
