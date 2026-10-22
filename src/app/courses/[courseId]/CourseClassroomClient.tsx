@@ -173,20 +173,10 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
       if (isDisposed || !videoRef.current) return;
 
       const hlsUrl = `/api/lessons/${lessonId}/hls/master.m3u8${token ? `?st=${encodeURIComponent(token)}` : ""}`;
-      const progressiveFallback = `/api/lessons/${lessonId}/stream${token ? `?st=${encodeURIComponent(token)}` : ""}`;
-
-      // Check if HLS stream is available
-      let hasHls = false;
-      try {
-        const headCheck = await fetch(hlsUrl, { method: "HEAD" });
-        hasHls = headCheck.ok;
-      } catch {
-        hasHls = false;
-      }
 
       if (isDisposed || !videoRef.current) return;
 
-      if (hasHls && Hls.isSupported()) {
+      if (Hls.isSupported()) {
         const hls = new Hls({
           enableWorker: true,
           lowLatencyMode: false,
@@ -209,21 +199,12 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
 
         hls.on(Hls.Events.ERROR, (_evt, data) => {
           if (data.fatal) {
-            console.warn("[HLS Security] Fallback on error:", data.type);
-            hls.destroy();
-            hlsInstanceRef.current = null;
-            if (videoRef.current) {
-              videoRef.current.src = progressiveFallback;
-              videoRef.current.load();
-              videoRef.current.play().catch(() => {});
-            }
+            console.warn("[HLS Security] Playback error:", data.type);
+            setVideoPlaybackError(true);
           }
         });
-      } else if (hasHls && videoRef.current.canPlayType("application/vnd.apple.mpegurl")) {
+      } else if (videoRef.current.canPlayType("application/vnd.apple.mpegurl")) {
         videoRef.current.src = hlsUrl;
-        videoRef.current.load();
-      } else {
-        videoRef.current.src = progressiveFallback;
         videoRef.current.load();
       }
     }
