@@ -180,6 +180,11 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
         const hls = new Hls({
           enableWorker: true,
           lowLatencyMode: false,
+          manifestLoadingTimeOut: 30000,
+          manifestLoadingMaxRetry: 6,
+          manifestLoadingRetryDelay: 2000,
+          levelLoadingMaxRetry: 5,
+          fragLoadingMaxRetry: 5,
           xhrSetup: (xhr, url) => {
             if (token && !url.includes("st=") && !url.includes("token=")) {
               const sep = url.includes("?") ? "&" : "?";
@@ -199,8 +204,15 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
 
         hls.on(Hls.Events.ERROR, (_evt, data) => {
           if (data.fatal) {
-            console.warn("[HLS Security] Playback error:", data.type);
-            setVideoPlaybackError(true);
+            console.warn("[HLS Security] Playback notice:", data.type, data.details);
+            if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
+              console.log("[HLS Security] Retrying network stream recovery...");
+              hls.startLoad();
+            } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
+              hls.recoverMediaError();
+            } else {
+              setVideoPlaybackError(true);
+            }
           }
         });
       } else if (videoRef.current.canPlayType("application/vnd.apple.mpegurl")) {
