@@ -45,6 +45,7 @@ import { Course, CourseLesson, CourseAssignment } from "@/types/courses";
 import { LectureChatbot } from "@/components/LectureChatbot";
 import { parseTimestampToSeconds } from "@/utils/ragHelpers";
 import { getVideoTypeAndEmbedUrl } from "@/utils/videoHelpers";
+import Hls from "hls.js";
 import "@/styles/ClassroomTabs.css";
 
 type TabType = "overview" | "assignments" | "mcqs" | "resources" | "syllabus" | "rag" | "discussions" | "certificate";
@@ -134,6 +135,110 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
   // Video Speed & Quality Controls State
   const [playbackSpeed, setPlaybackSpeed] = useState<number>(1);
   const [selectedQuality, setSelectedQuality] = useState<string>("Auto (1080p)");
+
+  // Enterprise Anti-Piracy HLS Streaming Engine (Hls.js with AES-128 crypto decoding)
+  const hlsInstanceRef = useRef<Hls | null>(null);
+
+  useEffect(() => {
+    if (!resolvedVideo.isDirectVideo || useDrivePlayer) return;
+    const video = videoRef.current;
+    if (!video) return;
+
+    const lessonId = activeLesson?.id;
+    if (!lessonId) return;
+
+    let isDisposed = false;
+
+    if (hlsInstanceRef.current) {
+      hlsInstanceRef.current.destroy();
+      hlsInstanceRef.current = null;
+    }
+
+    async function initEncryptedHLS() {
+      // 1. Fetch short-lived signed stream token
+      let token = authToken || "";
+      try {
+        const res = await fetch(`/api/lessons/${lessonId}/stream-token`, {
+          method: "POST",
+          headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
+        });
+        if (res.ok) {
+          const d = await res.json();
+          if (d.signed_token) token = d.signed_token;
+        }
+      } catch (e) {
+        console.warn("Stream token notice:", e);
+      }
+
+      if (isDisposed || !videoRef.current) return;
+
+      const hlsUrl = `/api/lessons/${lessonId}/hls/master.m3u8${token ? `?st=${encodeURIComponent(token)}` : ""}`;
+      const progressiveFallback = `/api/lessons/${lessonId}/stream${token ? `?st=${encodeURIComponent(token)}` : ""}`;
+
+      // Check if HLS stream is available
+      let hasHls = false;
+      try {
+        const headCheck = await fetch(hlsUrl, { method: "HEAD" });
+        hasHls = headCheck.ok;
+      } catch {
+        hasHls = false;
+      }
+
+      if (isDisposed || !videoRef.current) return;
+
+      if (hasHls && Hls.isSupported()) {
+        const hls = new Hls({
+          enableWorker: true,
+          lowLatencyMode: false,
+          xhrSetup: (xhr, url) => {
+            if (token && !url.includes("st=") && !url.includes("token=")) {
+              const sep = url.includes("?") ? "&" : "?";
+              xhr.open("GET", `${url}${sep}st=${encodeURIComponent(token)}`, true);
+            }
+          },
+        });
+
+        hlsInstanceRef.current = hls;
+        hls.loadSource(hlsUrl);
+        hls.attachMedia(videoRef.current);
+
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          setVideoPlaybackError(false);
+          videoRef.current?.play().catch(() => {});
+        });
+
+        hls.on(Hls.Events.ERROR, (_evt, data) => {
+          if (data.fatal) {
+            console.warn("[HLS Security] Fallback on error:", data.type);
+            hls.destroy();
+            hlsInstanceRef.current = null;
+            if (videoRef.current) {
+              videoRef.current.src = progressiveFallback;
+              videoRef.current.load();
+              videoRef.current.play().catch(() => {});
+            }
+          }
+        });
+      } else if (hasHls && videoRef.current.canPlayType("application/vnd.apple.mpegurl")) {
+        videoRef.current.src = hlsUrl;
+        videoRef.current.load();
+      } else {
+        videoRef.current.src = progressiveFallback;
+        videoRef.current.load();
+      }
+    }
+
+    initEncryptedHLS();
+
+    return () => {
+      isDisposed = true;
+      if (hlsInstanceRef.current) {
+        hlsInstanceRef.current.destroy();
+        hlsInstanceRef.current = null;
+      }
+    };
+  }, [activeLesson?.id, resolvedVideo.isDirectVideo, useDrivePlayer, authToken]);
+
   const [showSpeedMenu, setShowSpeedMenu] = useState(false);
   const [showQualityMenu, setShowQualityMenu] = useState(false);
 
@@ -1014,7 +1119,6 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                     key={activeLesson?.id ? `${activeLesson.id}_${authToken ? "auth" : "anon"}` : (activeLesson?.videoUrl || "player")}
                     ref={videoRef}
                     id="classroom-video-player-html5"
-                    src={resolvedVideo.embedUrl}
                     controls
                     autoPlay
                     controlsList="nodownload"

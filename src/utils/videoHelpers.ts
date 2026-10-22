@@ -9,7 +9,8 @@ export interface VideoInfo {
   type: VideoType;
   embedUrl: string;
   isDirectVideo: boolean;
-  // driveFallbackUrl removed for security
+  hlsUrl?: string;
+  isHls?: boolean;
 }
 
 const DEFAULT_CLOUD_RUN_URL = "https://teacher-lecture-video-rag-28929614461.asia-south1.run.app";
@@ -97,8 +98,10 @@ export function getVideoTypeAndEmbedUrl(
       if (lessonId) {
         return {
           type: "direct",
-          embedUrl: `/api/lessons/${lessonId}/stream${tokenQuery}`,
+          embedUrl: `/api/lessons/${lessonId}/hls/master.m3u8${tokenQuery}`,
+          hlsUrl: `/api/lessons/${lessonId}/hls/master.m3u8${tokenQuery}`,
           isDirectVideo: true,
+          isHls: true,
         };
       }
       return {
@@ -112,12 +115,14 @@ export function getVideoTypeAndEmbedUrl(
   // 3. Native Direct Video / Uploads
   if (trimmed.startsWith("/uploads/") || trimmed.startsWith("uploads/")) {
     if (lessonId) {
-      return {
-        type: "direct",
-        embedUrl: `/api/lessons/${lessonId}/stream${tokenQuery}`,
-        isDirectVideo: true,
-      };
-    }
+        return {
+          type: "direct",
+          embedUrl: `/api/lessons/${lessonId}/hls/master.m3u8${tokenQuery}`,
+          hlsUrl: `/api/lessons/${lessonId}/hls/master.m3u8${tokenQuery}`,
+          isDirectVideo: true,
+          isHls: true,
+        };
+      }
     const cleanPath = trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
     return {
       type: "direct",
@@ -130,8 +135,10 @@ export function getVideoTypeAndEmbedUrl(
   if (lessonId && !trimmed.endsWith(".mp4") && !trimmed.endsWith(".webm")) {
     return {
       type: "direct",
-      embedUrl: `/api/lessons/${lessonId}/stream${tokenQuery}`,
+      embedUrl: `/api/lessons/${lessonId}/hls/master.m3u8${tokenQuery}`,
+      hlsUrl: `/api/lessons/${lessonId}/hls/master.m3u8${tokenQuery}`,
       isDirectVideo: true,
+      isHls: true,
     };
   }
 
