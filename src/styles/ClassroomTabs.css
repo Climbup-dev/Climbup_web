@@ -372,7 +372,7 @@
   cursor: pointer;
   white-space: nowrap;
   letter-spacing: -0.01em;
-  transition: color 180ms ease;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
   user-select: none;
   touch-action: manipulation;
   -webkit-tap-highlight-color: #475569;
@@ -390,7 +390,7 @@
   background: transparent;
 }
 
-.classroomTabBtn.active::after {
+.classroomTabBtn::after {
   content: '';
   position: absolute;
   bottom: -1px;
@@ -400,6 +400,14 @@
   background: #2563eb;
   border-radius: 3px 3px 0 0;
   box-shadow: 0 0 10px rgba(37, 99, 235, 0.4);
+  opacity: 0;
+  transform: scaleX(0.4);
+  transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.24s ease;
+}
+
+.classroomTabBtn.active::after {
+  opacity: 1;
+  transform: scaleX(1);
 }
 
 /* Mobile-only tab button (hidden on desktop, shown on mobile) */
