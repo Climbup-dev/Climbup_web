@@ -200,7 +200,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
 
       if (isDisposed || !videoRef.current) return;
 
-      const tokenParam = token ? `?st=${encodeURIComponent(token)}&pk=amirshaikh320340` : `?pk=amirshaikh320340`;
+      const tokenParam = token ? `?st=${encodeURIComponent(token)}` : ``;
       const hlsUrl = `/api/lessons/${lessonId}/hls/master.m3u8${tokenParam}`;
       const directHlsUrl = `${backendBase}/api/lessons/${lessonId}/hls/master.m3u8${tokenParam}`;
 
