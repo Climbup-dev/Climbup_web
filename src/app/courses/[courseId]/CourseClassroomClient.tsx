@@ -22,8 +22,6 @@ import {
   Timer,
   Lock,
   RefreshCw,
-  Gauge,
-  Settings2,
   Check,
   Copy,
   ChevronRight,
@@ -140,10 +138,6 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
   }, [activeLesson?.videoUrl, activeLesson?.id, authToken]);
 
 
-
-  // Video Speed & Quality Controls State
-  const [playbackSpeed, setPlaybackSpeed] = useState<number>(1);
-  const [selectedQuality, setSelectedQuality] = useState<string>("Auto (1080p)");
 
   // Enterprise Anti-Piracy HLS Streaming Engine (Hls.js with AES-128 crypto decoding)
   const hlsInstanceRef = useRef<Hls | null>(null);
@@ -319,51 +313,6 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
       }
     };
   }, [activeLesson?.id, resolvedVideo.isDirectVideo, useDrivePlayer, authToken]);
-
-  const [showSpeedMenu, setShowSpeedMenu] = useState(false);
-  const [showQualityMenu, setShowQualityMenu] = useState(false);
-
-  const handleSpeedChange = (speed: number) => {
-    setPlaybackSpeed(speed);
-    setShowSpeedMenu(false);
-    if (videoRef.current) {
-      videoRef.current.playbackRate = speed;
-    }
-    const iframe = document.getElementById("classroom-video-player") as HTMLIFrameElement | null;
-    if (iframe && resolvedVideo.type === "youtube") {
-      try {
-        iframe.contentWindow?.postMessage(
-          JSON.stringify({
-            event: "command",
-            func: "setPlaybackRate",
-            args: [speed],
-          }),
-          "*"
-        );
-      } catch {}
-    }
-    showToast(`Speed set to ${speed}x`, "info");
-  };
-
-  const handleQualityChange = (quality: string) => {
-    setSelectedQuality(quality);
-    setShowQualityMenu(false);
-    const iframe = document.getElementById("classroom-video-player") as HTMLIFrameElement | null;
-    if (iframe && resolvedVideo.type === "youtube") {
-      const qCode = quality.includes("1080") ? "hd1080" : quality.includes("720") ? "hd720" : quality.includes("480") ? "large" : "medium";
-      try {
-        iframe.contentWindow?.postMessage(
-          JSON.stringify({
-            event: "command",
-            func: "setPlaybackQuality",
-            args: [qCode],
-          }),
-          "*"
-        );
-      } catch {}
-    }
-    showToast(`Streaming Quality: ${quality}`, "info");
-  };
 
   // Enrollment & Progress
   const [isEnrolled, setIsEnrolled] = useState(false);
@@ -1289,73 +1238,6 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
             onContextMenu={(e) => e.preventDefault()}
             onDragStart={(e) => e.preventDefault()}
           >
-            {/* Player Quick Controls (Speed & Quality options) */}
-            {activeLesson?.videoUrl && (
-              <div className="classroomPlayerToolbar">
-                {/* Playback Speed Control */}
-                <div className="playerControlGroup">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowSpeedMenu(!showSpeedMenu);
-                      setShowQualityMenu(false);
-                    }}
-                    className="playerControlBtn"
-                    title="Change Playback Speed"
-                  >
-                    <Gauge size={13} /> {playbackSpeed}x
-                  </button>
-                  {showSpeedMenu && (
-                    <div className="playerControlDropdown">
-                      <div className="playerControlDropdownTitle">Playback Speed</div>
-                      {[0.5, 0.75, 1, 1.25, 1.5, 1.75, 2].map((s) => (
-                        <button
-                          key={s}
-                          type="button"
-                          onClick={() => handleSpeedChange(s)}
-                          className={`playerDropdownItem ${playbackSpeed === s ? "active" : ""}`}
-                        >
-                          <span>{s === 1 ? "1.0x (Normal)" : `${s}x`}</span>
-                          {playbackSpeed === s && <CheckCircle2 size={12} color="#2563eb" />}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Video Quality Control */}
-                <div className="playerControlGroup">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowQualityMenu(!showQualityMenu);
-                      setShowSpeedMenu(false);
-                    }}
-                    className="playerControlBtn"
-                    title="Change Video Quality"
-                  >
-                    <Settings2 size={13} /> {selectedQuality.replace(" (1080p)", "")}
-                  </button>
-                  {showQualityMenu && (
-                    <div className="playerControlDropdown">
-                      <div className="playerControlDropdownTitle">Streaming Quality</div>
-                      {["Auto (1080p)", "1080p HD", "720p", "480p", "360p"].map((q) => (
-                        <button
-                          key={q}
-                          type="button"
-                          onClick={() => handleQualityChange(q)}
-                          className={`playerDropdownItem ${selectedQuality === q ? "active" : ""}`}
-                        >
-                          <span>{q}</span>
-                          {selectedQuality === q && <CheckCircle2 size={12} color="#2563eb" />}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
             {activeLesson?.videoUrl ? (
               (resolvedVideo.isDirectVideo && !useDrivePlayer) ? (
                 <>
