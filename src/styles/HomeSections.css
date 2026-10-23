@@ -1,7 +1,7 @@
 .homeSections {
   color: #0f172a;
   background: #ffffff;
-  font-family: Inter, system-ui, sans-serif;
+  font-family: var(--font-sans), 'Plus Jakarta Sans', system-ui, sans-serif;
 }
 
 .startupSection {

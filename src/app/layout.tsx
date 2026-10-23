@@ -7,7 +7,8 @@ import { Plus_Jakarta_Sans } from "next/font/google";
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
   display: "swap",
-  weight: ["300", "400", "500", "600", "700", "800"],
+  variable: "--font-sans",
+  weight: ["400", "500", "600", "700", "800"],
 });
 
 export const metadata: Metadata = {
@@ -56,7 +57,7 @@ export default function RootLayout({
       <head>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" />
       </head>
-      <body className={plusJakartaSans.className}>
+      <body className={`${plusJakartaSans.variable} ${plusJakartaSans.className}`}>
         <Script id="disable-rightclick" strategy="beforeInteractive">
           {`document.addEventListener('contextmenu', event => event.preventDefault());`}
         </Script>

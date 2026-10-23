@@ -1,10 +1,10 @@
 .siteFooter {
   position: relative;
   overflow: hidden;
-  color: #e2e8f0;
+  color: #f1f5f9;
   background: #040914;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
-  font-family: Inter, system-ui, -apple-system, sans-serif;
+  font-family: var(--font-sans), 'Plus Jakarta Sans', system-ui, sans-serif;
   padding: 44px 0 28px;
 }
 
@@ -20,7 +20,7 @@
   align-items: center;
   gap: 32px;
   padding-bottom: 28px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   flex-wrap: wrap;
 }
 
@@ -35,7 +35,7 @@
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  color: #fff;
+  color: #ffffff;
   font-size: 20px;
   font-weight: 800;
   letter-spacing: -0.02em;
@@ -48,9 +48,10 @@
 
 .footerTagline {
   margin: 0;
-  color: #94a3b8;
+  color: #cbd5e1;
   font-size: 13.5px;
   line-height: 1.5;
+  font-weight: 500;
 }
 
 .footerLinksNav {
@@ -61,9 +62,9 @@
 }
 
 .footerNavLink {
-  color: #94a3b8;
+  color: #cbd5e1;
   font-size: 13.5px;
-  font-weight: 500;
+  font-weight: 600;
   text-decoration: none;
   transition: color 0.18s ease;
 }
@@ -83,14 +84,15 @@
 
 .footerCopyright {
   margin: 0;
-  color: #64748b;
+  color: #94a3b8;
   font-size: 12.5px;
+  font-weight: 500;
 }
 
 .backToTopBtn {
   background: none;
   border: none;
-  color: #94a3b8;
+  color: #cbd5e1;
   font-size: 12.5px;
   font-weight: 600;
   display: inline-flex;
@@ -103,32 +105,33 @@
 }
 
 .backToTopBtn:hover {
-  color: #60a5fa;
-  background: rgba(59, 130, 246, 0.12);
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
 }
 
+.topArrowIcon {
+  font-size: 14px;
+}
+
+/* Responsive */
 @media (max-width: 768px) {
   .siteFooter {
     padding: 36px 0 24px;
   }
 
-  .footerContainer {
-    width: calc(100% - 32px);
-  }
-
   .footerMainRow {
     flex-direction: column;
     align-items: flex-start;
-    gap: 22px;
+    gap: 24px;
   }
 
   .footerLinksNav {
-    gap: 16px 20px;
+    gap: 18px 24px;
   }
 
   .footerBottomRow {
     flex-direction: column;
     align-items: flex-start;
-    gap: 12px;
+    gap: 14px;
   }
 }

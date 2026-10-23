@@ -58,7 +58,7 @@ body.reading-mode .navbar {
 
 .navLinks a {
   position: relative;
-  color: #475569;
+  color: #1e293b;
   font-size: 14.5px;
   font-weight: 600;
   text-decoration: none;
@@ -131,7 +131,7 @@ body.reading-mode .navbar {
 
 .loginBtn:hover {
   background: #f8fafc;
-  border-color: #94a3b8;
+  border-color: #334155;
 }
 
 .signupBtn:hover {
@@ -140,7 +140,7 @@ body.reading-mode .navbar {
 }
 
 .authStatus {
-  color: #64748b;
+  color: #1e293b;
   font-size: 13px;
   font-weight: 600;
 }
@@ -201,7 +201,7 @@ body.reading-mode .navbar {
 }
 
 .profileChevron {
-  color: #64748b;
+  color: #1e293b;
   transition: transform 180ms ease;
   flex-shrink: 0;
 }
@@ -243,7 +243,7 @@ body.reading-mode .navbar {
 }
 
 .profileDropdownHeader span {
-  color: #64748b;
+  color: #1e293b;
   font-size: 12px;
   overflow: hidden;
   text-overflow: ellipsis;

@@ -295,7 +295,7 @@
 
 .lessonHeaderMeta {
   font-size: 13px;
-  color: #64748b;
+  color: #475569;
 }
 
 .markCompleteBtn {
@@ -366,7 +366,7 @@
   padding: 10px 4px 14px;
   background: transparent;
   border: none;
-  color: #94a3b8;
+  color: #334155;
   font-size: 14.5px;
   font-weight: 600;
   cursor: pointer;
@@ -375,7 +375,7 @@
   transition: color 180ms ease;
   user-select: none;
   touch-action: manipulation;
-  -webkit-tap-highlight-color: #64748b;
+  -webkit-tap-highlight-color: #475569;
   min-height: 40px;
 }
 
@@ -444,7 +444,7 @@
   border-radius: 10px;
   border: 1px solid transparent;
   background: transparent;
-  color: #94a3b8;
+  color: #334155;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -915,7 +915,7 @@
   background: rgba(12, 22, 38, 0.95);
   border-bottom: 1px solid rgba(37, 99, 235, 0.15);
   font-size: 12px;
-  color: #94a3b8;
+  color: #334155;
 }
 
 .editorDots {
