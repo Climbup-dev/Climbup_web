@@ -11,7 +11,7 @@ import {
   type ReactNode,
 } from "react";
 
-type ToastType = "success" | "error" | "info";
+type ToastType = "success" | "error" | "info" | "warning";
 
 interface Toast {
   id: number;
@@ -29,6 +29,7 @@ const icons: Record<ToastType, string> = {
   success: "OK",
   error: "!",
   info: "i",
+  warning: "!",
 };
 
 export function ToastProvider({ children }: { children: ReactNode }) {

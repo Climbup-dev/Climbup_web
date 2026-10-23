@@ -56,18 +56,37 @@ function mapDBCourseToCourse(
         transcriptSnippets: l.transcript_snippets || [],
       })),
     })),
-    assignments: assignments.map((a: any) => ({
-      id: a.id,
-      courseId: a.course_id || row.id,
-      moduleId: a.module_id,
-      title: a.title,
-      description: a.description,
-      instructions: a.instructions || [],
-      starterCode: a.starter_code,
-      starterFileUrl: a.starter_file_url,
-      maxScore: a.max_score || 100,
-      dueDate: a.due_date || "Open",
-    })),
+    assignments: assignments.map((a: any) => {
+      let extra: any = {};
+      let cleanDesc = a.description || "";
+      if (typeof cleanDesc === "string" && cleanDesc.trim().startsWith("{") && cleanDesc.trim().endsWith("}")) {
+        try {
+          extra = JSON.parse(cleanDesc);
+          cleanDesc = extra.summary || cleanDesc;
+        } catch (_) {}
+      }
+      return {
+        id: a.id,
+        courseId: a.course_id || row.id,
+        moduleId: a.module_id,
+        lessonId: extra.lesson_id,
+        title: a.title,
+        description: cleanDesc,
+        scenarioContext: extra.scenario_context || extra.scenarioContext || cleanDesc,
+        scenario_context: extra.scenario_context || extra.scenarioContext || cleanDesc,
+        problems: extra.problems || [],
+        rubric: extra.rubric || null,
+        instructions: a.instructions || [],
+        starterCode: a.starter_code,
+        starter_code: a.starter_code,
+        starterFileUrl: a.starter_file_url,
+        maxScore: a.max_score || 100,
+        max_score: a.max_score || 100,
+        dueDate: a.due_date || "Open",
+        due_date: a.due_date || "Open",
+        status: extra.status || "published",
+      };
+    }),
     quizzes: quizzes.map((q: any) => ({
       id: q.id,
       courseId: q.course_id || row.id,
@@ -300,6 +319,7 @@ export interface StoredSubmission {
   status: AssignmentStatus;
   submittedAt: string;
   submissionText?: string;
+  approachNotes?: string;
   githubUrl?: string;
   liveUrl?: string;
   score?: number;
@@ -358,6 +378,10 @@ export async function submitAssignment(
     submissionText?: string;
     githubUrl?: string;
     liveUrl?: string;
+    approachNotes?: string;
+    score?: number;
+    feedback?: string;
+    aiFeedback?: any;
   },
   userId?: string
 ): Promise<StoredSubmission> {

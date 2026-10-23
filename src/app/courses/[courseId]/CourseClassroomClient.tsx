@@ -27,6 +27,7 @@ import {
   Check,
   Copy,
   ChevronRight,
+  ChevronLeft,
   AlertTriangle,
   ShieldCheck,
   Zap
@@ -49,6 +50,7 @@ import {
 } from "@/lib/courses/coursesService";
 import { Course, CourseLesson, CourseAssignment } from "@/types/courses";
 import { LectureChatbot } from "@/components/LectureChatbot";
+import StudentAssignmentWorkspace from "@/components/StudentAssignmentWorkspace";
 import { parseTimestampToSeconds } from "@/utils/ragHelpers";
 import { getVideoTypeAndEmbedUrl } from "@/utils/videoHelpers";
 import Hls from "hls.js";
@@ -378,11 +380,12 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
   // Load Dynamic Live AI Assignment for the current lesson
   useEffect(() => {
     let isMounted = true;
-    if (!activeLesson) return;
+    if (!activeLesson?.id) return;
+    const currentLessonId = activeLesson.id;
 
     async function loadLessonAssignment() {
       try {
-        const res = await fetch(`/api/lessons/${activeLesson.id}/assignment`);
+        const res = await fetch(`/api/lessons/${currentLessonId}/assignment`);
         if (res.ok) {
           const data = await res.json();
           if (data && data.assignment && isMounted) {
@@ -427,19 +430,29 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
       console.warn("Could not load backend MCQs, falling back to course quiz:", err);
     }
 
-    // Graceful fallback to course quiz if offline
-    if (course?.quizzes && course.quizzes[0]?.questions) {
-      const fallbackQuestions = course.quizzes[0].questions.map((q, idx) => ({
-        id: `mcq_fallback_${idx}`,
+    // Match the specific quiz for this active lesson from course.quizzes (Supabase cache)
+    const matchingQuiz = course?.quizzes?.find(
+      (q: any) =>
+        q.id === `quiz_${activeLesson.id}` ||
+        q.moduleId === activeLesson.id ||
+        (q.description && (q.description.includes(activeLesson.id) || q.description.includes(activeLesson.title))) ||
+        (q.title && q.title.toLowerCase().includes(activeLesson.title?.toLowerCase()))
+    );
+
+    if (matchingQuiz && matchingQuiz.questions && matchingQuiz.questions.length > 0) {
+      const fallbackQuestions = matchingQuiz.questions.map((q: any, idx: number) => ({
+        id: q.id || `mcq_cached_${idx}`,
         question: q.question,
         options: q.options,
-        difficulty: "Intermediate",
+        difficulty: q.difficulty || "Intermediate",
         topic_tag: activeLesson.title || "Lecture Concepts",
-        _fallbackCorrectIndex: q.correctAnswerIndex,
+        _fallbackCorrectIndex: q.correctAnswerIndex ?? (q.correct_answer ? ["A", "B", "C", "D"].indexOf(q.correct_answer) : undefined),
         _fallbackExplanation: q.explanation,
-        _fallbackTimestamp: q.timestampRef,
+        _fallbackTimestamp: q.timestampRef || q.timestamp_hint,
       }));
       setMcqQuizQuestions(fallbackQuestions);
+    } else {
+      setMcqQuizQuestions([]);
     }
     setMcqLoading(false);
   };
@@ -1527,466 +1540,18 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
               </div>
             )}
 
-            {/* 2. Assignment Tab (Option A - Single Clean Professional Workspace) */}
-            {/* 2. Enterprise Assignments Tab */}
+            {/* 2. Enterprise Dark-Mode Assignments & AI Auto-Grader Workspace */}
             {activeTab === "assignments" && (
-              <div>
-                {liveAssignment || selectedAssignment ? (
-                  (() => {
-                    const currentAssignment = liveAssignment || selectedAssignment;
-                    const rubric = currentAssignment.rubric || {};
-                    const maxPts = currentAssignment.maxScore || rubric.max_score || 100;
-                    const feedback = assignmentFeedback;
-                    const pillarBreakdown = feedback?.pillar_breakdown || {
-                      logic: feedback?.score ? Math.round((feedback.score / maxPts) * 50) : 42,
-                      syntax_quality: feedback?.score ? Math.round((feedback.score / maxPts) * 25) : 22,
-                      edge_cases: feedback?.score ? Math.round((feedback.score / maxPts) * 15) : 12,
-                      approach_architecture: feedback?.score ? Math.round((feedback.score / maxPts) * 10) : 9,
-                    };
-
-                    return (
-                      <div className="assignmentWorkspaceCard">
-                        {/* 1. Hero Header Row */}
-                        <div className="assignmentHeroHeader">
-                          <div>
-                            <div className="assignmentBadgeRow">
-                              <span className="assignmentCategoryPill">
-                                <span className="liveDot" />
-                                Production Milestone Assignment
-                              </span>
-                              <span style={{
-                                fontSize: "11.5px",
-                                fontWeight: 700,
-                                color: "#94a3b8",
-                                background: "rgba(255, 255, 255, 0.05)",
-                                border: "1px solid rgba(255, 255, 255, 0.1)",
-                                padding: "4px 10px",
-                                borderRadius: "999px",
-                                display: "inline-flex",
-                                alignItems: "center",
-                                gap: "5px"
-                              }}>
-                                <ShieldCheck size={13} color="#2563eb" /> AI Rubric Evaluated
-                              </span>
-                            </div>
-                            <h3 className="assignmentTitle">
-                              {currentAssignment.title}
-                            </h3>
-                          </div>
-
-                          <div className="assignmentMetaPills">
-                            <span className="scorePill">
-                              <Award size={15} /> Max Score: {maxPts} Pts
-                            </span>
-                            <span className="duePill">
-                              <Clock size={15} color="#94a3b8" /> {currentAssignment.dueDate ? `Due: ${currentAssignment.dueDate}` : "Estimated: 45 Mins"}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* 2. Enterprise Scenario Context Callout */}
-                        {currentAssignment.scenario_context ? (
-                          <div className="assignmentScenarioBox">
-                            <div className="scenarioBoxHeader">
-                              <BrainCircuit size={16} /> Enterprise Production Scenario
-                            </div>
-                            <p className="scenarioBoxBody">
-                              {currentAssignment.scenario_context}
-                            </p>
-                          </div>
-                        ) : (
-                          <p style={{ color: "rgba(255, 255, 255, 0.85)", fontSize: "15px", lineHeight: "1.7", margin: "0 0 24px" }}>
-                            {currentAssignment.description}
-                          </p>
-                        )}
-
-                        {/* 3. Progressive 3-Tier Problem Breakdown */}
-                        {currentAssignment.problems && currentAssignment.problems.length > 0 ? (
-                          <div style={{ marginBottom: "28px" }}>
-                            <div style={{ fontSize: "12.5px", fontWeight: 800, color: "#2563eb", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "14px", display: "flex", alignItems: "center", gap: "8px" }}>
-                              <Zap size={16} /> Progressive Implementation Challenges
-                            </div>
-                            <div className="assignmentProblemsContainer">
-                              {currentAssignment.problems.map((prob: any, idx: number) => {
-                                const tier = prob.tier?.toLowerCase() || (idx === 0 ? "basic" : idx === 1 ? "intermediate" : "advanced");
-                                return (
-                                  <div key={idx} className="problemCard">
-                                    <div className="problemCardHeader">
-                                      <span className={`problemTierBadge ${tier}`}>
-                                        Challenge {idx + 1}: {prob.tier || (tier.toUpperCase())}
-                                      </span>
-                                      <span className="problemMarksPill">
-                                        {prob.marks || (idx === 0 ? 30 : idx === 1 ? 40 : 30)} Pts
-                                      </span>
-                                    </div>
-                                    <p className="problemText">
-                                      {prob.problem_statement || prob.description}
-                                    </p>
-                                    {prob.acceptance_criteria && prob.acceptance_criteria.length > 0 && (
-                                      <div className="problemCriteriaGrid">
-                                        {prob.acceptance_criteria.map((crit: string, cIdx: number) => (
-                                          <div key={cIdx} className="criterionItem">
-                                            <CheckCircle2 size={15} color="#2563eb" style={{ flexShrink: 0, marginTop: "2px" }} />
-                                            <span>{crit}</span>
-                                          </div>
-                                        ))}
-                                      </div>
-                                    )}
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        ) : currentAssignment.instructions && currentAssignment.instructions.length > 0 ? (
-                          <div style={{ marginBottom: "26px" }}>
-                            <h4 style={{ fontSize: "13px", fontWeight: 700, color: "#2563eb", textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 12px", display: "flex", alignItems: "center", gap: "7px" }}>
-                              <CheckCircle2 size={16} /> Key Objectives & Acceptance Criteria
-                            </h4>
-                            <div style={{ display: "grid", gap: "10px" }}>
-                              {currentAssignment.instructions.map((inst: string, i: number) => (
-                                <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: "12px", fontSize: "14px", color: "rgba(255, 255, 255, 0.88)", lineHeight: "1.55", background: "rgba(255, 255, 255, 0.03)", padding: "10px 14px", borderRadius: "10px", border: "1px solid rgba(255, 255, 255, 0.06)" }}>
-                                  <CheckCircle2 size={16} color="#2563eb" style={{ flexShrink: 0, marginTop: "2px" }} />
-                                  <span>{inst}</span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        ) : null}
-
-                        {/* 4. Starter Code Boilerplate Console */}
-                        {(currentAssignment.starter_code || currentAssignment.starterCode) && (
-                          <div className="starterCodeContainer">
-                            <div className="starterCodeHeader">
-                              <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12.5px", fontWeight: 700, color: "#2563eb" }}>
-                                <Code2 size={15} /> Starter Code Boilerplate:
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  navigator.clipboard?.writeText(currentAssignment.starter_code || currentAssignment.starterCode);
-                                  setCopiedStarter(true);
-                                  setTimeout(() => setCopiedStarter(false), 2000);
-                                }}
-                                className="starterCodeCopyBtn"
-                              >
-                                {copiedStarter ? (
-                                  <>
-                                    <Check size={12} color="#2563eb" /> Copied!
-                                  </>
-                                ) : (
-                                  <>
-                                    <Copy size={12} /> Copy Code
-                                  </>
-                                )}
-                              </button>
-                            </div>
-                            <pre style={{
-                              background: "#030812",
-                              margin: 0,
-                              padding: "16px 20px",
-                              fontSize: "13px",
-                              color: "#93c5fd",
-                              fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
-                              overflowX: "auto",
-                              lineHeight: "1.6",
-                            }}>
-                              <code>{currentAssignment.starter_code || currentAssignment.starterCode}</code>
-                            </pre>
-                          </div>
-                        )}
-
-                        {/* 5. Comprehensive AI Evaluation Scorecard (If submitted) */}
-                        {feedback && (
-                          <div className="aiScorecardContainer">
-                            <div className="scorecardTopRow">
-                              <div>
-                                <span style={{ fontSize: "11px", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", color: "#2563eb", display: "block", marginBottom: "4px" }}>
-                                  AI Rubric Evaluation Report
-                                </span>
-                                <h4 style={{ fontSize: "20px", fontWeight: 800, color: "#0f172a", margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
-                                  <CheckCircle2 size={20} color="#2563eb" />
-                                  Grade: {feedback.score ?? 88} / {maxPts}
-                                </h4>
-                              </div>
-                              <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
-                                <span className={`verdictBadge ${(feedback.verdict || "Pass").toLowerCase().includes("pass") ? "passed" : "review"}`}>
-                                  {feedback.verdict || "PASSED - PRODUCTION READY"}
-                                </span>
-                                {feedback.video_revisit_timestamp && (
-                                  <button
-                                    type="button"
-                                    onClick={() => handleTimestampJump(feedback.video_revisit_timestamp)}
-                                    className="videoRevisitPill"
-                                    title="Click to jump classroom video to review key concept"
-                                  >
-                                    <Play size={13} fill="#2563eb" /> Review at [{feedback.video_revisit_timestamp}]
-                                  </button>
-                                )}
-                              </div>
-                            </div>
-
-                            {/* 4-Pillar Rubric Breakdown Progress Bars */}
-                            <div className="pillarGrid">
-                              <div className="pillarCard">
-                                <div className="pillarHeader">
-                                  <span>Core Logic & Accuracy</span>
-                                  <span style={{ color: "#2563eb" }}>{pillarBreakdown.logic} / 50</span>
-                                </div>
-                                <div className="pillarBarBg">
-                                  <div className="pillarBarFill" style={{ width: `${Math.min(100, (pillarBreakdown.logic / 50) * 100)}%` }} />
-                                </div>
-                              </div>
-
-                              <div className="pillarCard">
-                                <div className="pillarHeader">
-                                  <span>Syntax & Code Quality</span>
-                                  <span style={{ color: "#2563eb" }}>{pillarBreakdown.syntax_quality} / 25</span>
-                                </div>
-                                <div className="pillarBarBg">
-                                  <div className="pillarBarFill" style={{ width: `${Math.min(100, (pillarBreakdown.syntax_quality / 25) * 100)}%` }} />
-                                </div>
-                              </div>
-
-                              <div className="pillarCard">
-                                <div className="pillarHeader">
-                                  <span>Edge Cases & Resilience</span>
-                                  <span style={{ color: "#2563eb" }}>{pillarBreakdown.edge_cases} / 15</span>
-                                </div>
-                                <div className="pillarBarBg">
-                                  <div className="pillarBarFill" style={{ width: `${Math.min(100, (pillarBreakdown.edge_cases / 15) * 100)}%` }} />
-                                </div>
-                              </div>
-
-                              <div className="pillarCard">
-                                <div className="pillarHeader">
-                                  <span>Architecture & Approach</span>
-                                  <span style={{ color: "#2563eb" }}>{pillarBreakdown.approach_architecture} / 10</span>
-                                </div>
-                                <div className="pillarBarBg">
-                                  <div className="pillarBarFill" style={{ width: `${Math.min(100, (pillarBreakdown.approach_architecture / 10) * 100)}%` }} />
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Strengths & Mistakes */}
-                            {((feedback.strengths && feedback.strengths.length > 0) || (feedback.critical_mistakes && feedback.critical_mistakes.length > 0)) && (
-                              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "14px", marginBottom: "20px" }}>
-                                {feedback.strengths && feedback.strengths.length > 0 && (
-                                  <div style={{ background: "rgba(16, 185, 129, 0.08)", border: "1px solid rgba(16, 185, 129, 0.25)", borderRadius: "12px", padding: "14px 18px" }}>
-                                    <div style={{ fontSize: "12.5px", fontWeight: 800, color: "#2563eb", marginBottom: "8px", display: "flex", alignItems: "center", gap: "6px" }}>
-                                      <CheckCircle2 size={15} /> Key Strengths
-                                    </div>
-                                    <div style={{ display: "grid", gap: "6px" }}>
-                                      {feedback.strengths.map((str: string, sIdx: number) => (
-                                        <div key={sIdx} style={{ fontSize: "13px", color: "rgba(255, 255, 255, 0.9)", display: "flex", alignItems: "flex-start", gap: "8px" }}>
-                                          <span style={{ color: "#2563eb" }}>✔</span> {str}
-                                        </div>
-                                      ))}
-                                    </div>
-                                  </div>
-                                )}
-
-                                {feedback.critical_mistakes && feedback.critical_mistakes.length > 0 && (
-                                  <div style={{ background: "rgba(245, 158, 11, 0.08)", border: "1px solid rgba(245, 158, 11, 0.25)", borderRadius: "12px", padding: "14px 18px" }}>
-                                    <div style={{ fontSize: "12.5px", fontWeight: 800, color: "#fbbf24", marginBottom: "8px", display: "flex", alignItems: "center", gap: "6px" }}>
-                                      <AlertTriangle size={15} /> Areas for Refinement
-                                    </div>
-                                    <div style={{ display: "grid", gap: "6px" }}>
-                                      {feedback.critical_mistakes.map((mis: string, mIdx: number) => (
-                                        <div key={mIdx} style={{ fontSize: "13px", color: "rgba(255, 255, 255, 0.9)", display: "flex", alignItems: "flex-start", gap: "8px" }}>
-                                          <span style={{ color: "#fbbf24" }}>•</span> {mis}
-                                        </div>
-                                      ))}
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            )}
-
-                            {/* Actionable Advice */}
-                            <p style={{ margin: "0 0 16px", fontSize: "14px", color: "rgba(255, 255, 255, 0.92)", lineHeight: "1.65", background: "rgba(255, 255, 255, 0.03)", padding: "12px 16px", borderRadius: "10px", border: "1px solid rgba(255, 255, 255, 0.06)" }}>
-                              <strong style={{ color: "#2563eb" }}>Mentor Advice: </strong> {feedback.actionable_advice || feedback.feedback}
-                            </p>
-
-                            {/* Ideal Model Snippet if available */}
-                            {feedback.ideal_model_snippet && (
-                              <div style={{ borderRadius: "10px", overflow: "hidden", border: "1px solid rgba(37, 99, 235, 0.25)", background: "#020712" }}>
-                                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 14px", background: "rgba(16, 185, 129, 0.12)", borderBottom: "1px solid rgba(37, 99, 235, 0.2)" }}>
-                                  <span style={{ fontSize: "12px", fontWeight: 700, color: "#2563eb", display: "flex", alignItems: "center", gap: "6px" }}>
-                                    <Code2 size={13} /> Ideal Production Pattern
-                                  </span>
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      navigator.clipboard?.writeText(feedback.ideal_model_snippet);
-                                      setCopiedSnippet(true);
-                                      setTimeout(() => setCopiedSnippet(false), 2000);
-                                    }}
-                                    className="starterCodeCopyBtn"
-                                  >
-                                    {copiedSnippet ? "Copied!" : "Copy Snippet"}
-                                  </button>
-                                </div>
-                                <pre style={{ margin: 0, padding: "14px 16px", fontSize: "12.5px", color: "#93c5fd", fontFamily: "monospace", overflowX: "auto" }}>
-                                  <code>{feedback.ideal_model_snippet}</code>
-                                </pre>
-                              </div>
-                            )}
-                          </div>
-                        )}
-
-                        {/* 6. Interactive Submission Studio */}
-                        <form onSubmit={handleAssignmentSubmit} className="submissionSection">
-                          <div className="submissionSectionHeader">
-                            <h4 style={{ fontSize: "18px", fontWeight: 800, color: "#0f172a", margin: "0 0 6px", letterSpacing: "-0.01em" }}>
-                              Student Solution Studio
-                            </h4>
-                            <p style={{ fontSize: "13.5px", color: "#475569", margin: 0 }}>
-                              Submit your implementation code and architecture notes. Graded automatically by the Dual-AI Mentor.
-                            </p>
-                          </div>
-
-                          {/* Code Editor Studio */}
-                          <div className="codeEditorStudio">
-                            <div className="codeEditorHeader">
-                              <div className="editorDots">
-                                <span className="editorDot" style={{ background: "#ef4444" }} />
-                                <span className="editorDot" style={{ background: "#f59e0b" }} />
-                                <span className="editorDot" style={{ background: "#10b981" }} />
-                              </div>
-                              <span style={{ fontFamily: "monospace", fontSize: "11.5px", color: "#94a3b8" }}>
-                                solution.tsx / solution.py
-                              </span>
-                              <span style={{ fontSize: "11px", color: "#2563eb", fontWeight: 700 }}>
-                                {submissionCode.length} chars
-                              </span>
-                            </div>
-                            <textarea
-                              rows={8}
-                              placeholder="// Paste your complete implementation code here...&#10;// Example:&#10;function optimizePipeline(data) { ... }"
-                              value={submissionCode}
-                              onChange={(e) => setSubmissionCode(e.target.value)}
-                              className="codeEditorTextarea"
-                            />
-                          </div>
-
-                          {/* Architectural Notes */}
-                          <div style={{ marginBottom: "20px" }}>
-                            <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "rgba(255,255,255,0.85)", marginBottom: "6px" }}>
-                              Architectural Approach & Design Rationale:
-                            </label>
-                            <textarea
-                              rows={3}
-                              placeholder="Explain your algorithmic strategy, trade-offs, state management, and edge-case handling..."
-                              value={approachNotes}
-                              onChange={(e) => setApproachNotes(e.target.value)}
-                              style={{
-                                width: "100%",
-                                background: "rgba(2, 21, 38, 0.85)",
-                                border: "1px solid rgba(37, 99, 235, 0.3)",
-                                borderRadius: "10px",
-                                padding: "12px 14px",
-                                color: "#fff",
-                                fontSize: "13.5px",
-                                outline: "none",
-                                boxSizing: "border-box",
-                                lineHeight: "1.5",
-                              }}
-                            />
-                          </div>
-
-                          {/* Repo & Demo Link Inputs */}
-                          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "16px", marginBottom: "24px" }}>
-                            <div>
-                              <label style={{ display: "block", fontSize: "12px", fontWeight: 700, color: "rgba(255,255,255,0.75)", marginBottom: "6px" }}>
-                                GitHub Repository URL (Optional):
-                              </label>
-                              <input
-                                type="url"
-                                placeholder="https://github.com/username/project"
-                                value={githubUrl}
-                                onChange={(e) => setGithubUrl(e.target.value)}
-                                style={{
-                                  width: "100%",
-                                  background: "rgba(2, 21, 38, 0.85)",
-                                  border: "1px solid rgba(37, 99, 235, 0.3)",
-                                  borderRadius: "10px",
-                                  padding: "11px 14px",
-                                  color: "#fff",
-                                  fontSize: "13.5px",
-                                  outline: "none",
-                                  boxSizing: "border-box",
-                                }}
-                              />
-                            </div>
-
-                            <div>
-                              <label style={{ display: "block", fontSize: "12px", fontWeight: 700, color: "rgba(255,255,255,0.75)", marginBottom: "6px" }}>
-                                Live Production Demo URL (Optional):
-                              </label>
-                              <input
-                                type="url"
-                                placeholder="https://my-project.vercel.app"
-                                value={liveUrl}
-                                onChange={(e) => setLiveUrl(e.target.value)}
-                                style={{
-                                  width: "100%",
-                                  background: "rgba(2, 21, 38, 0.85)",
-                                  border: "1px solid rgba(37, 99, 235, 0.3)",
-                                  borderRadius: "10px",
-                                  padding: "11px 14px",
-                                  color: "#fff",
-                                  fontSize: "13.5px",
-                                  outline: "none",
-                                  boxSizing: "border-box",
-                                }}
-                              />
-                            </div>
-                          </div>
-
-                          {/* Action Button */}
-                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "14px" }}>
-                            <button
-                              type="submit"
-                              disabled={submitting || evaluatingAssignment}
-                              style={{
-                                background: "linear-gradient(135deg, #38d399, #059669)",
-                                border: "none",
-                                borderRadius: "12px",
-                                color: "#021526",
-                                fontWeight: 800,
-                                fontSize: "14.5px",
-                                padding: "14px 32px",
-                                cursor: submitting ? "not-allowed" : "pointer",
-                                display: "inline-flex",
-                                alignItems: "center",
-                                gap: "9px",
-                                boxShadow: "0 6px 22px rgba(37, 99, 235, 0.35)",
-                                opacity: submitting ? 0.75 : 1,
-                                transition: "all 0.2s ease",
-                              }}
-                            >
-                              <Send size={16} />
-                              {evaluatingAssignment ? "Evaluating with Dual-AI Rubric..." : "Submit Solution for AI Evaluation"}
-                            </button>
-
-                            <div style={{ fontSize: "12px", color: "rgba(255, 255, 255, 0.55)", display: "flex", alignItems: "center", gap: "6px" }}>
-                              <ShieldCheck size={14} color="#2563eb" />
-                              Static Semantic Analysis • Zero Server Execution
-                            </div>
-                          </div>
-                        </form>
-                      </div>
-                    );
-                  })()
-                ) : (
-                  <div style={{ color: "#475569", padding: "40px", textAlign: "center", background: "#f8fafc", borderRadius: "16px", border: "1px dashed #cbd5e1" }}>
-                    <Sparkles size={28} color="#2563eb" style={{ margin: "0 auto 12px", display: "block" }} />
-                    <h4 style={{ color: "#0f172a", margin: "0 0 6px", fontWeight: 700 }}>No Assignment Active Yet</h4>
-                    <p style={{ margin: 0, fontSize: "13.5px", color: "#475569" }}>The teacher is preparing the synthesis milestone for this lecture.</p>
-                  </div>
-                )}
-              </div>
+              <StudentAssignmentWorkspace
+                lessonId={activeLesson?.id || "default_lesson"}
+                courseId={course.id}
+                studentId={currentUser?.id || "student_user"}
+                studentName={currentUser?.user_metadata?.full_name || currentUser?.email?.split("@")[0] || "Student"}
+                studentEmail={currentUser?.email || "student@climbup.dev"}
+                initialAssignment={liveAssignment || selectedAssignment || (course?.assignments ? course.assignments[0] : null)}
+                onSeekVideo={handleTimestampJump}
+                onSwitchTab={(tab) => setActiveTab(tab as TabType)}
+              />
             )}
 
             {/* 3. Server-Verified MCQs Practice Tab (Zero-Leakage Security) */}
@@ -2038,12 +1603,13 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                           onClick={loadLessonMCQs}
                           title="Generate fresh randomized questions"
                           style={{
-                            background: "rgba(255, 255, 255, 0.05)",
-                            border: "1px solid rgba(255, 255, 255, 0.12)",
-                            color: "#fff",
-                            padding: "6px 12px",
+                            background: "#f1f5f9",
+                            border: "1px solid #cbd5e1",
+                            color: "#1e293b",
+                            padding: "6px 14px",
                             borderRadius: "999px",
                             fontSize: "12px",
+                            fontWeight: 700,
                             cursor: "pointer",
                             display: "flex",
                             alignItems: "center",
@@ -2060,19 +1626,22 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                       {mcqQuizQuestions.map((q, i) => {
                         const isAnswered = mcqSelectedAnswers[q.id] !== undefined;
                         const isActive = activeQuizQuestionIdx === i;
-                        let extraStyle = "";
-                        if (quizSubmitted && mcqVerificationResult?.results) {
-                          const resItem = mcqVerificationResult.results[i];
-                          if (resItem?.is_correct) extraStyle = "border-color: #10b981; color: #10b981;";
-                          else extraStyle = "border-color: #ef4444; color: #ef4444;";
+                        const resItem = mcqVerificationResult?.results?.[i];
+                        let statusClass = "";
+                        if (quizSubmitted && resItem) {
+                          statusClass = resItem.is_correct ? "correct" : "wrong";
+                        } else if (isActive) {
+                          statusClass = "active";
+                        } else if (isAnswered) {
+                          statusClass = "answered";
                         }
+
                         return (
                           <button
                             key={q.id || i}
                             type="button"
                             onClick={() => setActiveQuizQuestionIdx(i)}
-                            className={`mcqStepDot ${isActive ? "active" : ""} ${isAnswered ? "answered" : ""}`}
-                            style={extraStyle ? { borderColor: extraStyle.includes("#10b981") ? "#10b981" : "#ef4444" } : undefined}
+                            className={`mcqStepDot ${isActive ? "active" : ""} ${statusClass}`}
                           >
                             {i + 1}
                           </button>
@@ -2140,16 +1709,16 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                           {/* Explanation Card if submitted */}
                           {quizSubmitted && resItem && (
                             <div style={{
-                              background: "rgba(16, 185, 129, 0.08)",
-                              border: "1px solid rgba(16, 185, 129, 0.35)",
+                              background: "#f0fdf4",
+                              border: "1px solid #86efac",
                               borderRadius: "14px",
                               padding: "20px 24px",
                               marginBottom: "24px",
                             }}>
-                              <div style={{ color: "#2563eb", fontWeight: 800, fontSize: "13.5px", marginBottom: "6px", display: "flex", alignItems: "center", gap: "6px" }}>
-                                <CheckCircle2 size={16} /> Pedagogical Rationale & Video Reference:
+                              <div style={{ color: "#15803d", fontWeight: 800, fontSize: "14px", marginBottom: "8px", display: "flex", alignItems: "center", gap: "7px" }}>
+                                <CheckCircle2 size={16} color="#15803d" /> Pedagogical Rationale & Video Reference:
                               </div>
-                              <p style={{ margin: "0 0 10px", fontSize: "13.5px", color: "rgba(255,255,255,0.9)", lineHeight: "1.6" }}>
+                              <p style={{ margin: "0 0 12px", fontSize: "14px", color: "#1f2937", lineHeight: "1.65" }}>
                                 {resItem.explanation}
                               </p>
                               {resItem.timestamp_ref && (
@@ -2157,100 +1726,117 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                                   type="button"
                                   onClick={() => handleTimestampJump(resItem.timestamp_ref, 60)}
                                   className="videoRevisitPill"
+                                  style={{
+                                    background: "#ffffff",
+                                    border: "1px solid #86efac",
+                                    color: "#15803d",
+                                    fontWeight: 700,
+                                  }}
                                 >
-                                  <Play size={12} fill="#2563eb" /> Jump to Video Explanation at [{resItem.timestamp_ref}] →
+                                  <Play size={12} fill="#15803d" /> Jump to Video Explanation at [{resItem.timestamp_ref}] →
                                 </button>
                               )}
                             </div>
                           )}
 
                           {/* Controls Row */}
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "14px", marginTop: "10px" }}>
+                            {/* Previous Question Button */}
                             <button
                               type="button"
                               disabled={activeQuizQuestionIdx === 0}
                               onClick={() => setActiveQuizQuestionIdx((prev) => Math.max(0, prev - 1))}
                               style={{
-                                background: "rgba(255, 255, 255, 0.08)",
-                                border: "1px solid rgba(255, 255, 255, 0.18)",
-                                color: "#fff",
+                                background: "#f1f5f9",
+                                border: "1.5px solid #cbd5e1",
+                                color: activeQuizQuestionIdx === 0 ? "#94a3b8" : "#1e293b",
                                 borderRadius: "10px",
-                                padding: "10px 20px",
+                                padding: "11px 22px",
                                 cursor: activeQuizQuestionIdx === 0 ? "not-allowed" : "pointer",
-                                opacity: activeQuizQuestionIdx === 0 ? 0.4 : 1,
-                                fontWeight: 600,
-                                fontSize: "13.5px",
-                              }}
-                            >
-                              Previous Question
-                            </button>
-
-                            {!quizSubmitted ? (
-                              <button
-                                type="button"
-                                onClick={handleVerifyQuiz}
-                                disabled={mcqVerifying || Object.keys(mcqSelectedAnswers).length === 0}
-                                style={{
-                                  background: "linear-gradient(135deg, #38d399, #059669)",
-                                  border: "none",
-                                  borderRadius: "10px",
-                                  color: "#021526",
-                                  fontWeight: 800,
-                                  fontSize: "14px",
-                                  padding: "11px 26px",
-                                  cursor: "pointer",
-                                  boxShadow: "0 4px 18px rgba(37, 99, 235, 0.35)",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: "8px",
-                                }}
-                              >
-                                {mcqVerifying ? <RefreshCw size={15} className="animate-spin" /> : <ShieldCheck size={16} />}
-                                {mcqVerifying ? "Verifying with Cloud AI..." : "Submit Test to AI Evaluator"}
-                              </button>
-                            ) : (
-                              <button
-                                type="button"
-                                onClick={loadLessonMCQs}
-                                style={{
-                                  background: "linear-gradient(135deg, #38d399, #059669)",
-                                  border: "none",
-                                  borderRadius: "10px",
-                                  color: "#021526",
-                                  fontWeight: 800,
-                                  fontSize: "14px",
-                                  padding: "11px 24px",
-                                  cursor: "pointer",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: "8px",
-                                }}
-                              >
-                                <RefreshCw size={15} /> Retake Randomized Quiz
-                              </button>
-                            )}
-
-                            <button
-                              type="button"
-                              disabled={activeQuizQuestionIdx === mcqQuizQuestions.length - 1}
-                              onClick={() => setActiveQuizQuestionIdx((prev) => Math.min(mcqQuizQuestions.length - 1, prev + 1))}
-                              style={{
-                                background: "rgba(255, 255, 255, 0.08)",
-                                border: "1px solid rgba(255, 255, 255, 0.18)",
-                                color: "#fff",
-                                borderRadius: "10px",
-                                padding: "10px 20px",
-                                cursor: activeQuizQuestionIdx === mcqQuizQuestions.length - 1 ? "not-allowed" : "pointer",
-                                opacity: activeQuizQuestionIdx === mcqQuizQuestions.length - 1 ? 0.4 : 1,
-                                fontWeight: 600,
-                                fontSize: "13.5px",
-                                display: "flex",
+                                opacity: activeQuizQuestionIdx === 0 ? 0.45 : 1,
+                                fontWeight: 700,
+                                fontSize: "14px",
+                                display: "inline-flex",
                                 alignItems: "center",
-                                gap: "6px",
+                                gap: "7px",
+                                transition: "all 0.15s ease",
                               }}
                             >
-                              Next Question <ChevronRight size={15} />
+                              <ChevronLeft size={16} /> Previous Question
                             </button>
+
+                            {/* Contextual Action: Next Question if not on last question; otherwise Submit (or Retake if submitted) */}
+                            <div>
+                              {activeQuizQuestionIdx < mcqQuizQuestions.length - 1 ? (
+                                <button
+                                  type="button"
+                                  onClick={() => setActiveQuizQuestionIdx((prev) => Math.min(mcqQuizQuestions.length - 1, prev + 1))}
+                                  style={{
+                                    background: "#2563eb",
+                                    border: "none",
+                                    color: "#ffffff",
+                                    borderRadius: "10px",
+                                    padding: "11px 24px",
+                                    cursor: "pointer",
+                                    fontWeight: 800,
+                                    fontSize: "14px",
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: "8px",
+                                    boxShadow: "0 4px 14px rgba(37, 99, 235, 0.3)",
+                                    transition: "all 0.15s ease",
+                                  }}
+                                >
+                                  Next Question <ChevronRight size={17} />
+                                </button>
+                              ) : !quizSubmitted ? (
+                                <button
+                                  type="button"
+                                  onClick={handleVerifyQuiz}
+                                  disabled={mcqVerifying || Object.keys(mcqSelectedAnswers).length === 0}
+                                  style={{
+                                    background: "linear-gradient(135deg, #10b981, #059669)",
+                                    border: "none",
+                                    borderRadius: "10px",
+                                    color: "#ffffff",
+                                    fontWeight: 800,
+                                    fontSize: "14px",
+                                    padding: "11px 26px",
+                                    cursor: mcqVerifying || Object.keys(mcqSelectedAnswers).length === 0 ? "not-allowed" : "pointer",
+                                    opacity: mcqVerifying || Object.keys(mcqSelectedAnswers).length === 0 ? 0.6 : 1,
+                                    boxShadow: "0 4px 16px rgba(16, 185, 129, 0.3)",
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: "8px",
+                                    transition: "all 0.2s ease",
+                                  }}
+                                >
+                                  {mcqVerifying ? <RefreshCw size={15} className="animate-spin" /> : <ShieldCheck size={16} />}
+                                  {mcqVerifying ? "Verifying with AI..." : `Submit Quiz (${Object.keys(mcqSelectedAnswers).length}/${mcqQuizQuestions.length} answered)`}
+                                </button>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={loadLessonMCQs}
+                                  style={{
+                                    background: "linear-gradient(135deg, #2563eb, #1d4ed8)",
+                                    border: "none",
+                                    borderRadius: "10px",
+                                    color: "#ffffff",
+                                    fontWeight: 800,
+                                    fontSize: "14px",
+                                    padding: "11px 22px",
+                                    cursor: "pointer",
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: "8px",
+                                    boxShadow: "0 4px 14px rgba(37, 99, 235, 0.25)",
+                                  }}
+                                >
+                                  <RefreshCw size={15} /> Retake Randomized Quiz
+                                </button>
+                              )}
+                            </div>
                           </div>
                         </div>
                       );
@@ -2272,6 +1858,28 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                         <p style={{ color: "#475569", fontSize: "14px", margin: "0 auto 24px", maxWidth: "480px" }}>
                           Your quiz was verified securely by the Cloud Run server. You can review each question and jump directly to relevant video timestamps above.
                         </p>
+
+                        <button
+                          type="button"
+                          onClick={loadLessonMCQs}
+                          style={{
+                            background: "linear-gradient(135deg, #2563eb, #1d4ed8)",
+                            border: "none",
+                            borderRadius: "10px",
+                            color: "#ffffff",
+                            fontWeight: 800,
+                            fontSize: "14px",
+                            padding: "12px 28px",
+                            cursor: "pointer",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "8px",
+                            boxShadow: "0 4px 14px rgba(37, 99, 235, 0.25)",
+                            margin: "0 auto",
+                          }}
+                        >
+                          <RefreshCw size={15} /> Retake Randomized Quiz
+                        </button>
                       </div>
                     )}
                   </div>

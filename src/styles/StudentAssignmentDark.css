@@ -1,0 +1,1042 @@
+/* ============================================================
+   CLIMBUP ENTERPRISE LIGHT & PREMIUM ASSIGNMENT WORKSPACE SYSTEM
+   Harmonized with PractiQ / ClimbUp Platform Design System
+   ============================================================ */
+
+.darkAssignmentRoot {
+  /* Website Brand Palette Tokens */
+  --da-bg-primary: #ffffff;
+  --da-bg-surface: #f8fafc;
+  --da-bg-surface-elevated: #ffffff;
+  --da-bg-input: #ffffff;
+  --da-border-subtle: #e2e8f0;
+  --da-border-focus: #bfdbfe;
+  --da-accent-blue: #2563eb;
+  --da-accent-blue-light: #eff6ff;
+  --da-accent-blue-border: #bfdbfe;
+  --da-accent-emerald: #059669;
+  --da-accent-emerald-light: #ecfdf5;
+  --da-accent-emerald-border: #a7f3d0;
+  --da-accent-amber: #d97706;
+  --da-accent-amber-light: #fffbeb;
+  --da-accent-amber-border: #fde68a;
+  --da-accent-purple: #7c3aed;
+  --da-accent-purple-light: #f5f3ff;
+  --da-accent-purple-border: #ddd6fe;
+  --da-text-primary: #0f172a;
+  --da-text-secondary: #475569;
+  --da-text-muted: #64748b;
+
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 32px 36px;
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.05);
+  color: var(--da-text-primary);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+@media (max-width: 768px) {
+  .darkAssignmentRoot {
+    padding: 22px 18px;
+    border-radius: 16px;
+  }
+}
+
+/* ── 1. HEADER & ENTERPRISE SCENARIO CARD ── */
+.darkAssignmentHeader {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding-bottom: 22px;
+  border-bottom: 1px solid #e2e8f0;
+  margin-bottom: 24px;
+}
+
+.darkBadgeRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.darkTagLive {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #1d4ed8;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  padding: 4px 12px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.darkTagLive .darkPulseDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #2563eb;
+  box-shadow: 0 0 8px rgba(37, 99, 235, 0.6);
+  animation: lightPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes lightPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.35; transform: scale(0.85); }
+}
+
+.darkTagAiRubric {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #6d28d9;
+  background: #f5f3ff;
+  border: 1px solid #ddd6fe;
+  padding: 4px 12px;
+  border-radius: 999px;
+}
+
+.darkAssignmentTitle {
+  font-size: 24px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+}
+
+@media (max-width: 640px) {
+  .darkAssignmentTitle {
+    font-size: 20px;
+  }
+}
+
+.darkMetaPills {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.darkDuePill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  padding: 7px 16px;
+  border-radius: 10px;
+}
+
+.darkMaxScoreBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 800;
+  color: #047857;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  padding: 7px 16px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.08);
+}
+
+/* Enterprise Scenario Context Box (Branded Light Blue Accent) */
+.darkScenarioCard {
+  position: relative;
+  z-index: 1;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-left: 5px solid #2563eb;
+  border-radius: 14px;
+  padding: 20px 24px;
+  margin-bottom: 28px;
+  box-shadow: 0 2px 10px rgba(37, 99, 235, 0.04);
+}
+
+.darkScenarioHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  font-weight: 800;
+  color: #1d4ed8;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin-bottom: 8px;
+}
+
+.darkScenarioBody {
+  font-size: 14.5px;
+  line-height: 1.7;
+  color: #1e3a8a;
+  margin: 0;
+  font-weight: 500;
+}
+
+/* ── 2. 3-TIER MILESTONE CHALLENGE TABS ── */
+.darkMilestonesSection {
+  position: relative;
+  z-index: 1;
+  margin-bottom: 30px;
+}
+
+.darkMilestonesHeaderRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.darkMilestonesTitle {
+  font-size: 12.5px;
+  font-weight: 800;
+  color: #2563eb;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.darkTierTabGroup {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #f1f5f9;
+  padding: 4px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  flex-wrap: wrap;
+}
+
+.darkTierTabBtn {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 7px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.darkTierTabBtn:hover {
+  color: #0f172a;
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.darkTierTabBtn.active {
+  background: #ffffff;
+  color: #1d4ed8;
+  border: 1px solid #cbd5e1;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
+}
+
+.darkTierTabBtn.active.basic {
+  background: #ecfdf5;
+  color: #047857;
+  border-color: #a7f3d0;
+}
+
+.darkTierTabBtn.active.intermediate {
+  background: #fffbeb;
+  color: #b45309;
+  border-color: #fde68a;
+}
+
+.darkTierTabBtn.active.advanced {
+  background: #f5f3ff;
+  color: #6d28d9;
+  border-color: #ddd6fe;
+}
+
+/* Problem Cards */
+.darkProblemCard {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 20px 24px;
+  margin-bottom: 12px;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.darkProblemCard:hover {
+  border-color: #93c5fd;
+  background: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+}
+
+.darkProblemTopRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.darkProblemTierBadge {
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 3px 10px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.darkProblemTierBadge.basic {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}
+
+.darkProblemTierBadge.intermediate {
+  background: #fffbeb;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+
+.darkProblemTierBadge.advanced {
+  background: #f5f3ff;
+  color: #6d28d9;
+  border: 1px solid #ddd6fe;
+}
+
+.darkProblemMarksBadge {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #1d4ed8;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  padding: 3px 10px;
+  border-radius: 6px;
+}
+
+.darkProblemStatement {
+  font-size: 14.5px;
+  line-height: 1.65;
+  color: #0f172a;
+  font-weight: 600;
+  margin: 0 0 14px;
+}
+
+/* Expected Deliverable Tag */
+.darkDeliverableTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #1d4ed8;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  padding: 6px 14px;
+  border-radius: 8px;
+  margin-bottom: 14px;
+  width: fit-content;
+}
+
+/* Acceptance Criteria Checklist */
+.darkCriteriaList {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.darkCriterionItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: #334155;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  padding: 8px 12px;
+  border-radius: 8px;
+  transition: all 0.15s ease;
+}
+
+.darkCriterionItem:hover {
+  border-color: #cbd5e1;
+  background: #fafafa;
+}
+
+.darkCriterionCheckIcon {
+  color: #10b981;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* ── 3. CODE SUBMISSION WORKSPACE ── */
+.darkWorkspaceContainer {
+  position: relative;
+  z-index: 1;
+  margin-top: 10px;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 26px;
+  margin-bottom: 20px;
+}
+
+.darkWorkspaceHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.darkWorkspaceTitle {
+  font-size: 13px;
+  font-weight: 800;
+  color: #2563eb;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+/* Monospace Code Editor Card (Polished IDE Styling) */
+.darkEditorCard {
+  background: #040914;
+  border: 1.5px solid rgba(37, 99, 235, 0.35);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.6);
+  margin-bottom: 18px;
+  position: relative;
+}
+
+.darkEditorCard.locked {
+  border-color: #10b981;
+}
+
+.darkEditorToolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: rgba(12, 22, 38, 0.95);
+  border-bottom: 1px solid rgba(37, 99, 235, 0.15);
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.darkEditorWindowDots {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.darkWindowDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.darkWindowDot.red { background: #ef4444; }
+.darkWindowDot.yellow { background: #f59e0b; }
+.darkWindowDot.green { background: #10b981; }
+
+.darkEditorFileName {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+  font-size: 12px;
+  color: #94a3b8;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.darkEditorActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.darkToolBtn {
+  background: rgba(59, 130, 246, 0.12);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  color: #60a5fa;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.15s ease;
+}
+
+.darkToolBtn:hover:not(:disabled) {
+  background: rgba(59, 130, 246, 0.25);
+  color: #93c5fd;
+}
+
+.darkToolBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.darkEditorTextarea {
+  width: 100%;
+  background: transparent;
+  color: #bfdbfe;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+  font-size: 13.5px;
+  line-height: 1.6;
+  border: none;
+  outline: none;
+  padding: 16px;
+  box-sizing: border-box;
+  resize: vertical;
+  min-height: 220px;
+  tab-size: 2;
+}
+
+.darkEditorTextarea:focus {
+  outline: none;
+}
+
+.darkEditorTextarea::placeholder {
+  color: rgba(147, 197, 253, 0.4);
+}
+
+.darkEditorLockedOverlay {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(16, 185, 129, 0.12);
+  border-top: 1px solid rgba(16, 185, 129, 0.25);
+  padding: 10px 16px;
+  font-size: 12.5px;
+  color: #34d399;
+  font-weight: 700;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Approach Notes Field (Light Theme Input) */
+.darkNotesContainer {
+  margin-bottom: 22px;
+}
+
+.darkNotesLabel {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.darkNotesLabel span.optional {
+  font-size: 11.5px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.darkNotesTextarea {
+  width: 100%;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 12px 14px;
+  color: #0f172a;
+  font-size: 13.5px;
+  line-height: 1.6;
+  outline: none;
+  box-sizing: border-box;
+  resize: vertical;
+  min-height: 80px;
+  transition: all 0.2s ease;
+}
+
+.darkNotesTextarea:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.darkNotesTextarea::placeholder {
+  color: #94a3b8;
+}
+
+/* Submit Action Button */
+.darkSubmitRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.darkSubmitBtn {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  border: none;
+  border-radius: 12px;
+  color: #ffffff;
+  font-size: 14.5px;
+  font-weight: 800;
+  padding: 13px 30px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.3);
+  transition: all 0.2s ease;
+}
+
+.darkSubmitBtn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.4);
+}
+
+.darkSubmitBtn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.darkSubmitBtn.evaluating {
+  background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+  animation: lightPulseGlow 2s infinite;
+}
+
+@keyframes lightPulseGlow {
+  0%, 100% { box-shadow: 0 0 15px rgba(37, 99, 235, 0.3); }
+  50% { box-shadow: 0 0 25px rgba(124, 58, 237, 0.45); }
+}
+
+.darkSecurityNote {
+  font-size: 12px;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ── 4. INSTANT AI GRADED REPORT CARD ── */
+.darkReportCardRoot {
+  position: relative;
+  z-index: 1;
+  background: #ffffff;
+  border: 1.5px solid #bfdbfe;
+  border-radius: 18px;
+  padding: 28px 32px;
+  margin-bottom: 30px;
+  box-shadow: 0 8px 30px rgba(37, 99, 235, 0.08);
+}
+
+@media (max-width: 768px) {
+  .darkReportCardRoot {
+    padding: 20px 16px;
+  }
+}
+
+.darkReportTopRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e2e8f0;
+  margin-bottom: 22px;
+}
+
+.darkReportScoreArea {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+/* Circular Score Gauge (Crisp on Light Surface) */
+.darkScoreGaugeWrapper {
+  position: relative;
+  width: 90px;
+  height: 90px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.darkScoreGaugeSvg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.darkGaugeTrack {
+  stroke: #e2e8f0;
+}
+
+.darkGaugeFill {
+  transition: stroke-dashoffset 1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.darkGaugeValue {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.darkGaugeNum {
+  font-size: 22px;
+  font-weight: 900;
+  color: #0f172a;
+  line-height: 1;
+}
+
+.darkGaugeMax {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+/* Verdict Pill */
+.darkVerdictPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  font-weight: 800;
+  padding: 6px 16px;
+  border-radius: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.darkVerdictPill.passed {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}
+
+.darkVerdictPill.needsRevision {
+  background: #fffbeb;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+
+.darkReportActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.darkVideoJumpBtn {
+  background: rgba(37, 99, 235, 0.08);
+  border: 1px solid #bfdbfe;
+  color: #1d4ed8;
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 7px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  transition: all 0.2s ease;
+}
+
+.darkVideoJumpBtn:hover {
+  background: rgba(37, 99, 235, 0.16);
+  transform: translateY(-1px);
+}
+
+/* 4-Pillar Rubric Breakdown Progress Bars */
+.darkPillarGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+.darkPillarCard {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 13px 15px;
+}
+
+.darkPillarHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 8px;
+}
+
+.darkPillarPts {
+  font-weight: 800;
+  color: #2563eb;
+}
+
+.darkPillarBarBg {
+  width: 100%;
+  height: 6px;
+  background: #e2e8f0;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.darkPillarBarFill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #2563eb, #3b82f6);
+  transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* AI Insights: Strengths & Mistakes */
+.darkInsightsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.darkInsightsBox {
+  border-radius: 12px;
+  padding: 15px 18px;
+}
+
+.darkInsightsBox.strengths {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+}
+
+.darkInsightsBox.mistakes {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+}
+
+.darkInsightsTitle {
+  font-size: 12.5px;
+  font-weight: 800;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.darkInsightsBox.strengths .darkInsightsTitle {
+  color: #166534;
+}
+
+.darkInsightsBox.mistakes .darkInsightsTitle {
+  color: #92400e;
+}
+
+.darkInsightsPillGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.darkStrengthPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: #15803d;
+  background: #ffffff;
+  border: 1px solid #86efac;
+  padding: 5px 12px;
+  border-radius: 999px;
+  line-height: 1.4;
+  box-shadow: 0 1px 3px rgba(16, 185, 129, 0.08);
+}
+
+.darkMistakePill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: #b45309;
+  background: #ffffff;
+  border: 1px solid #fcd34d;
+  padding: 5px 12px;
+  border-radius: 999px;
+  line-height: 1.4;
+  box-shadow: 0 1px 3px rgba(245, 158, 11, 0.08);
+}
+
+/* Lecture Revision Hint */
+.darkRevisionHintBox {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 12px;
+  padding: 14px 18px;
+  margin-bottom: 18px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.darkRevisionHintText {
+  font-size: 13.5px;
+  color: #1e40af;
+  line-height: 1.55;
+  margin: 0;
+  flex-grow: 1;
+}
+
+/* Ideal Solution Snippet */
+.darkIdealSolutionBox {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #cbd5e1;
+  background: #040914;
+  margin-bottom: 18px;
+}
+
+.darkIdealHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: #0f172a;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.darkIdealTitle {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #93c5fd;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.darkIdealCodePre {
+  margin: 0;
+  padding: 14px 18px;
+  font-size: 12.5px;
+  color: #bfdbfe;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  overflow-x: auto;
+  line-height: 1.6;
+}
+
+/* Teacher Executive Summary */
+.darkTeacherSummaryBox {
+  background: #f5f3ff;
+  border: 1px solid #ddd6fe;
+  border-left: 4px solid #7c3aed;
+  border-radius: 12px;
+  padding: 14px 18px;
+}
+
+.darkTeacherSummaryHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #6d28d9;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 5px;
+}
+
+.darkTeacherSummaryText {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: #4c1d95;
+  margin: 0;
+}
+
+/* ── 5. EMPTY STATE (404 / No Assignment Published) ── */
+.darkEmptyStateCard {
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 18px;
+  padding: 48px 24px;
+  text-align: center;
+  color: #64748b;
+  position: relative;
+  overflow: hidden;
+}
+
+.darkEmptyStateIconWrap {
+  width: 58px;
+  height: 58px;
+  margin: 0 auto 16px;
+  border-radius: 14px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  display: grid;
+  place-items: center;
+  color: #2563eb;
+  box-shadow: 0 2px 10px rgba(37, 99, 235, 0.08);
+}
+
+.darkEmptyStateTitle {
+  font-size: 19px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 8px;
+  letter-spacing: -0.01em;
+}
+
+.darkEmptyStateDesc {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: #475569;
+  max-width: 480px;
+  margin: 0 auto 20px;
+}
+
+.darkEmptyStateActions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
