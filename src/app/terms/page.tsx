@@ -8,7 +8,7 @@ export default function TermsPage() {
         <h1 style={{ fontSize: "2.5rem", marginBottom: "30px", fontWeight: 800, color: "#0f172a" }}>Terms of Service</h1>
         
         <p style={{ color: "#475569", lineHeight: 1.7, marginBottom: "30px" }}>
-          Welcome to PractiQ. By using our platform, you agree to these simple and transparent terms.
+          Welcome to PractQ. By using our platform, you agree to these simple and transparent terms.
         </p>
 
         <h3 style={{ color: "#1d4ed8", fontSize: "1.3rem", marginTop: "30px", fontWeight: 700 }}>1. Fair Usage Policy</h3>
@@ -23,7 +23,7 @@ export default function TermsPage() {
 
         <h3 style={{ color: "#1d4ed8", fontSize: "1.3rem", marginTop: "30px", fontWeight: 700 }}>3. Academic Integrity</h3>
         <p style={{ color: "#475569", lineHeight: 1.7 }}>
-          Our AI Study Assistant is designed to help you learn faster and smarter. It is not intended to do your homework for you or help you cheat on exams. Use PractiQ responsibly to boost your actual knowledge.
+          Our AI Study Assistant is designed to help you learn faster and smarter. It is not intended to do your homework for you or help you cheat on exams. Use PractQ responsibly to boost your actual knowledge.
         </p>
 
       </div>

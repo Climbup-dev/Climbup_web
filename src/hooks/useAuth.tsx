@@ -97,7 +97,7 @@ function getMetadataName(user: SupabaseUser): string {
     return name.trim();
   }
 
-  return user.email?.split("@")[0] || "PractiQ member";
+  return user.email?.split("@")[0] || "PractQ member";
 }
 
 function wait(ms: number) {

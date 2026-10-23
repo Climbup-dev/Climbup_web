@@ -743,7 +743,7 @@ export default function AuthModal({
           ? "Create your account"
           : mode === "forgot"
             ? "Forgot password"
-            : "Sign in to PractiQ";
+            : "Sign in to PractQ";
 
   const modalDescription =
     step === "otp"
@@ -781,7 +781,7 @@ export default function AuthModal({
             <div className="sidebar-content">
               <Image
                 src="/logo.png"
-                alt="PractiQ logo"
+                alt="PractQ logo"
                 width={80}
                 height={80}
                 priority
@@ -819,7 +819,7 @@ export default function AuthModal({
               <Image
                 className="auth-logo-image"
                 src="/logo.png"
-                alt="PractiQ logo"
+                alt="PractQ logo"
                 width={64}
                 height={64}
                 priority

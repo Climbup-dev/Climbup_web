@@ -605,7 +605,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
             Student Login Required
           </h2>
           <p style={{ color: "#475569", fontSize: "14.5px", lineHeight: "1.6", marginBottom: "26px" }}>
-            Course lectures, assignments, and interactive AI mentoring are reserved for registered PractiQ students. Please log in or sign up to continue.
+            Course lectures, assignments, and interactive AI mentoring are reserved for registered PractQ students. Please log in or sign up to continue.
           </p>
           <div style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap" }}>
             <button
@@ -1346,7 +1346,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                   {(resolvedVideo.type === "drive" || useDrivePlayer) && (
                     <div
                       className="classroomIframePopoutBlocker"
-                      title="PractiQ Protected Video"
+                      title="PractQ Protected Video"
                       onClick={(e) => {
                         e.stopPropagation();
                         e.preventDefault();

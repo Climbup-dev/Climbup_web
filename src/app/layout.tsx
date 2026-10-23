@@ -16,32 +16,32 @@ export const metadata: Metadata = {
     process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
   ),
   title: {
-    default: "PractiQ - Learn Tech Skills, Practice & Build",
-    template: "%s | PractiQ",
+    default: "PractQ - Learn Tech Skills, Practice & Build",
+    template: "%s | PractQ",
   },
   description:
     "Master in-demand tech skills with interactive video courses, practice quizzes, real-world projects, and instant AI guidance.",
-  applicationName: "PractiQ",
+  applicationName: "PractQ",
   keywords: [
     "online courses",
     "web development masterclass",
     "AI and machine learning",
     "system design and DSA",
     "coding assignments",
-    "PractiQ",
+    "PractQ",
   ],
   openGraph: {
-    title: "PractiQ - Learn Tech Skills, Practice & Build",
+    title: "PractQ - Learn Tech Skills, Practice & Build",
     description:
       "Master in-demand tech skills with interactive video courses, practice quizzes, real-world projects, and instant AI guidance.",
     type: "website",
-    siteName: "PractiQ",
+    siteName: "PractQ",
     images: [
       {
         url: "/logo.png",
         width: 1200,
         height: 630,
-        alt: "PractiQ Logo",
+        alt: "PractQ Logo",
       },
     ],
   },

@@ -45,7 +45,7 @@ export default function AuthPopupPage() {
     <main className="oauth-popup-status">
       <div className="oauth-popup-mark" aria-hidden>✓</div>
       <h1>Google sign-in complete</h1>
-      <p>Returning to PractiQ. You can safely close this window if it remains open.</p>
+      <p>Returning to PractQ. You can safely close this window if it remains open.</p>
       <button type="button" onClick={() => window.close()}>Close window</button>
     </main>
   );

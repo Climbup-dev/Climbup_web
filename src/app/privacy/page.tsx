@@ -25,7 +25,7 @@ export default function PrivacyPage() {
         
         <h3 style={{ color: "#1d4ed8", fontSize: "1.3rem", marginTop: "40px", fontWeight: 700 }}>1. The &quot;Your Data is Yours&quot; Promise (Data Ownership)</h3>
         <p style={{ color: "#475569", lineHeight: 1.7 }}>
-          You retain full ownership of any PDFs, assignments, or study materials you upload. PractiQ only processes these documents to generate your personalized study sessions. We do not sell your academic materials to third parties.
+          You retain full ownership of any PDFs, assignments, or study materials you upload. PractQ only processes these documents to generate your personalized study sessions. We do not sell your academic materials to third parties.
         </p>
 
         <h3 style={{ color: "#1d4ed8", fontSize: "1.3rem", marginTop: "30px", fontWeight: 700 }}>2. AI &amp; Privacy (No Public Training)</h3>
@@ -40,7 +40,7 @@ export default function PrivacyPage() {
 
         <h3 style={{ color: "#1d4ed8", fontSize: "1.3rem", marginTop: "30px", fontWeight: 700 }}>4. Secure Registration &amp; Private Saves</h3>
         <p style={{ color: "#475569", lineHeight: 1.7 }}>
-          When you register on PractiQ, your account credentials and personal details are safely encrypted. Any study materials, PDFs, or assignments you save privately remain visible <strong>only to you</strong>. We strictly enforce private boundaries so your personal workspace stays completely confidential.
+          When you register on PractQ, your account credentials and personal details are safely encrypted. Any study materials, PDFs, or assignments you save privately remain visible <strong>only to you</strong>. We strictly enforce private boundaries so your personal workspace stays completely confidential.
         </p>
 
         <h3 style={{ color: "#1d4ed8", fontSize: "1.3rem", marginTop: "30px", fontWeight: 700 }}>5. Transparent Data Collection</h3>

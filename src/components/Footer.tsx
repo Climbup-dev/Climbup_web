@@ -25,8 +25,8 @@ export default function Footer() {
         <div className="footerMainRow">
           <div className="footerBrand">
             <Link className="footerLogo" href="/" prefetch={false}>
-              <Image src="/logo-transparent.png" alt="PractiQ" width={34} height={34} />
-              <span>PractiQ</span>
+              <Image src="/logo-transparent.png" alt="PractQ" width={34} height={34} />
+              <span>PractQ</span>
             </Link>
             <p className="footerTagline">
               A free, non-profit learning initiative open to everyone. Let&apos;s grow together.
@@ -44,7 +44,7 @@ export default function Footer() {
 
         <div className="footerBottomRow">
           <p className="footerCopyright">
-            © {new Date().getFullYear()} PractiQ. All rights reserved.
+            © {new Date().getFullYear()} PractQ. All rights reserved.
           </p>
 
           <button
