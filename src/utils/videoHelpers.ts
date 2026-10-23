@@ -12,12 +12,14 @@ export interface VideoInfo {
   isDirectVideo: boolean;
   hlsUrl?: string;
   isHls?: boolean;
+  driveId?: string;
 }
 
-const DEFAULT_CLOUD_RUN_URL = "https://teacher-lecture-video-rag-28929614461.asia-south1.run.app";
-function getBackendBaseUrl(): string {
+export const DEFAULT_CLOUD_RUN_URL = "https://teacher-lecture-video-rag-28929614461.asia-south1.run.app";
+
+export function getBackendBaseUrl(): string {
   const envUrl = process.env.NEXT_PUBLIC_RAG_SERVER_URL || "";
-  if (envUrl && envUrl.includes("run.app")) {
+  if (envUrl && (envUrl.includes("run.app") || envUrl.includes("localhost") || envUrl.includes("127.0.0.1") || envUrl.startsWith("http"))) {
     return envUrl.replace(/\/$/, "");
   }
   return DEFAULT_CLOUD_RUN_URL;
@@ -85,7 +87,7 @@ export function getVideoTypeAndEmbedUrl(
     }
   }
 
-  // 2. Google Drive Links & Private Drive Storage (Streamed securely via backend byte-range proxy)
+  // 2. Google Drive Links & Private Drive Storage (Streamed securely via backend byte-range proxy & HLS)
   if (
     trimmed.includes("drive.google.com") ||
     trimmed.startsWith("gdrive:") ||
@@ -93,22 +95,24 @@ export function getVideoTypeAndEmbedUrl(
   ) {
     const driveId = extractGoogleDriveId(trimmed);
     if (driveId) {
-      const backendBase = getBackendBaseUrl();
-      const driveFallbackUrl = `https://drive.google.com/file/d/${driveId}/preview`;
+      const driveStreamFallback = `/api/stream/drive/${driveId}${tokenQuery}`;
       // Masked first-party streaming endpoint (Next.js server-side proxies to Cloud Run; hides backend URL from browser Network tab)
       if (lessonId) {
         return {
           type: "direct",
           embedUrl: `/api/lessons/${lessonId}/hls/master.m3u8${tokenQuery}`,
           hlsUrl: `/api/lessons/${lessonId}/hls/master.m3u8${tokenQuery}`,
-          fallbackUrl: driveFallbackUrl,
+          fallbackUrl: driveStreamFallback,
+          driveId: driveId,
           isDirectVideo: true,
           isHls: true,
         };
       }
       return {
         type: "direct",
-        embedUrl: `/api/stream/drive/${driveId}${tokenQuery}`,
+        embedUrl: driveStreamFallback,
+        fallbackUrl: driveStreamFallback,
+        driveId: driveId,
         isDirectVideo: true,
       };
     }
@@ -117,14 +121,14 @@ export function getVideoTypeAndEmbedUrl(
   // 3. Native Direct Video / Uploads
   if (trimmed.startsWith("/uploads/") || trimmed.startsWith("uploads/")) {
     if (lessonId) {
-        return {
-          type: "direct",
-          embedUrl: `/api/lessons/${lessonId}/hls/master.m3u8${tokenQuery}`,
-          hlsUrl: `/api/lessons/${lessonId}/hls/master.m3u8${tokenQuery}`,
-          isDirectVideo: true,
-          isHls: true,
-        };
-      }
+      return {
+        type: "direct",
+        embedUrl: `/api/lessons/${lessonId}/hls/master.m3u8${tokenQuery}`,
+        hlsUrl: `/api/lessons/${lessonId}/hls/master.m3u8${tokenQuery}`,
+        isDirectVideo: true,
+        isHls: true,
+      };
+    }
     const cleanPath = trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
     return {
       type: "direct",

@@ -52,7 +52,7 @@ import { Course, CourseLesson, CourseAssignment } from "@/types/courses";
 import { LectureChatbot } from "@/components/LectureChatbot";
 import StudentAssignmentWorkspace from "@/components/StudentAssignmentWorkspace";
 import { parseTimestampToSeconds } from "@/utils/ragHelpers";
-import { getVideoTypeAndEmbedUrl } from "@/utils/videoHelpers";
+import { getVideoTypeAndEmbedUrl, getBackendBaseUrl, extractGoogleDriveId } from "@/utils/videoHelpers";
 import Hls from "hls.js";
 import "@/styles/ClassroomTabs.css";
 
@@ -163,69 +163,93 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
     }
 
     async function initEncryptedHLS() {
-      // 1. Fetch short-lived signed stream token
+      const backendBase = getBackendBaseUrl();
+      // 1. Fetch short-lived signed stream token (with resilient proxy fallback)
       let token = authToken || "";
       try {
-        const res = await fetch(`/api/lessons/${lessonId}/stream-token`, {
+        let res = await fetch(`/api/lessons/${lessonId}/stream-token`, {
           method: "POST",
           headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
         });
+        if (!res.ok) {
+          // Direct fallback to backend server if internal Next.js proxy is unavailable
+          res = await fetch(`${backendBase}/api/lessons/${lessonId}/stream-token`, {
+            method: "POST",
+            headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
+          });
+        }
         if (res.ok) {
           const d = await res.json();
           if (d.signed_token) token = d.signed_token;
         }
       } catch (e) {
-        console.warn("Stream token notice:", e);
+        console.warn("[Stream Security] Proxy notice, attempting direct connection:", e);
+        try {
+          const directRes = await fetch(`${backendBase}/api/lessons/${lessonId}/stream-token`, {
+            method: "POST",
+            headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
+          });
+          if (directRes.ok) {
+            const d = await directRes.json();
+            if (d.signed_token) token = d.signed_token;
+          }
+        } catch (dirErr) {
+          console.warn("[Stream Security] Direct token fetch notice:", dirErr);
+        }
       }
 
       if (isDisposed || !videoRef.current) return;
 
-      const hlsUrl = `/api/lessons/${lessonId}/hls/master.m3u8${token ? `?st=${encodeURIComponent(token)}` : ""}`;
-      const progressiveFallback = `/api/lessons/${lessonId}/stream${token ? `?st=${encodeURIComponent(token)}` : ""}`;
+      const tokenParam = token ? `?st=${encodeURIComponent(token)}` : "";
+      const hlsUrl = `/api/lessons/${lessonId}/hls/master.m3u8${tokenParam}`;
+      const directHlsUrl = `${backendBase}/api/lessons/${lessonId}/hls/master.m3u8${tokenParam}`;
 
-      if (isDisposed || !videoRef.current) return;
-
+      // 2. High-security byte-range fallback directly to backend streaming proxy
       const fallbackToDirectStream = () => {
-        if (isDisposed) return;
-        if (activeLesson?.videoUrl && (activeLesson.videoUrl.includes("drive.google.com") || activeLesson.videoUrl.includes("drive/"))) {
-          console.info("[Video Player] Direct HLS stream unreachable, seamlessly switching to protected Google Drive player:", lessonId);
+        if (isDisposed || !videoRef.current) return;
+        const driveId = activeLesson?.videoUrl ? extractGoogleDriveId(activeLesson.videoUrl) : "";
+        if (driveId) {
+          console.info("[Video Security] Seamlessly engaging protected byte-range stream for Drive file:", driveId);
           if (hlsInstanceRef.current) {
             hlsInstanceRef.current.destroy();
             hlsInstanceRef.current = null;
           }
-          setUseDrivePlayer(true);
+          const streamUrl = `/api/stream/drive/${driveId}${tokenParam}`;
+          videoRef.current.src = streamUrl;
+          videoRef.current.load();
+          videoRef.current.play().catch(() => {});
           setVideoPlaybackError(false);
           return;
         }
-        if (hlsInstanceRef.current) {
-          try {
-            hlsInstanceRef.current.startLoad();
-          } catch {
-            setVideoPlaybackError(true);
+        if (activeLesson?.videoUrl && (activeLesson.videoUrl.endsWith(".mp4") || activeLesson.videoUrl.endsWith(".webm") || activeLesson.videoUrl.startsWith("/uploads/"))) {
+          if (hlsInstanceRef.current) {
+            hlsInstanceRef.current.destroy();
+            hlsInstanceRef.current = null;
           }
-        } else {
-          setVideoPlaybackError(true);
+          videoRef.current.src = activeLesson.videoUrl;
+          videoRef.current.load();
+          videoRef.current.play().catch(() => {});
+          setVideoPlaybackError(false);
+          return;
         }
+        setVideoPlaybackError(true);
       };
 
       if (Hls.isSupported()) {
+        let networkRetries = 0;
         const hls = new Hls({
           enableWorker: true,
           lowLatencyMode: false,
-          manifestLoadingTimeOut: 25000,
-          manifestLoadingMaxRetry: 4,
-          manifestLoadingRetryDelay: 1000,
+          manifestLoadingTimeOut: 30000,
+          manifestLoadingMaxRetry: 3,
+          manifestLoadingRetryDelay: 1500,
           levelLoadingMaxRetry: 4,
           fragLoadingMaxRetry: 6,
           fragLoadingTimeOut: 35000,
           maxBufferLength: 60,
           maxMaxBufferLength: 120,
           maxBufferSize: 60 * 1000 * 1000,
-          xhrSetup: (xhr, url) => {
-            if (token && !url.includes("st=") && !url.includes("token=")) {
-              const sep = url.includes("?") ? "&" : "?";
-              xhr.open("GET", `${url}${sep}st=${encodeURIComponent(token)}`, true);
-            }
+          xhrSetup: (xhr, _url) => {
             try {
               xhr.setRequestHeader("X-Climbup-Player", "amirshaikh320340");
               if (token) {
@@ -241,15 +265,15 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
         hls.loadSource(hlsUrl);
         hls.attachMedia(videoRef.current);
 
-        // Anti-stall watchdog: If HLS stream is blocked, 500 error, or stalled for > 5s, auto-fallback
+        // Resilient Watchdog: Allows Cloud Run time (18s) to transcode on-demand before engaging byte-range fallback
         const streamWatchdog = setTimeout(() => {
           if (isDisposed) return;
           const v = videoRef.current;
           if (v && (v.paused || v.readyState < 2) && v.currentTime === 0) {
-            console.warn("[Video Player] HLS stream stall detected (>5s), executing fallback.");
+            console.warn("[Video Player] HLS stream stall detected (>18s), engaging protected byte-range stream.");
             fallbackToDirectStream();
           }
-        }, 5000);
+        }, 18000);
 
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
           clearTimeout(streamWatchdog);
@@ -263,7 +287,14 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
             if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
               hls.recoverMediaError();
             } else if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
-              hls.startLoad();
+              networkRetries++;
+              if (networkRetries <= 2) {
+                console.info("[Video Security] Retrying stream directly via cloud backend...");
+                hls.loadSource(directHlsUrl);
+                hls.startLoad();
+              } else {
+                fallbackToDirectStream();
+              }
             } else {
               fallbackToDirectStream();
             }
@@ -1414,8 +1445,9 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                     id="classroom-video-player"
                     src={
                       (useDrivePlayer || resolvedVideo.type === "drive")
-                        ? (resolvedVideo.fallbackUrl ||
-                           (activeLesson.videoUrl ? `https://drive.google.com/file/d/${extractGoogleDriveId(activeLesson.videoUrl)}/preview` : resolvedVideo.embedUrl))
+                        ? (activeLesson.videoUrl && (activeLesson.videoUrl.includes("drive.google.com") || activeLesson.videoUrl.includes("drive/"))
+                            ? `https://drive.google.com/file/d/${extractGoogleDriveId(activeLesson.videoUrl)}/preview`
+                            : (resolvedVideo.fallbackUrl || resolvedVideo.embedUrl))
                         : resolvedVideo.embedUrl
                     }
                     title={activeLesson.title}
@@ -1424,7 +1456,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                     style={{ width: "100%", height: "100%", border: "none" }}
                   />
                   {/* Google Drive Popout blocker: intercepts clicks to the external 'Open in new window' button to prevent downloads */}
-                  {resolvedVideo.type === "drive" && (
+                  {(resolvedVideo.type === "drive" || useDrivePlayer) && (
                     <div
                       className="classroomIframePopoutBlocker"
                       title="PractiQ Protected Video"
