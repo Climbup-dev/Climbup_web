@@ -200,37 +200,22 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
 
       if (isDisposed || !videoRef.current) return;
 
-      const tokenParam = token ? `?st=${encodeURIComponent(token)}` : "";
+      const tokenParam = token ? `?st=${encodeURIComponent(token)}&pk=amirshaikh320340` : `?pk=amirshaikh320340`;
       const hlsUrl = `/api/lessons/${lessonId}/hls/master.m3u8${tokenParam}`;
       const directHlsUrl = `${backendBase}/api/lessons/${lessonId}/hls/master.m3u8${tokenParam}`;
 
-      // 2. High-security byte-range fallback directly to backend streaming proxy
+      // Anti-Piracy Enforcement: Under strict security, raw progressive MP4 fallback is DISABLED
+      // Browser extensions (FetchV, IDM, Video DownloadHelper) sniff .mp4 URLs to offer download buttons.
+      // Playback is strictly maintained via encrypted HLS blob streams.
       const fallbackToDirectStream = () => {
         if (isDisposed || !videoRef.current) return;
-        const driveId = activeLesson?.videoUrl ? extractGoogleDriveId(activeLesson.videoUrl) : "";
-        if (driveId) {
-          console.info("[Video Security] Seamlessly engaging protected byte-range stream for Drive file:", driveId);
-          if (hlsInstanceRef.current) {
-            hlsInstanceRef.current.destroy();
-            hlsInstanceRef.current = null;
-          }
-          const streamUrl = `/api/stream/drive/${driveId}${tokenParam}`;
-          videoRef.current.src = streamUrl;
-          videoRef.current.load();
-          videoRef.current.play().catch(() => {});
-          setVideoPlaybackError(false);
-          return;
-        }
-        if (activeLesson?.videoUrl && (activeLesson.videoUrl.endsWith(".mp4") || activeLesson.videoUrl.endsWith(".webm") || activeLesson.videoUrl.startsWith("/uploads/"))) {
-          if (hlsInstanceRef.current) {
-            hlsInstanceRef.current.destroy();
-            hlsInstanceRef.current = null;
-          }
-          videoRef.current.src = activeLesson.videoUrl;
-          videoRef.current.load();
-          videoRef.current.play().catch(() => {});
-          setVideoPlaybackError(false);
-          return;
+        console.warn("[Video Security] Direct progressive MP4 blocked to protect lecture copyright.");
+        if (hlsInstanceRef.current) {
+          try {
+            hlsInstanceRef.current.loadSource(directHlsUrl);
+            hlsInstanceRef.current.startLoad();
+            return;
+          } catch {}
         }
         setVideoPlaybackError(true);
       };
@@ -249,14 +234,26 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
           maxBufferLength: 60,
           maxMaxBufferLength: 120,
           maxBufferSize: 60 * 1000 * 1000,
-          xhrSetup: (xhr, _url) => {
-            try {
-              xhr.setRequestHeader("X-Climbup-Player", "amirshaikh320340");
-              if (token) {
-                xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+          xhrSetup: (xhr: XMLHttpRequest, _url: string) => {
+            const injectHeaders = () => {
+              try {
+                xhr.setRequestHeader("X-Climbup-Player", "amirshaikh320340");
+                if (token) {
+                  xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+                }
+              } catch (e) {
+                // Header state guarded
               }
-            } catch (err) {
-              console.warn("XHR header notice:", err);
+            };
+            if (xhr.readyState === XMLHttpRequest.OPENED || xhr.readyState === 1) {
+              injectHeaders();
+            } else {
+              const origOpen = xhr.open;
+              xhr.open = function (...args: any[]) {
+                const res = origOpen.apply(this, args as any);
+                injectHeaders();
+                return res;
+              };
             }
           },
         });
