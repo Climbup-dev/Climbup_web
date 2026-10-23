@@ -125,7 +125,7 @@
 
 .dashboardGreetingSub {
   margin: 0;
-  color: #475569;
+  color: #1e293b;
   font-size: 14.5px;
 }
 
@@ -182,7 +182,7 @@
 .filterTabBtn {
   background: transparent;
   border: none;
-  color: #475569;
+  color: #1e293b;
   padding: 6px 14px;
   border-radius: 7px;
   font-size: 13px;
@@ -208,7 +208,7 @@
   padding: 1px 6px;
   border-radius: 10px;
   background: #f1f5f9;
-  color: #475569;
+  color: #1e293b;
 }
 
 .filterTabBtn.active .tabCountBadge {
@@ -361,7 +361,7 @@
 
 .instructorNameText {
   font-size: 12px;
-  color: #475569;
+  color: #1e293b;
   font-weight: 500;
 }
 
@@ -404,7 +404,7 @@
   display: flex;
   justify-content: space-between;
   font-size: 12px;
-  color: #475569;
+  color: #1e293b;
   margin-bottom: 6px;
 }
 
@@ -465,7 +465,7 @@
 }
 
 .enrolledEmptyState p {
-  color: #475569;
+  color: #1e293b;
   font-size: 14px;
   margin: 0 0 18px;
 }

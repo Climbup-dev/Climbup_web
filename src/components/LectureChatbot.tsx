@@ -286,8 +286,8 @@ const StructuredMessageContent: React.FC<StructuredMessageContentProps> = ({
       return;
     }
 
-    // Heading
-    if (trimmed.startsWith('### ') || trimmed.startsWith('## ')) {
+    // Heading (supports #, ##, ###, ####, #####)
+    if (/^#{1,6}\s+/.test(trimmed)) {
       flushBullets(`line-${lineIdx}`);
       flushSuggestedQuestions(`line-${lineIdx}`);
       const headingText = trimmed.replace(/^#+\s*/, '');
@@ -296,9 +296,27 @@ const StructuredMessageContent: React.FC<StructuredMessageContentProps> = ({
       }
       elements.push(
         <h4 key={`heading-${lineIdx}`} className="chatHeading">
-          <Sparkles size={14} style={{ color: '#60a5fa' }} />
+          <Sparkles size={14} style={{ color: '#2563eb' }} />
           <span>{headingText}</span>
         </h4>
+      );
+      return;
+    }
+
+    // Caution / Curriculum Notice (starts with ⚠️ or Topic Not Discussed)
+    if (trimmed.startsWith('⚠️') || trimmed.includes('Topic Not Discussed')) {
+      flushBullets(`line-${lineIdx}`);
+      flushSuggestedQuestions(`line-${lineIdx}`);
+      elements.push(
+        <div key={`caution-${lineIdx}`} className="chatCautionCard">
+          <div className="chatCautionHeader">
+            <AlertTriangle size={15} color="#d97706" />
+            <span className="chatCautionBadge">Curriculum Scope Notice</span>
+          </div>
+          <div className="chatCautionBody">
+            {renderFormattedTokens(trimmed.replace(/^⚠️\s*/, ''))}
+          </div>
+        </div>
       );
       return;
     }

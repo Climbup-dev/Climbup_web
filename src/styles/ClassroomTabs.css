@@ -295,7 +295,7 @@
 
 .lessonHeaderMeta {
   font-size: 13px;
-  color: #475569;
+  color: #1e293b;
 }
 
 .markCompleteBtn {
@@ -375,7 +375,7 @@
   transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
   user-select: none;
   touch-action: manipulation;
-  -webkit-tap-highlight-color: #475569;
+  -webkit-tap-highlight-color: #1e293b;
   min-height: 40px;
 }
 
@@ -725,7 +725,7 @@
 
 .duePill {
   font-size: 13px;
-  color: #475569;
+  color: #1e293b;
   background: #f1f5f9;
   border: 1px solid #cbd5e1;
   padding: 7px 16px;

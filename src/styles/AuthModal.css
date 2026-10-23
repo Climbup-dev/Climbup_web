@@ -124,7 +124,7 @@
 }
 
 .sidebar-content p {
-  color: #94a3b8;
+  color: #334155;
   font-size: 15px;
   line-height: 1.6;
   max-width: 90%;
@@ -200,7 +200,7 @@
 
 .auth-description {
   font-size: 0.95rem;
-  color: #64748b;
+  color: #334155;
   margin-bottom: 24px;
   animation: form-switch-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -273,11 +273,11 @@
 }
 
 .auth-input::placeholder {
-  color: #94a3b8;
+  color: #334155;
 }
 
 .auth-input:hover:not(:disabled) {
-  border-color: #cbd5e1;
+  border-color: #334155;
   background: #ffffff;
 }
 
@@ -356,7 +356,7 @@
   align-items: center;
   gap: 12px;
   margin: 24px 0 16px;
-  color: #94a3b8;
+  color: #334155;
   font-size: 0.8rem;
   font-weight: 600;
 }
@@ -386,7 +386,7 @@
 
 .auth-terms {
   margin: 24px 0 0;
-  color: #64748b;
+  color: #334155;
   font-size: 0.75rem;
   line-height: 1.55;
   text-align: center;
@@ -502,6 +502,6 @@
 .auth-error, .auth-success { margin: 0 0 16px; padding: 12px 16px; border-radius: 12px; font-size: 0.9rem; font-weight: 600; line-height: 1.5; }
 .auth-error { color: #991b1b; background: #fef2f2; border: 1px solid #fecaca; }
 .auth-success { color: #065f46; background: #d1fae5; border: 1px solid #a7f3d0; }
-.auth-password-hint { margin: -4px 0 0; color: #64748b; font-size: 0.8rem; line-height: 1.45; }
+.auth-password-hint { margin: -4px 0 0; color: #334155; font-size: 0.8rem; line-height: 1.45; }
 .auth-otp-input { padding-left: 24px; font-size: 1.5rem; font-weight: 800; letter-spacing: 0.5rem; text-align: center; }
 .auth-otp-actions { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 8px; }
