@@ -222,10 +222,17 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
           maxMaxBufferLength: 120,
           maxBufferSize: 60 * 1000 * 1000,
           xhrSetup: (xhr, url) => {
-            xhr.setRequestHeader("X-Climbup-Player", "amirshaikh320340");
             if (token && !url.includes("st=") && !url.includes("token=")) {
               const sep = url.includes("?") ? "&" : "?";
               xhr.open("GET", `${url}${sep}st=${encodeURIComponent(token)}`, true);
+            }
+            try {
+              xhr.setRequestHeader("X-Climbup-Player", "amirshaikh320340");
+              if (token) {
+                xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+              }
+            } catch (err) {
+              console.warn("XHR header notice:", err);
             }
           },
         });
@@ -1405,7 +1412,12 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                   <iframe
                     key={activeLesson.id || activeLesson.videoUrl}
                     id="classroom-video-player"
-                    src={resolvedVideo.embedUrl}
+                    src={
+                      (useDrivePlayer || resolvedVideo.type === "drive")
+                        ? (resolvedVideo.fallbackUrl ||
+                           (activeLesson.videoUrl ? `https://drive.google.com/file/d/${extractGoogleDriveId(activeLesson.videoUrl)}/preview` : resolvedVideo.embedUrl))
+                        : resolvedVideo.embedUrl
+                    }
                     title={activeLesson.title}
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                     allowFullScreen

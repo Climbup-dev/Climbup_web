@@ -8,6 +8,7 @@ export type VideoType = "youtube" | "drive" | "direct";
 export interface VideoInfo {
   type: VideoType;
   embedUrl: string;
+  fallbackUrl?: string;
   isDirectVideo: boolean;
   hlsUrl?: string;
   isHls?: boolean;
@@ -100,6 +101,7 @@ export function getVideoTypeAndEmbedUrl(
           type: "direct",
           embedUrl: `/api/lessons/${lessonId}/hls/master.m3u8${tokenQuery}`,
           hlsUrl: `/api/lessons/${lessonId}/hls/master.m3u8${tokenQuery}`,
+          fallbackUrl: driveFallbackUrl,
           isDirectVideo: true,
           isHls: true,
         };
