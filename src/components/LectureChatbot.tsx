@@ -477,7 +477,16 @@ export const LectureChatbot: React.FC<LectureChatbotProps> = ({
   }, [loading]);
 
   useEffect(() => {
-    chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const scrollToBottom = () => {
+      chatBottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    };
+    scrollToBottom();
+    const timerA = setTimeout(scrollToBottom, 60);
+    const timerB = setTimeout(scrollToBottom, 200);
+    return () => {
+      clearTimeout(timerA);
+      clearTimeout(timerB);
+    };
   }, [messages, loading]);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -789,49 +798,21 @@ export const LectureChatbot: React.FC<LectureChatbotProps> = ({
           );
         })}
 
-        {/* High-Tech Thinking & Reasoning Hologram Box */}
+        {/* Sleek Modern AI Thinking Pill */}
         {loading && (
           <div className="thinkingCard" role="status" aria-live="polite">
-            <div className="thinkingHeader">
-              {/* Vibrant Glowing Brain Icon Wrapper */}
-              <div className="thinkingBrainIconWrapper">
-                <div className="thinkingPulseRing1" />
-                <div className="thinkingPulseRing2" />
-                <div className="thinkingPulseGlow" />
-                <Brain size={22} strokeWidth={2.4} className="thinkingBrainSvg" />
-              </div>
-
-              {/* Status and Audio Equalizer Visualizer */}
-              <div className="thinkingTitleContainer">
-                <div className="thinkingTitleRow">
-                  <span className="thinkingLabel">AI Reasoning & Retrieval</span>
-                  
-                  {/* Animated Audio Equalizer Bars showing live transcript scan */}
-                  <div className="audioEqualizerBars" title="Scanning audio transcript">
-                    <span className="audioBar bar1" />
-                    <span className="audioBar bar2" />
-                    <span className="audioBar bar3" />
-                    <span className="audioBar bar4" />
-                    <span className="audioBar bar5" />
-                  </div>
-
-                  <span className="thinkingDots" aria-hidden="true">
-                    <span className="thinkingDot" />
-                    <span className="thinkingDot" />
-                    <span className="thinkingDot" />
-                  </span>
-                </div>
-
-                {/* Dynamic Step Text */}
-                <p className="thinkingStepText">
-                  {THINKING_STEPS[thinkingIndex]}
-                </p>
-              </div>
+            <div className="thinkingBrainIconWrapper">
+              <Brain size={18} strokeWidth={2.4} className="thinkingBrainSvg" />
             </div>
-
-            {/* Glowing Shimmer Laser Beam */}
-            <div className="thinkingShimmerBar" aria-hidden="true">
-              <div className="thinkingShimmerBeam" />
+            <div className="thinkingTitleContainer">
+              <span className="thinkingLabel">AI Reasoning</span>
+              <span className="thinkingStepDivider">•</span>
+              <span className="thinkingStepText">{THINKING_STEPS[thinkingIndex]}</span>
+            </div>
+            <div className="thinkingDots" aria-hidden="true">
+              <span className="thinkingDot" />
+              <span className="thinkingDot" />
+              <span className="thinkingDot" />
             </div>
           </div>
         )}
