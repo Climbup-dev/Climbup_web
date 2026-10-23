@@ -1519,20 +1519,6 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                       </div>
 
                       <div className="mcqPillsGroup">
-                        <span style={{
-                          background: "rgba(37, 99, 235, 0.15)",
-                          color: "#2563eb",
-                          border: "1px solid rgba(37, 99, 235, 0.35)",
-                          padding: "6px 14px",
-                          borderRadius: "999px",
-                          fontSize: "12.5px",
-                          fontWeight: 700,
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "6px",
-                        }}>
-                          <Timer size={14} /> 10:00 Timer
-                        </span>
                         <button
                           type="button"
                           onClick={loadLessonMCQs}
