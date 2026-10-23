@@ -29,25 +29,28 @@ body.reading-mode .navbar {
 .brand {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   color: #0f172a;
-  font-size: 20px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
   text-decoration: none;
+  flex-shrink: 0;
+  min-width: max-content;
 }
 
 .brand span {
   color: #0f172a;
+  font-size: 22px;
   font-weight: 800;
   letter-spacing: -0.02em;
+  white-space: nowrap;
 }
 
 .brand img {
-  width: 34px;
-  height: 34px;
+  width: 44px;
+  height: 44px;
   object-fit: contain;
-  border-radius: 8px;
+  border-radius: 10px;
+  flex-shrink: 0;
+  filter: drop-shadow(0 2px 8px rgba(37, 99, 235, 0.15));
 }
 
 .navLinks {
@@ -90,7 +93,9 @@ body.reading-mode .navbar {
 .navActions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  flex-shrink: 0;
+  margin-left: auto;
 }
 
 .loginBtn, .signupBtn, .logoutBtn {
@@ -317,7 +322,10 @@ body.reading-mode .navbar {
 
 /* Mobile Viewport: show mobile menu button and hide desktop links */
 @media (max-width: 868px) {
-  .navbar { padding: 0 20px; }
+  .navbar { 
+    padding: 0 16px; 
+    gap: 12px;
+  }
   .navLinks { display: none; }
   .mobileMenuBtn {
     display: flex !important;
@@ -326,6 +334,40 @@ body.reading-mode .navbar {
   }
   .desktopAuthButtons {
     display: none;
+  }
+  .userNameText {
+    max-width: 90px;
+  }
+}
+
+@media (max-width: 580px) {
+  .navbar {
+    padding: 0 12px;
+    gap: 8px;
+  }
+  .brand {
+    gap: 8px;
+  }
+  .brand img {
+    width: 40px;
+    height: 40px;
+  }
+  .brand span {
+    font-size: 19px;
+  }
+  .profileTrigger {
+    padding: 2px;
+    min-height: 36px;
+    border-radius: 50%;
+    gap: 0;
+  }
+  .profileTrigger .userNameText,
+  .profileTrigger .profileChevron {
+    display: none;
+  }
+  .profileTrigger .userAvatar {
+    width: 34px;
+    height: 34px;
   }
 }
 

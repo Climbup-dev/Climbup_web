@@ -107,7 +107,7 @@ export default function Navbar({ onLogin, onSignUp }: NavbarProps) {
   return (
     <nav className="navbar" aria-label="Main navigation">
       <Link className="brand" href="/" aria-label="PractiQ Courses home">
-        <Image src="/logo-transparent.png" alt="PractiQ logo" width={38} height={38} priority />
+        <Image src="/logo-transparent.png" alt="PractiQ logo" width={48} height={48} priority />
         <span>PractiQ</span>
       </Link>
 
@@ -209,7 +209,7 @@ export default function Navbar({ onLogin, onSignUp }: NavbarProps) {
         <div className="mobileMenuOverlay">
           <div className="mobileMenuHeader">
             <Link className="brand mobileBrand" href="/" onClick={closeMenu}>
-              <Image src="/logo-transparent.png" alt="PractiQ logo" width={38} height={38} />
+              <Image src="/logo-transparent.png" alt="PractiQ logo" width={48} height={48} />
               <span>PractiQ</span>
             </Link>
             <button className="mobileMenuCloseBtn" onClick={closeMenu}>

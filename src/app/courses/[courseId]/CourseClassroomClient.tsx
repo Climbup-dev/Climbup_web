@@ -64,7 +64,14 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
 
   const [course, setCourse] = useState<Course | null>(null);
   const [activeLesson, setActiveLesson] = useState<CourseLesson | null>(null);
-  const [activeTab, setActiveTab] = useState<TabType>("syllabus");
+  const [activeTab, setActiveTab] = useState<TabType>("assignments");
+
+  // On mobile/tablet (<= 1024px), right sidebar is hidden so default to syllabus tab under video
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.innerWidth <= 1024) {
+      setActiveTab("syllabus");
+    }
+  }, []);
   const [sidebarTab, setSidebarTab] = useState<"curriculum" | "rag">("curriculum");
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoPlaybackError, setVideoPlaybackError] = useState(false);
@@ -1395,7 +1402,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
           <div className="classroomTabsWrapper">
             <div className="classroomTabsCapsule" role="tablist">
               {[
-                { id: "syllabus", label: "Syllabus", icon: ListVideo },
+                { id: "syllabus", label: "Syllabus", icon: ListVideo, mobileOnly: true },
                 { id: "assignments", label: "Assignment", icon: FileCheck2 },
                 { id: "mcqs", label: "MCQs Practice", icon: Award },
                 { id: "rag", label: "AI Mentor (RAG)", icon: Sparkles },
@@ -1411,7 +1418,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                     role="tab"
                     aria-selected={isActive}
                     onClick={() => setActiveTab(tab.id as TabType)}
-                    className={`classroomTabBtn ${isActive ? "active" : ""}`}
+                    className={`classroomTabBtn ${isActive ? "active" : ""} ${tab.mobileOnly ? "mobileOnlyTab" : ""}`}
                   >
                     <Icon size={16} /> {tab.label}
                   </button>
@@ -2048,59 +2055,49 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                   </div>
                 </div>
 
-                {/* Modules & Lessons Playlist */}
-                <div style={{ padding: "16px" }}>
+                {/* Modules & Continuous Lesson Playlist */}
+                <div>
                   {course.modules.map((mod, modIdx) => {
                     const completedInMod = mod.lessons.filter((l) => completedLessonIds.includes(l.id)).length;
-                    const modHasCurrent = mod.lessons.some((l) => l.id === activeLesson?.id);
 
                     return (
-                      <div
-                        key={mod.id}
-                        style={{
-                          marginBottom: "14px",
-                          border: `1px solid ${modHasCurrent ? "#bfdbfe" : "#e2e8f0"}`,
-                          borderRadius: "12px",
-                          background: "#ffffff",
-                          overflow: "hidden",
-                          boxShadow: modHasCurrent ? "0 2px 10px rgba(37, 99, 235, 0.06)" : "none",
-                        }}
-                      >
-                        {/* Module Header */}
+                      <div key={mod.id}>
+                        {/* Module Section Header */}
                         <div style={{
-                          padding: "10px 14px",
-                          background: modHasCurrent ? "#eff6ff" : "#f8fafc",
+                          padding: "10px 16px",
+                          background: "#f1f5f9",
                           borderBottom: "1px solid #e2e8f0",
+                          borderTop: modIdx > 0 ? "1px solid #e2e8f0" : "none",
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "space-between",
                           gap: "8px",
                         }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: "8px", minWidth: 0, flex: 1, overflow: "hidden" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px", minWidth: 0, flex: 1 }}>
                             <span style={{
                               fontSize: "11px",
                               fontWeight: 800,
                               textTransform: "uppercase",
                               letterSpacing: "0.06em",
-                              background: modHasCurrent ? "#2563eb" : "#e2e8f0",
-                              color: modHasCurrent ? "#ffffff" : "#475569",
-                              padding: "2px 8px",
-                              borderRadius: "6px",
+                              background: "#2563eb",
+                              color: "#ffffff",
+                              padding: "2px 7px",
+                              borderRadius: "4px",
                               flexShrink: 0,
                             }}>
                               Module {modIdx + 1}
                             </span>
-                            <span style={{ fontSize: "13.5px", fontWeight: 700, color: "#0f172a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                            <span style={{ fontSize: "13px", fontWeight: 700, color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                               {mod.title}
                             </span>
                           </div>
-                          <span style={{ fontSize: "12px", color: "#64748b", fontWeight: 500, flexShrink: 0 }}>
+                          <span style={{ fontSize: "11.5px", color: "#64748b", fontWeight: 600, flexShrink: 0 }}>
                             {completedInMod}/{mod.lessons.length} done
                           </span>
                         </div>
 
-                        {/* Lessons in Module (Uniform Fixed Height & Ellipsis) */}
-                        <div style={{ padding: "8px", display: "grid", gap: "6px" }}>
+                        {/* Continuous Lessons List */}
+                        <div>
                           {mod.lessons.map((lesson) => {
                             const isCurrent = activeLesson?.id === lesson.id;
                             const isDone = completedLessonIds.includes(lesson.id);
@@ -2127,20 +2124,19 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                                   alignItems: "center",
                                   justifyContent: "space-between",
                                   padding: "0 14px",
-                                  height: "50px",
-                                  minHeight: "50px",
-                                  maxHeight: "50px",
-                                  borderRadius: "10px",
-                                  background: isCurrent ? "#eff6ff" : "#ffffff",
-                                  border: `1.5px solid ${isCurrent ? "#2563eb" : "#f1f5f9"}`,
-                                  cursor: "pointer",
-                                  transition: "all 0.15s ease",
-                                  boxShadow: isCurrent ? "0 2px 8px rgba(37, 99, 235, 0.10)" : "none",
+                                  height: "48px",
                                   boxSizing: "border-box",
+                                  background: isCurrent ? "#eff6ff" : "#ffffff",
+                                  borderLeft: isCurrent ? "3.5px solid #2563eb" : "3.5px solid transparent",
+                                  borderBottom: "1px solid #f1f5f9",
+                                  cursor: "pointer",
+                                  transition: "background 0.15s ease",
+                                  gap: "10px",
                                 }}
                                 className="syllabusLessonItem"
                                 title={lesson.title}
                               >
+                                {/* Left icon / play indicator */}
                                 <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0, flex: 1, overflow: "hidden" }}>
                                   <span
                                     onClick={(e) => {
@@ -2153,19 +2149,33 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                                       display: "grid",
                                       placeItems: "center",
                                       flexShrink: 0,
+                                      width: "22px",
+                                      height: "22px",
                                     }}
                                   >
                                     {isDone ? (
-                                      <CheckCircle2 size={17} color="#2563eb" />
+                                      <CheckCircle2 size={18} color="#10b981" />
+                                    ) : isCurrent ? (
+                                      <div style={{
+                                        width: "22px",
+                                        height: "22px",
+                                        borderRadius: "50%",
+                                        background: "rgba(37, 99, 235, 0.15)",
+                                        display: "grid",
+                                        placeItems: "center",
+                                      }}>
+                                        <Play size={10} fill="#2563eb" color="#2563eb" />
+                                      </div>
                                     ) : (
-                                      <Circle size={17} color="#94a3b8" />
+                                      <Circle size={16} color="#94a3b8" />
                                     )}
                                   </span>
 
+                                  {/* Title (Single line with ellipsis) */}
                                   <span
                                     style={{
                                       fontSize: "13.5px",
-                                      color: isCurrent ? "#1d4ed8" : "#0f172a",
+                                      color: isCurrent ? "#1d4ed8" : "#1e293b",
                                       fontWeight: isCurrent ? 700 : 500,
                                       whiteSpace: "nowrap",
                                       overflow: "hidden",
@@ -2176,30 +2186,25 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                                   >
                                     {lesson.title}
                                   </span>
-
-                                  {isCurrent && (
-                                    <span
-                                      style={{
-                                        fontSize: "10px",
-                                        fontWeight: 800,
-                                        color: "#2563eb",
-                                        background: "rgba(37, 99, 235, 0.12)",
-                                        padding: "2px 7px",
-                                        borderRadius: "999px",
-                                        display: "inline-flex",
-                                        alignItems: "center",
-                                        gap: "3px",
-                                        flexShrink: 0,
-                                      }}
-                                    >
-                                      <Play size={8} fill="#2563eb" /> Playing
-                                    </span>
-                                  )}
                                 </div>
 
-                                <div style={{ display: "flex", alignItems: "center", gap: "5px", flexShrink: 0, marginLeft: "10px" }}>
-                                  <Clock size={12} color="#94a3b8" />
-                                  <span style={{ fontSize: "12px", color: isCurrent ? "#2563eb" : "#64748b", fontWeight: isCurrent ? 600 : 400, whiteSpace: "nowrap" }}>
+                                {/* Right: Duration Badge (Always visible on mobile) */}
+                                <div style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "4px",
+                                  flexShrink: 0,
+                                  background: isCurrent ? "rgba(37, 99, 235, 0.12)" : "#f1f5f9",
+                                  padding: "3px 8px",
+                                  borderRadius: "6px",
+                                }}>
+                                  <Clock size={11} color={isCurrent ? "#2563eb" : "#64748b"} />
+                                  <span style={{
+                                    fontSize: "11.5px",
+                                    color: isCurrent ? "#2563eb" : "#475569",
+                                    fontWeight: isCurrent ? 700 : 600,
+                                    whiteSpace: "nowrap",
+                                  }}>
                                     {lesson.duration}
                                   </span>
                                 </div>
