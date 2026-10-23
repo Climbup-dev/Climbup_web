@@ -43,8 +43,8 @@ body {
 
 /* Global High-Contrast Readability System */
 h1, h2, h3, h4, h5, h6 {
-  color: #090d16 !important;
-  font-weight: 800 !important;
+  color: #090d16;
+  font-weight: 800;
   letter-spacing: -0.025em;
 }
 
@@ -54,8 +54,8 @@ p {
 }
 
 b, strong {
-  color: #090d16 !important;
-  font-weight: 800 !important;
+  color: #090d16;
+  font-weight: 800;
 }
 
 button,
