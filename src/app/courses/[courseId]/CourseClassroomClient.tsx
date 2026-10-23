@@ -6,6 +6,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { 
   Play, 
+  Pause,
+  Volume2,
+  VolumeX,
+  Maximize,
+  Minimize,
+  RotateCcw,
   CheckCircle2, 
   Circle, 
   Clock, 
@@ -74,7 +80,117 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
   }, []);
   const [sidebarTab, setSidebarTab] = useState<"curriculum" | "rag">("curriculum");
   const videoRef = useRef<HTMLVideoElement>(null);
+  const videoContainerRef = useRef<HTMLDivElement>(null);
   const [videoPlaybackError, setVideoPlaybackError] = useState(false);
+
+  // Custom Video Player Controls State & Effective Playback Speed (1x, 1.5x, 2x, etc.)
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [bufferedTime, setBufferedTime] = useState(0);
+  const [playbackSpeed, setPlaybackSpeed] = useState(1);
+  const [isSpeedMenuOpen, setIsSpeedMenuOpen] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  const [volume, setVolume] = useState(1);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showControls, setShowControls] = useState(true);
+  const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const speedMenuRef = useRef<HTMLDivElement | null>(null);
+
+  const SPEED_OPTIONS = [0.75, 1, 1.25, 1.5, 1.75, 2];
+
+  const handleSpeedChange = (speed: number) => {
+    if (videoRef.current) {
+      videoRef.current.playbackRate = speed;
+    }
+    setPlaybackSpeed(speed);
+    setIsSpeedMenuOpen(false);
+  };
+
+  const togglePlay = () => {
+    if (!videoRef.current) return;
+    if (videoRef.current.paused) {
+      videoRef.current.play().catch(() => {});
+    } else {
+      videoRef.current.pause();
+    }
+  };
+
+  const toggleMute = () => {
+    if (!videoRef.current) return;
+    const nextMuted = !isMuted;
+    videoRef.current.muted = nextMuted;
+    setIsMuted(nextMuted);
+  };
+
+  const handleVolumeChange = (newVol: number) => {
+    if (!videoRef.current) return;
+    videoRef.current.volume = newVol;
+    setVolume(newVol);
+    if (newVol === 0) {
+      videoRef.current.muted = true;
+      setIsMuted(true);
+    } else if (isMuted) {
+      videoRef.current.muted = false;
+      setIsMuted(false);
+    }
+  };
+
+  const skipTime = (seconds: number) => {
+    if (!videoRef.current) return;
+    const target = Math.max(0, Math.min(duration || 0, videoRef.current.currentTime + seconds));
+    videoRef.current.currentTime = target;
+    setCurrentTime(target);
+  };
+
+  const toggleFullscreen = () => {
+    const container = videoContainerRef.current;
+    if (!container) return;
+    if (!document.fullscreenElement) {
+      container.requestFullscreen().catch(() => {});
+    } else {
+      document.exitFullscreen().catch(() => {});
+    }
+  };
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (speedMenuRef.current && !speedMenuRef.current.contains(e.target as Node)) {
+        setIsSpeedMenuOpen(false);
+      }
+    };
+    if (isSpeedMenuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isSpeedMenuOpen]);
+
+  const resetControlsTimeout = () => {
+    setShowControls(true);
+    if (controlsTimeoutRef.current) {
+      clearTimeout(controlsTimeoutRef.current);
+    }
+    if (isPlaying && !isSpeedMenuOpen) {
+      controlsTimeoutRef.current = setTimeout(() => {
+        setShowControls(false);
+      }, 2500);
+    }
+  };
+
+  const formatVideoTime = (secs: number) => {
+    if (isNaN(secs) || secs < 0) return "0:00";
+    const m = Math.floor(secs / 60);
+    const s = Math.floor(secs % 60);
+    return `${m}:${s < 10 ? "0" : ""}${s}`;
+  };
   // Subtle, Non-Distracting Anti-Piracy Watermark (Drifts gently every 14s)
   const [watermarkPos, setWatermarkPos] = useState({ top: "6%", left: "5%" });
   useEffect(() => {
@@ -1239,11 +1355,18 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
         {/* Left Column: Video Player + Tabs */}
         <div className="classroomMainColumn">
           
-          {/* Video Player Container (Protected with anti-download restrictions) */}
+          {/* Video Player Container (Protected with custom sleek controls and DRM) */}
           <div
-            className="classroomVideoContainer" style={{ background: "#000" }}
+            ref={videoContainerRef}
+            className="classroomVideoContainer"
+            style={{ background: "#000" }}
             onContextMenu={(e) => e.preventDefault()}
             onDragStart={(e) => e.preventDefault()}
+            onMouseMove={resetControlsTimeout}
+            onMouseLeave={() => {
+              if (isPlaying && !isSpeedMenuOpen) setShowControls(false);
+            }}
+            onClick={() => resetControlsTimeout()}
           >
             {activeLesson?.videoUrl ? (
               (resolvedVideo.isDirectVideo && !useDrivePlayer) ? (
@@ -1277,16 +1400,43 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                     key={activeLesson?.id ? `${activeLesson.id}_${authToken ? "auth" : "anon"}` : (activeLesson?.videoUrl || "player")}
                     ref={videoRef}
                     id="classroom-video-player-html5"
-                    controls
                     autoPlay
-                    controlsList="nodownload"
                     disablePictureInPicture
                     disableRemotePlayback
                     onContextMenu={(e) => e.preventDefault()}
                     onDragStart={(e) => e.preventDefault()}
                     playsInline
                     preload="auto"
-                    onCanPlay={() => setVideoPlaybackError(false)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      togglePlay();
+                      resetControlsTimeout();
+                    }}
+                    onPlay={() => setIsPlaying(true)}
+                    onPause={() => setIsPlaying(false)}
+                    onTimeUpdate={() => {
+                      if (videoRef.current) {
+                        setCurrentTime(videoRef.current.currentTime);
+                        if (videoRef.current.buffered.length > 0) {
+                          setBufferedTime(videoRef.current.buffered.end(videoRef.current.buffered.length - 1));
+                        }
+                      }
+                    }}
+                    onLoadedMetadata={() => {
+                      if (videoRef.current) {
+                        setDuration(videoRef.current.duration || 0);
+                        videoRef.current.playbackRate = playbackSpeed;
+                        videoRef.current.volume = volume;
+                        videoRef.current.muted = isMuted;
+                      }
+                      setVideoPlaybackError(false);
+                    }}
+                    onCanPlay={() => {
+                      if (videoRef.current) {
+                        videoRef.current.playbackRate = playbackSpeed;
+                      }
+                      setVideoPlaybackError(false);
+                    }}
                     onLoadedData={() => setVideoPlaybackError(false)}
                     onError={(e) => {
                       const err = e.currentTarget.error;
@@ -1294,8 +1444,156 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                         setVideoPlaybackError(true);
                       }
                     }}
-                    style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
+                    style={{ width: "100%", height: "100%", objectFit: "contain", display: "block", cursor: "pointer" }}
                   />
+
+                  {/* Central Play Button Overlay when paused */}
+                  {!isPlaying && !videoPlaybackError && (
+                    <button
+                      type="button"
+                      className="customPlayerCenterPlay"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        togglePlay();
+                        resetControlsTimeout();
+                      }}
+                      aria-label="Play video"
+                    >
+                      <Play size={32} fill="#ffffff" color="#ffffff" style={{ marginLeft: "4px" }} />
+                    </button>
+                  )}
+
+                  {/* Custom Sleek Video Controls Bar */}
+                  <div
+                    className={`customPlayerOverlay ${showControls || !isPlaying || isSpeedMenuOpen ? "visible" : "hidden"}`}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {/* Scrubber / Progress Bar */}
+                    <div
+                      className="customPlayerProgressContainer"
+                      onClick={(e) => {
+                        if (!videoRef.current || !duration) return;
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+                        const targetTime = ratio * duration;
+                        videoRef.current.currentTime = targetTime;
+                        setCurrentTime(targetTime);
+                      }}
+                    >
+                      <div className="customPlayerProgressTrack">
+                        {/* Buffered Buffer Bar */}
+                        <div
+                          className="customPlayerProgressBuffered"
+                          style={{ width: `${duration > 0 ? (bufferedTime / duration) * 100 : 0}%` }}
+                        />
+                        {/* Played Progress Bar */}
+                        <div
+                          className="customPlayerProgressPlayed"
+                          style={{ width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%` }}
+                        />
+                        {/* Scrubber Thumb */}
+                        <div
+                          className="customPlayerProgressThumb"
+                          style={{ left: `${duration > 0 ? (currentTime / duration) * 100 : 0}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Bottom Controls Bar Row */}
+                    <div className="customPlayerControlsRow">
+                      {/* Left: Play/Pause, 10s Rewind, Volume & Time */}
+                      <div className="customPlayerControlsLeft">
+                        <button
+                          type="button"
+                          className="customPlayerBtn"
+                          onClick={togglePlay}
+                          aria-label={isPlaying ? "Pause" : "Play"}
+                          title={isPlaying ? "Pause" : "Play"}
+                        >
+                          {isPlaying ? <Pause size={20} /> : <Play size={20} fill="currentColor" />}
+                        </button>
+
+                        <button
+                          type="button"
+                          className="customPlayerBtn"
+                          onClick={() => skipTime(-10)}
+                          aria-label="Rewind 10 seconds"
+                          title="Rewind 10s"
+                        >
+                          <RotateCcw size={18} />
+                        </button>
+
+                        <div className="customPlayerVolumeWrapper">
+                          <button
+                            type="button"
+                            className="customPlayerBtn"
+                            onClick={toggleMute}
+                            aria-label={isMuted || volume === 0 ? "Unmute" : "Mute"}
+                            title={isMuted || volume === 0 ? "Unmute" : "Mute"}
+                          >
+                            {isMuted || volume === 0 ? <VolumeX size={20} /> : <Volume2 size={20} />}
+                          </button>
+                          <input
+                            type="range"
+                            min="0"
+                            max="1"
+                            step="0.05"
+                            value={isMuted ? 0 : volume}
+                            onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
+                            className="customPlayerVolumeSlider"
+                            aria-label="Volume slider"
+                          />
+                        </div>
+
+                        <span className="customPlayerTime">
+                          {formatVideoTime(currentTime)} / {formatVideoTime(duration)}
+                        </span>
+                      </div>
+
+                      {/* Right: Playback Speed (2x, 1.5x, etc.) & Fullscreen */}
+                      <div className="customPlayerControlsRight">
+                        {/* Speed Menu Popover */}
+                        <div className="customPlayerSpeedWrapper" ref={speedMenuRef}>
+                          <button
+                            type="button"
+                            className="customPlayerSpeedBtn"
+                            onClick={() => setIsSpeedMenuOpen(!isSpeedMenuOpen)}
+                            aria-label="Playback speed"
+                            title="Playback Speed"
+                          >
+                            <span>{playbackSpeed === 1 ? "1x" : `${playbackSpeed}x`}</span>
+                          </button>
+
+                          {isSpeedMenuOpen && (
+                            <div className="customPlayerSpeedDropdown">
+                              <div className="customPlayerSpeedHeader">Speed</div>
+                              {SPEED_OPTIONS.map((speed) => (
+                                <button
+                                  key={speed}
+                                  type="button"
+                                  className={`customPlayerSpeedOption ${playbackSpeed === speed ? "active" : ""}`}
+                                  onClick={() => handleSpeedChange(speed)}
+                                >
+                                  <span>{speed === 1 ? "Normal (1x)" : `${speed}x`}</span>
+                                  {playbackSpeed === speed && <Check size={14} />}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                        <button
+                          type="button"
+                          className="customPlayerBtn"
+                          onClick={toggleFullscreen}
+                          aria-label={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+                          title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+                        >
+                          {isFullscreen ? <Minimize size={20} /> : <Maximize size={20} />}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                   {videoPlaybackError && (
                     <div className="classroomVideoErrorOverlay">
                       <p style={{ margin: "0 0 10px", fontSize: "14px", fontWeight: 600 }}>Video playback interrupted or format unsupported.</p>
