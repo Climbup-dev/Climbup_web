@@ -30,7 +30,8 @@ import {
   ChevronLeft,
   AlertTriangle,
   ShieldCheck,
-  Zap
+  Zap,
+  ListVideo
 } from "lucide-react";
 
 import Navbar from "@/components/Navbar";
@@ -65,7 +66,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
 
   const [course, setCourse] = useState<Course | null>(null);
   const [activeLesson, setActiveLesson] = useState<CourseLesson | null>(null);
-  const [activeTab, setActiveTab] = useState<TabType>("assignments");
+  const [activeTab, setActiveTab] = useState<TabType>("syllabus");
   const [sidebarTab, setSidebarTab] = useState<"curriculum" | "rag">("curriculum");
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoPlaybackError, setVideoPlaybackError] = useState(false);
@@ -1506,34 +1507,18 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                 Duration: {activeLesson?.duration} • Instructor: {course.instructor.name}
               </span>
             </div>
-
-            <button
-              type="button"
-              onClick={() => activeLesson && handleToggleLesson(activeLesson.id)}
-              className={`markCompleteBtn ${activeLesson && completedLessonIds.includes(activeLesson.id) ? "completed" : "pending"}`}
-            >
-              {activeLesson && completedLessonIds.includes(activeLesson.id) ? (
-                <>
-                  <CheckCircle2 size={16} color="#2563eb" /> Completed
-                </>
-              ) : (
-                <>
-                  <Circle size={16} /> Mark as Complete
-                </>
-              )}
-            </button>
           </div>
 
           {/* ── COURSE ACTIVITY TABS (Unified Mobile & Desktop Activity Tabs) ── */}
           <div className="classroomTabsWrapper">
             <div className="classroomTabsCapsule" role="tablist">
               {[
+                { id: "syllabus", label: "Syllabus", icon: ListVideo },
                 { id: "assignments", label: "Assignment", icon: FileCheck2 },
                 { id: "mcqs", label: "MCQs Practice", icon: Award },
                 { id: "rag", label: "AI Mentor (RAG)", icon: Sparkles },
                 { id: "overview", label: "Overview", icon: BrainCircuit },
                 { id: "resources", label: "Resources", icon: FolderDown },
-                { id: "syllabus", label: "Syllabus", icon: FileCheck2, mobileOnly: true },
               ].map((tab) => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
@@ -1544,7 +1529,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                     role="tab"
                     aria-selected={isActive}
                     onClick={() => setActiveTab(tab.id as TabType)}
-                    className={`classroomTabBtn ${isActive ? "active" : ""} ${tab.mobileOnly ? "mobileOnlyTab" : ""}`}
+                    className={`classroomTabBtn ${isActive ? "active" : ""}`}
                   >
                     <Icon size={16} /> {tab.label}
                   </button>
@@ -2149,28 +2134,234 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
               </div>
             )}
 
-            {/* 7. Syllabus Tab (Mobile Unified Classroom View) */}
+            {/* 7. Syllabus Tab (Website Theme-Matched Course Playlist) */}
             {activeTab === "syllabus" && (
-              <div style={{
-                background: "linear-gradient(180deg, rgba(13, 22, 38, 0.85) 0%, rgba(9, 15, 28, 0.95) 100%)",
-                border: "1px solid rgba(37, 99, 235, 0.22)",
-                borderRadius: "18px",
+              <div className="tabContentFadeIn" style={{
+                background: "#ffffff",
+                border: "1px solid #e2e8f0",
+                borderRadius: "16px",
                 overflow: "hidden",
-                boxShadow: "0 14px 40px rgba(0, 0, 0, 0.35)",
+                boxShadow: "0 4px 20px rgba(15, 23, 42, 0.04)",
               }}>
+                {/* Header Bar */}
                 <div style={{
                   padding: "16px 20px",
-                  borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
-                  fontWeight: 700,
-                  fontSize: "15px",
-                  color: "#2563eb",
+                  background: "linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%)",
+                  borderBottom: "1px solid #e2e8f0",
                   display: "flex",
                   alignItems: "center",
-                  gap: "8px"
+                  justifyContent: "space-between",
+                  flexWrap: "wrap",
+                  gap: "12px",
                 }}>
-                  <FileCheck2 size={16} /> Course Syllabus & Lessons Playlist
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <div style={{
+                      width: "34px",
+                      height: "34px",
+                      borderRadius: "10px",
+                      background: "#eff6ff",
+                      border: "1px solid #bfdbfe",
+                      display: "grid",
+                      placeItems: "center",
+                      color: "#2563eb",
+                    }}>
+                      <ListVideo size={18} />
+                    </div>
+                    <div>
+                      <h3 style={{ fontSize: "16px", fontWeight: 800, color: "#0f172a", margin: 0 }}>
+                        Course Syllabus & Video Playlist
+                      </h3>
+                      <p style={{ fontSize: "12.5px", color: "#64748b", margin: 0 }}>
+                        {course.modules?.length || 0} Modules • {totalLessonsCount} Lectures • {completedLessonIds.length} Completed
+                      </p>
+                    </div>
+                  </div>
+
+                  <div style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "10px",
+                    background: "#ffffff",
+                    padding: "6px 14px",
+                    borderRadius: "999px",
+                    border: "1px solid #e2e8f0",
+                  }}>
+                    <span style={{ fontSize: "12px", fontWeight: 700, color: "#2563eb" }}>
+                      {progressPercent}% Complete
+                    </span>
+                    <div style={{ width: "60px", height: "6px", background: "#e2e8f0", borderRadius: "99px", overflow: "hidden" }}>
+                      <div style={{ width: `${progressPercent}%`, height: "100%", background: "#2563eb" }} />
+                    </div>
+                  </div>
                 </div>
-                {renderCurriculumList()}
+
+                {/* Modules & Lessons Playlist */}
+                <div style={{ padding: "16px" }}>
+                  {course.modules.map((mod, modIdx) => {
+                    const completedInMod = mod.lessons.filter((l) => completedLessonIds.includes(l.id)).length;
+                    const modHasCurrent = mod.lessons.some((l) => l.id === activeLesson?.id);
+
+                    return (
+                      <div
+                        key={mod.id}
+                        style={{
+                          marginBottom: "14px",
+                          border: `1px solid ${modHasCurrent ? "#bfdbfe" : "#e2e8f0"}`,
+                          borderRadius: "12px",
+                          background: "#ffffff",
+                          overflow: "hidden",
+                          boxShadow: modHasCurrent ? "0 2px 10px rgba(37, 99, 235, 0.06)" : "none",
+                        }}
+                      >
+                        {/* Module Header */}
+                        <div style={{
+                          padding: "12px 16px",
+                          background: modHasCurrent ? "#eff6ff" : "#f8fafc",
+                          borderBottom: "1px solid #e2e8f0",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          flexWrap: "wrap",
+                          gap: "8px",
+                        }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <span style={{
+                              fontSize: "11px",
+                              fontWeight: 800,
+                              textTransform: "uppercase",
+                              letterSpacing: "0.06em",
+                              background: modHasCurrent ? "#2563eb" : "#e2e8f0",
+                              color: modHasCurrent ? "#ffffff" : "#475569",
+                              padding: "2px 8px",
+                              borderRadius: "6px",
+                            }}>
+                              Module {modIdx + 1}
+                            </span>
+                            <span style={{ fontSize: "14px", fontWeight: 700, color: "#0f172a" }}>
+                              {mod.title}
+                            </span>
+                          </div>
+                          <span style={{ fontSize: "12px", color: "#64748b", fontWeight: 500 }}>
+                            {completedInMod}/{mod.lessons.length} done
+                          </span>
+                        </div>
+
+                        {/* Lessons in Module */}
+                        <div style={{ padding: "8px", display: "grid", gap: "6px" }}>
+                          {mod.lessons.map((lesson, lessonIdx) => {
+                            const isCurrent = activeLesson?.id === lesson.id;
+                            const isDone = completedLessonIds.includes(lesson.id);
+
+                            return (
+                              <div
+                                key={lesson.id}
+                                onClick={() => {
+                                  setActiveLesson(lesson);
+                                  setVideoPlaybackError(false);
+                                  setUseDrivePlayer(false);
+                                  if (typeof window !== "undefined" && window.innerWidth <= 1024) {
+                                    window.scrollTo({ top: 0, behavior: "smooth" });
+                                  }
+                                  setTimeout(() => {
+                                    if (videoRef.current) {
+                                      videoRef.current.load();
+                                      videoRef.current.play().catch(() => {});
+                                    }
+                                  }, 100);
+                                }}
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "space-between",
+                                  padding: "10px 14px",
+                                  borderRadius: "10px",
+                                  background: isCurrent ? "#eff6ff" : "#ffffff",
+                                  border: `1.5px solid ${isCurrent ? "#2563eb" : "#f1f5f9"}`,
+                                  cursor: "pointer",
+                                  transition: "all 0.18s ease",
+                                  boxShadow: isCurrent ? "0 2px 8px rgba(37, 99, 235, 0.12)" : "none",
+                                }}
+                                className="syllabusLessonItem"
+                              >
+                                <div style={{ display: "flex", alignItems: "center", gap: "12px", minWidth: 0, flex: 1 }}>
+                                  <span
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleToggleLesson(lesson.id);
+                                    }}
+                                    title={isDone ? "Mark as incomplete" : "Mark as completed"}
+                                    style={{
+                                      cursor: "pointer",
+                                      display: "grid",
+                                      placeItems: "center",
+                                      flexShrink: 0,
+                                      transition: "transform 0.15s ease",
+                                    }}
+                                  >
+                                    {isDone ? (
+                                      <CheckCircle2 size={18} color="#2563eb" />
+                                    ) : (
+                                      <Circle size={18} color="#94a3b8" />
+                                    )}
+                                  </span>
+
+                                  <div style={{ minWidth: 0, flex: 1 }}>
+                                    <div style={{
+                                      fontSize: "13.5px",
+                                      color: isCurrent ? "#1d4ed8" : "#0f172a",
+                                      fontWeight: isCurrent ? 700 : 500,
+                                      display: "flex",
+                                      alignItems: "center",
+                                      gap: "8px",
+                                      flexWrap: "wrap",
+                                    }}>
+                                      <span style={{
+                                        color: isCurrent ? "#2563eb" : "#94a3b8",
+                                        fontSize: "12px",
+                                        fontWeight: 600,
+                                      }}>
+                                        {lessonIdx + 1}.
+                                      </span>
+                                      <span style={{
+                                        overflow: "hidden",
+                                        textOverflow: "ellipsis",
+                                        whiteSpace: "normal",
+                                      }}>
+                                        {lesson.title}
+                                      </span>
+                                      {isCurrent && (
+                                        <span style={{
+                                          fontSize: "10.5px",
+                                          fontWeight: 800,
+                                          color: "#2563eb",
+                                          background: "rgba(37, 99, 235, 0.12)",
+                                          padding: "2px 8px",
+                                          borderRadius: "999px",
+                                          display: "inline-flex",
+                                          alignItems: "center",
+                                          gap: "4px",
+                                        }}>
+                                          <Play size={10} fill="#2563eb" /> Playing Now
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0, marginLeft: "10px" }}>
+                                  <Clock size={12} color="#94a3b8" />
+                                  <span style={{ fontSize: "12px", color: isCurrent ? "#2563eb" : "#64748b", fontWeight: isCurrent ? 600 : 400 }}>
+                                    {lesson.duration}
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             )}
 

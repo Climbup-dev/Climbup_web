@@ -504,22 +504,12 @@
   /* On mobile and tablet, hide separate desktop sidebar;
      its contents (Syllabus and AI Tutor) are unified in the activity tabs! */
   .classroomSidebarColumn {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  display: flex;
-  flex-direction: column;
-  height: calc(100vh - 120px);
-  position: sticky;
-  top: 72px;
-  overflow: hidden;
-  border-radius: 18px;
-  margin: 16px 16px 16px 0;
-  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.05);
-}
+    display: none !important;
+  }
 
-  /* Show Syllabus & AI Tutor as tabs directly below the video on mobile */
-  .classroomTabBtn.mobileOnlyTab {
-    display: inline-flex;
+  .syllabusLessonItem:hover {
+    background: #f8fafc !important;
+    border-color: #cbd5e1 !important;
   }
 
   .classroomTabsCapsule {
