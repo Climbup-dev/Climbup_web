@@ -2025,55 +2025,26 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                 overflow: "hidden",
                 boxShadow: "0 4px 20px rgba(15, 23, 42, 0.04)",
               }}>
-                {/* Header Bar */}
+                {/* Header Bar: Only Completion Progress Bar */}
                 <div style={{
-                  padding: "16px 20px",
-                  background: "linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%)",
+                  padding: "12px 18px",
+                  background: "#f8fafc",
                   borderBottom: "1px solid #e2e8f0",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
-                  flexWrap: "wrap",
-                  gap: "12px",
+                  gap: "14px",
                 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                    <div style={{
-                      width: "34px",
-                      height: "34px",
-                      borderRadius: "10px",
-                      background: "#eff6ff",
-                      border: "1px solid #bfdbfe",
-                      display: "grid",
-                      placeItems: "center",
-                      color: "#2563eb",
-                    }}>
-                      <ListVideo size={18} />
-                    </div>
-                    <div>
-                      <h3 style={{ fontSize: "16px", fontWeight: 800, color: "#0f172a", margin: 0 }}>
-                        Course Syllabus & Video Playlist
-                      </h3>
-                      <p style={{ fontSize: "12.5px", color: "#64748b", margin: 0 }}>
-                        {course.modules?.length || 0} Modules • {totalLessonsCount} Lectures • {completedLessonIds.length} Completed
-                      </p>
-                    </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", fontWeight: 700, color: "#334155" }}>
+                    <span>Course Progress:</span>
+                    <span style={{ color: "#2563eb", fontWeight: 800 }}>{progressPercent}%</span>
+                    <span style={{ fontSize: "11.5px", color: "#64748b", fontWeight: 500 }}>
+                      ({completedLessonIds.length}/{totalLessonsCount} completed)
+                    </span>
                   </div>
 
-                  <div style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "10px",
-                    background: "#ffffff",
-                    padding: "6px 14px",
-                    borderRadius: "999px",
-                    border: "1px solid #e2e8f0",
-                  }}>
-                    <span style={{ fontSize: "12px", fontWeight: 700, color: "#2563eb" }}>
-                      {progressPercent}% Complete
-                    </span>
-                    <div style={{ width: "60px", height: "6px", background: "#e2e8f0", borderRadius: "99px", overflow: "hidden" }}>
-                      <div style={{ width: `${progressPercent}%`, height: "100%", background: "#2563eb" }} />
-                    </div>
+                  <div style={{ flex: 1, maxWidth: "240px", height: "7px", background: "#e2e8f0", borderRadius: "999px", overflow: "hidden" }}>
+                    <div style={{ width: `${progressPercent}%`, height: "100%", background: "#2563eb", borderRadius: "999px", transition: "width 0.3s ease" }} />
                   </div>
                 </div>
 
@@ -2097,16 +2068,15 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                       >
                         {/* Module Header */}
                         <div style={{
-                          padding: "12px 16px",
+                          padding: "10px 14px",
                           background: modHasCurrent ? "#eff6ff" : "#f8fafc",
                           borderBottom: "1px solid #e2e8f0",
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "space-between",
-                          flexWrap: "wrap",
                           gap: "8px",
                         }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px", minWidth: 0, flex: 1, overflow: "hidden" }}>
                             <span style={{
                               fontSize: "11px",
                               fontWeight: 800,
@@ -2116,21 +2086,22 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                               color: modHasCurrent ? "#ffffff" : "#475569",
                               padding: "2px 8px",
                               borderRadius: "6px",
+                              flexShrink: 0,
                             }}>
                               Module {modIdx + 1}
                             </span>
-                            <span style={{ fontSize: "14px", fontWeight: 700, color: "#0f172a" }}>
+                            <span style={{ fontSize: "13.5px", fontWeight: 700, color: "#0f172a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                               {mod.title}
                             </span>
                           </div>
-                          <span style={{ fontSize: "12px", color: "#64748b", fontWeight: 500 }}>
+                          <span style={{ fontSize: "12px", color: "#64748b", fontWeight: 500, flexShrink: 0 }}>
                             {completedInMod}/{mod.lessons.length} done
                           </span>
                         </div>
 
-                        {/* Lessons in Module */}
+                        {/* Lessons in Module (Uniform Fixed Height & Ellipsis) */}
                         <div style={{ padding: "8px", display: "grid", gap: "6px" }}>
-                          {mod.lessons.map((lesson, lessonIdx) => {
+                          {mod.lessons.map((lesson) => {
                             const isCurrent = activeLesson?.id === lesson.id;
                             const isDone = completedLessonIds.includes(lesson.id);
 
@@ -2155,17 +2126,22 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                                   display: "flex",
                                   alignItems: "center",
                                   justifyContent: "space-between",
-                                  padding: "10px 14px",
+                                  padding: "0 14px",
+                                  height: "50px",
+                                  minHeight: "50px",
+                                  maxHeight: "50px",
                                   borderRadius: "10px",
                                   background: isCurrent ? "#eff6ff" : "#ffffff",
                                   border: `1.5px solid ${isCurrent ? "#2563eb" : "#f1f5f9"}`,
                                   cursor: "pointer",
-                                  transition: "all 0.18s ease",
-                                  boxShadow: isCurrent ? "0 2px 8px rgba(37, 99, 235, 0.12)" : "none",
+                                  transition: "all 0.15s ease",
+                                  boxShadow: isCurrent ? "0 2px 8px rgba(37, 99, 235, 0.10)" : "none",
+                                  boxSizing: "border-box",
                                 }}
                                 className="syllabusLessonItem"
+                                title={lesson.title}
                               >
-                                <div style={{ display: "flex", alignItems: "center", gap: "12px", minWidth: 0, flex: 1 }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0, flex: 1, overflow: "hidden" }}>
                                   <span
                                     onClick={(e) => {
                                       e.stopPropagation();
@@ -2177,62 +2153,53 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                                       display: "grid",
                                       placeItems: "center",
                                       flexShrink: 0,
-                                      transition: "transform 0.15s ease",
                                     }}
                                   >
                                     {isDone ? (
-                                      <CheckCircle2 size={18} color="#2563eb" />
+                                      <CheckCircle2 size={17} color="#2563eb" />
                                     ) : (
-                                      <Circle size={18} color="#94a3b8" />
+                                      <Circle size={17} color="#94a3b8" />
                                     )}
                                   </span>
 
-                                  <div style={{ minWidth: 0, flex: 1 }}>
-                                    <div style={{
+                                  <span
+                                    style={{
                                       fontSize: "13.5px",
                                       color: isCurrent ? "#1d4ed8" : "#0f172a",
                                       fontWeight: isCurrent ? 700 : 500,
-                                      display: "flex",
-                                      alignItems: "center",
-                                      gap: "8px",
-                                      flexWrap: "wrap",
-                                    }}>
-                                      <span style={{
-                                        color: isCurrent ? "#2563eb" : "#94a3b8",
-                                        fontSize: "12px",
-                                        fontWeight: 600,
-                                      }}>
-                                        {lessonIdx + 1}.
-                                      </span>
-                                      <span style={{
-                                        overflow: "hidden",
-                                        textOverflow: "ellipsis",
-                                        whiteSpace: "normal",
-                                      }}>
-                                        {lesson.title}
-                                      </span>
-                                      {isCurrent && (
-                                        <span style={{
-                                          fontSize: "10.5px",
-                                          fontWeight: 800,
-                                          color: "#2563eb",
-                                          background: "rgba(37, 99, 235, 0.12)",
-                                          padding: "2px 8px",
-                                          borderRadius: "999px",
-                                          display: "inline-flex",
-                                          alignItems: "center",
-                                          gap: "4px",
-                                        }}>
-                                          <Play size={10} fill="#2563eb" /> Playing Now
-                                        </span>
-                                      )}
-                                    </div>
-                                  </div>
+                                      whiteSpace: "nowrap",
+                                      overflow: "hidden",
+                                      textOverflow: "ellipsis",
+                                      flex: 1,
+                                      minWidth: 0,
+                                    }}
+                                  >
+                                    {lesson.title}
+                                  </span>
+
+                                  {isCurrent && (
+                                    <span
+                                      style={{
+                                        fontSize: "10px",
+                                        fontWeight: 800,
+                                        color: "#2563eb",
+                                        background: "rgba(37, 99, 235, 0.12)",
+                                        padding: "2px 7px",
+                                        borderRadius: "999px",
+                                        display: "inline-flex",
+                                        alignItems: "center",
+                                        gap: "3px",
+                                        flexShrink: 0,
+                                      }}
+                                    >
+                                      <Play size={8} fill="#2563eb" /> Playing
+                                    </span>
+                                  )}
                                 </div>
 
-                                <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0, marginLeft: "10px" }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: "5px", flexShrink: 0, marginLeft: "10px" }}>
                                   <Clock size={12} color="#94a3b8" />
-                                  <span style={{ fontSize: "12px", color: isCurrent ? "#2563eb" : "#64748b", fontWeight: isCurrent ? 600 : 400 }}>
+                                  <span style={{ fontSize: "12px", color: isCurrent ? "#2563eb" : "#64748b", fontWeight: isCurrent ? 600 : 400, whiteSpace: "nowrap" }}>
                                     {lesson.duration}
                                   </span>
                                 </div>
