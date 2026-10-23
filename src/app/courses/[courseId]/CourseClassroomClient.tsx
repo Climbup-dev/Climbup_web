@@ -186,8 +186,17 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
       if (isDisposed || !videoRef.current) return;
 
       const fallbackToDirectStream = () => {
-        if (isDisposed || !videoRef.current) return;
-        // Strictly prevent exposing raw unencrypted MP4 URLs in the DOM (blocks downloader extensions)
+        if (isDisposed) return;
+        if (activeLesson?.videoUrl && (activeLesson.videoUrl.includes("drive.google.com") || activeLesson.videoUrl.includes("drive/"))) {
+          console.info("[Video Player] Direct HLS stream unreachable, seamlessly switching to protected Google Drive player:", lessonId);
+          if (hlsInstanceRef.current) {
+            hlsInstanceRef.current.destroy();
+            hlsInstanceRef.current = null;
+          }
+          setUseDrivePlayer(true);
+          setVideoPlaybackError(false);
+          return;
+        }
         if (hlsInstanceRef.current) {
           try {
             hlsInstanceRef.current.startLoad();
@@ -225,7 +234,18 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
         hls.loadSource(hlsUrl);
         hls.attachMedia(videoRef.current);
 
+        // Anti-stall watchdog: If HLS stream is blocked, 500 error, or stalled for > 5s, auto-fallback
+        const streamWatchdog = setTimeout(() => {
+          if (isDisposed) return;
+          const v = videoRef.current;
+          if (v && (v.paused || v.readyState < 2) && v.currentTime === 0) {
+            console.warn("[Video Player] HLS stream stall detected (>5s), executing fallback.");
+            fallbackToDirectStream();
+          }
+        }, 5000);
+
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          clearTimeout(streamWatchdog);
           setVideoPlaybackError(false);
           videoRef.current?.play().catch(() => {});
         });
