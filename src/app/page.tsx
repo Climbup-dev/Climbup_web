@@ -10,16 +10,16 @@ const HeroSection = dynamic(() => import("@/components/HeroSection"), {
   ssr: false,
   loading: () => (
     <div 
-      style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "100%", minHeight: "100vh", backgroundColor: "#021526" }}
+      style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "100%", minHeight: "100vh", backgroundColor: "#f4f8fc" }}
     >
-      <div style={{ width: "40px", height: "40px", border: "3px solid rgba(59, 130, 246, 0.15)", borderTopColor: "#3b82f6", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
+      <div style={{ width: "42px", height: "42px", border: "3.5px solid rgba(37, 99, 235, 0.15)", borderTopColor: "#2563eb", borderRightColor: "#3b82f6", borderRadius: "50%", animation: "spin 0.85s linear infinite", willChange: "transform" }} />
     </div>
   ),
 });
 
 const HomeSections = dynamic(() => import("@/components/HomeSections"), {
   ssr: false,
-  loading: () => <div className="w-full bg-[#021526]" style={{ minHeight: "100vh" }} />,
+  loading: () => <div className="w-full bg-[#f4f8fc]" style={{ minHeight: "60vh" }} />,
 });
 
 export default function Page() {

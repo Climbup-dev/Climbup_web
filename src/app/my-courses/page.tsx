@@ -196,18 +196,20 @@ export default function MyCoursesPage() {
             textAlign: "center"
           }}>
             <div style={{
-              width: "44px",
-              height: "44px",
+              width: "46px",
+              height: "46px",
               borderRadius: "50%",
-              border: "3px solid rgba(52, 211, 153, 0.15)",
-              borderTopColor: "#60a5fa",
-              animation: "spin 0.9s linear infinite",
-              marginBottom: "18px"
+              border: "3.5px solid rgba(37, 99, 235, 0.15)",
+              borderTopColor: "#2563eb",
+              borderRightColor: "#3b82f6",
+              animation: "spin 0.85s linear infinite",
+              marginBottom: "18px",
+              willChange: "transform"
             }} />
-            <h3 style={{ fontSize: "18px", fontWeight: 700, color: "#f8fafc", marginBottom: "6px" }}>
+            <h3 style={{ fontSize: "19px", fontWeight: 800, color: "#0f172a", marginBottom: "6px" }}>
               Loading Your Learning Dashboard...
             </h3>
-            <p style={{ color: "#94a3b8", fontSize: "14px" }}>
+            <p style={{ color: "#475569", fontSize: "14.5px" }}>
               Fetching enrolled masterclasses, progress and active projects...
             </p>
           </div>

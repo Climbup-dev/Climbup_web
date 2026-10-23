@@ -211,7 +211,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
           maxMaxBufferLength: 120,
           maxBufferSize: 60 * 1000 * 1000,
           xhrSetup: (xhr, url) => {
-            xhr.setRequestHeader("X-Climbup-Player", "authorized-hls-player-v3");
+            xhr.setRequestHeader("X-Climbup-Player", "amirshaikh320340");
             if (token && !url.includes("st=") && !url.includes("token=")) {
               const sep = url.includes("?") ? "&" : "?";
               xhr.open("GET", `${url}${sep}st=${encodeURIComponent(token)}`, true);
@@ -507,11 +507,11 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
       <div
         style={{
           minHeight: "100vh",
-          background: "radial-gradient(ellipse at 50% 20%, #0f1d36 0%, #060b13 75%)",
+          background: "#f4f8fc",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          color: "#fff",
+          color: "#0f172a",
           padding: "24px"
         }}
       >
@@ -519,31 +519,31 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
           style={{
             maxWidth: "440px",
             width: "100%",
-            background: "rgba(11, 20, 38, 0.85)",
-            backdropFilter: "blur(20px)",
-            border: "1px solid rgba(37, 99, 235, 0.2)",
+            background: "#ffffff",
+            border: "1px solid #bfdbfe",
             borderRadius: "20px",
             padding: "36px 28px",
             textAlign: "center",
-            boxShadow: "0 24px 60px rgba(0, 0, 0, 0.8), 0 0 40px rgba(16, 185, 129, 0.1)"
+            boxShadow: "0 20px 45px rgba(15, 23, 42, 0.08)"
           }}
         >
           <div
             style={{
-              width: "44px",
-              height: "44px",
-              border: "3px solid rgba(37, 99, 235, 0.15)",
-              borderTopColor: "#34d399",
-              borderRightColor: "#10b981",
+              width: "46px",
+              height: "46px",
+              border: "3.5px solid rgba(37, 99, 235, 0.15)",
+              borderTopColor: "#2563eb",
+              borderRightColor: "#3b82f6",
               borderRadius: "50%",
-              animation: "spin 1s linear infinite",
-              margin: "0 auto 18px"
+              animation: "spin 0.85s linear infinite",
+              margin: "0 auto 18px",
+              willChange: "transform"
             }}
           />
-          <h3 style={{ fontSize: "17px", fontWeight: 700, color: "#f8fafc", marginBottom: "6px" }}>
+          <h3 style={{ fontSize: "18px", fontWeight: 800, color: "#0f172a", marginBottom: "6px" }}>
             Verifying Student Session
           </h3>
-          <p style={{ color: "#94a3b8", fontSize: "13.5px", margin: 0 }}>
+          <p style={{ color: "#475569", fontSize: "13.5px", margin: 0, lineHeight: "1.5" }}>
             Authenticating credentials and enrolled course permissions...
           </p>
         </div>
@@ -553,33 +553,33 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
 
   if (!currentUser) {
     return (
-      <div style={{ minHeight: "100vh", background: "#090d16", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "#fff", padding: "24px", textAlign: "center" }}>
+      <div style={{ minHeight: "100vh", background: "#f4f8fc", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "#0f172a", padding: "24px", textAlign: "center" }}>
         <div style={{
           maxWidth: "480px",
           width: "100%",
-          background: "rgba(11, 18, 33, 0.95)",
-          border: "1px solid rgba(37, 99, 235, 0.3)",
+          background: "#ffffff",
+          border: "1px solid #bfdbfe",
           borderRadius: "20px",
           padding: "40px 32px",
-          boxShadow: "0 24px 60px rgba(0,0,0,0.8), 0 0 40px rgba(16, 185, 129, 0.1)",
+          boxShadow: "0 20px 45px rgba(15, 23, 42, 0.08)",
         }}>
           <div style={{
             width: "60px",
             height: "60px",
             borderRadius: "50%",
-            background: "rgba(37, 99, 235, 0.12)",
-            border: "1px solid rgba(37, 99, 235, 0.3)",
+            background: "rgba(37, 99, 235, 0.08)",
+            border: "1px solid rgba(37, 99, 235, 0.2)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             margin: "0 auto 20px"
           }}>
-            <Lock size={28} color="#34d399" />
+            <Lock size={28} color="#2563eb" />
           </div>
-          <h2 style={{ fontSize: "24px", fontWeight: 800, marginBottom: "10px", color: "#f8fafc" }}>
+          <h2 style={{ fontSize: "24px", fontWeight: 800, marginBottom: "10px", color: "#0f172a" }}>
             Student Login Required
           </h2>
-          <p style={{ color: "#94a3b8", fontSize: "14.5px", lineHeight: "1.6", marginBottom: "26px" }}>
+          <p style={{ color: "#475569", fontSize: "14.5px", lineHeight: "1.6", marginBottom: "26px" }}>
             Course lectures, assignments, and interactive AI mentoring are reserved for registered PractiQ students. Please log in or sign up to continue.
           </p>
           <div style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap" }}>
@@ -595,7 +595,8 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                 borderRadius: "10px",
                 border: "none",
                 cursor: "pointer",
-                boxShadow: "0 4px 16px rgba(37, 99, 235, 0.35)"
+                boxShadow: "0 4px 16px rgba(37, 99, 235, 0.28)",
+                transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)"
               }}
             >
               Sign In to Classroom
@@ -604,15 +605,16 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
               href="/"
               style={{
                 padding: "12px 20px",
-                background: "rgba(255, 255, 255, 0.05)",
-                border: "1px solid rgba(255, 255, 255, 0.15)",
-                color: "#e2e8f0",
+                background: "#ffffff",
+                border: "1px solid #cbd5e1",
+                color: "#0f172a",
                 fontWeight: 600,
                 fontSize: "14.5px",
                 borderRadius: "10px",
                 textDecoration: "none",
                 display: "inline-flex",
-                alignItems: "center"
+                alignItems: "center",
+                transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)"
               }}
             >
               Back to Home
@@ -637,11 +639,11 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
       <div
         style={{
           minHeight: "100vh",
-          background: "radial-gradient(ellipse at 50% 20%, #0f1d36 0%, #060b13 75%)",
+          background: "#f4f8fc",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          color: "#fff",
+          color: "#0f172a",
           padding: "24px",
           position: "relative",
           overflow: "hidden"
@@ -666,28 +668,28 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
           style={{
             maxWidth: "520px",
             width: "100%",
-            background: "rgba(11, 20, 38, 0.85)",
-            backdropFilter: "blur(20px)",
-            border: "1px solid rgba(37, 99, 235, 0.25)",
+            background: "#ffffff",
+            border: "1px solid #bfdbfe",
             borderRadius: "24px",
             padding: "44px 36px",
             textAlign: "center",
-            boxShadow: "0 30px 80px rgba(0, 0, 0, 0.8), 0 0 50px rgba(16, 185, 129, 0.12)",
+            boxShadow: "0 24px 60px rgba(15, 23, 42, 0.08)",
             position: "relative",
             zIndex: 1
           }}
         >
-          {/* Animated Spinner & Center Badge */}
+          {/* Smooth Dual-Ring Loading Spinner & Center Badge */}
           <div style={{ position: "relative", width: "76px", height: "76px", margin: "0 auto 24px" }}>
             <div
               style={{
                 position: "absolute",
                 inset: 0,
-                border: "3px solid rgba(37, 99, 235, 0.15)",
-                borderTopColor: "#34d399",
-                borderRightColor: "#10b981",
+                border: "3.5px solid rgba(37, 99, 235, 0.15)",
+                borderTopColor: "#2563eb",
+                borderRightColor: "#3b82f6",
                 borderRadius: "50%",
-                animation: "spin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite"
+                animation: "spin 0.85s linear infinite",
+                willChange: "transform"
               }}
             />
             <div
@@ -695,14 +697,14 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                 position: "absolute",
                 inset: "8px",
                 borderRadius: "50%",
-                background: "rgba(37, 99, 235, 0.1)",
+                background: "rgba(37, 99, 235, 0.08)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                boxShadow: "0 0 20px rgba(37, 99, 235, 0.2)"
+                boxShadow: "0 2px 10px rgba(37, 99, 235, 0.15)"
               }}
             >
-              <Sparkles size={28} color="#34d399" />
+              <Sparkles size={28} color="#2563eb" />
             </div>
           </div>
 
@@ -711,9 +713,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
               fontSize: "22px",
               fontWeight: 800,
               marginBottom: "10px",
-              background: "linear-gradient(135deg, #ffffff 30%, #a7f3d0)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
+              color: "#0f172a",
               letterSpacing: "-0.02em"
             }}
           >
@@ -722,8 +722,8 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
 
           <p
             style={{
-              color: "#94a3b8",
-              fontSize: "14px",
+              color: "#475569",
+              fontSize: "14.5px",
               lineHeight: "1.6",
               maxWidth: "400px",
               margin: "0 auto 26px"
@@ -732,7 +732,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
             Synchronizing interactive video lectures, syllabus materials, and AI doubt assistant...
           </p>
 
-          {/* Shimmering Feature Pills */}
+          {/* High-Contrast Feature Badges */}
           <div
             style={{
               display: "flex",
@@ -744,66 +744,67 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
           >
             <span
               style={{
-                padding: "6px 12px",
-                background: "rgba(37, 99, 235, 0.08)",
-                border: "1px solid rgba(37, 99, 235, 0.2)",
+                padding: "6px 14px",
+                background: "#eff6ff",
+                border: "1px solid #bfdbfe",
                 borderRadius: "20px",
                 fontSize: "12px",
-                color: "#6ee7b7",
-                fontWeight: 600,
+                color: "#1d4ed8",
+                fontWeight: 700,
                 display: "inline-flex",
                 alignItems: "center",
                 gap: "5px"
               }}
             >
-              <BrainCircuit size={13} /> 768-dim Vector RAG
+              <BrainCircuit size={13} color="#2563eb" /> 768-dim Vector RAG
             </span>
             <span
               style={{
-                padding: "6px 12px",
-                background: "rgba(56, 189, 248, 0.08)",
-                border: "1px solid rgba(56, 189, 248, 0.2)",
+                padding: "6px 14px",
+                background: "#f0f9ff",
+                border: "1px solid #bae6fd",
                 borderRadius: "20px",
                 fontSize: "12px",
-                color: "#7dd3fc",
-                fontWeight: 600,
+                color: "#0369a1",
+                fontWeight: 700,
                 display: "inline-flex",
                 alignItems: "center",
                 gap: "5px"
               }}
             >
-              <Play size={12} /> Adaptive HD Player
+              <Play size={12} color="#0284c7" /> Adaptive HD Player
             </span>
             <span
               style={{
-                padding: "6px 12px",
-                background: "rgba(168, 85, 247, 0.08)",
-                border: "1px solid rgba(168, 85, 247, 0.2)",
+                padding: "6px 14px",
+                background: "#eef2ff",
+                border: "1px solid #c7d2fe",
                 borderRadius: "20px",
                 fontSize: "12px",
-                color: "#d8b4fe",
-                fontWeight: 600,
+                color: "#4338ca",
+                fontWeight: 700,
                 display: "inline-flex",
                 alignItems: "center",
                 gap: "5px"
               }}
             >
-              <Award size={13} /> Verified Certificate
+              <Award size={13} color="#4f46e5" /> Verified Certificate
             </span>
           </div>
 
           {/* Navigation fallback */}
-          <div style={{ borderTop: "1px solid rgba(255, 255, 255, 0.08)", paddingTop: "18px" }}>
+          <div style={{ borderTop: "1px solid #e2e8f0", paddingTop: "18px" }}>
             <Link
               href="/courses"
               style={{
                 display: "inline-flex",
                 alignItems: "center",
                 gap: "6px",
-                color: "#94a3b8",
-                fontSize: "13px",
-                fontWeight: 600,
-                textDecoration: "none"
+                color: "#2563eb",
+                fontSize: "13.5px",
+                fontWeight: 700,
+                textDecoration: "none",
+                transition: "color 0.2s ease"
               }}
             >
               <ArrowLeft size={14} /> Back to Course Catalog
@@ -1482,11 +1483,11 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
           <div style={{ flexGrow: 1 }}>
             {/* 1. Overview Tab */}
             {activeTab === "overview" && (
-              <div>
-                <h3 style={{ fontSize: "18px", fontWeight: 700, color: "#fff", marginBottom: "12px" }}>
+              <div className="tabContentFadeIn">
+                <h3 style={{ fontSize: "19px", fontWeight: 800, color: "#0f172a", marginBottom: "12px" }}>
                   About this Course & Current Module
                 </h3>
-                <p style={{ color: "rgba(255, 255, 255, 0.75)", lineHeight: "1.6", fontSize: "15px", marginBottom: "20px" }}>
+                <p style={{ color: "#334155", lineHeight: "1.65", fontSize: "15px", marginBottom: "20px" }}>
                   {course.description}
                 </p>
 
@@ -1495,29 +1496,30 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                 </h4>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "10px", marginBottom: "24px" }}>
                   {course.skillsGained.map((skill) => (
-                    <div key={skill} style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "14px", color: "rgba(255,255,255,0.85)" }}>
+                    <div key={skill} style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "14px", color: "#1e293b", fontWeight: 500 }}>
                       <CheckCircle2 size={16} color="#2563eb" /> {skill}
                     </div>
                   ))}
                 </div>
 
                 <div style={{
-                  background: "rgba(7, 48, 73, 0.5)",
-                  border: "1px solid rgba(37, 99, 235, 0.25)",
+                  background: "#f8fafc",
+                  border: "1px solid #e2e8f0",
                   borderRadius: "14px",
                   padding: "18px",
                   display: "flex",
                   gap: "16px",
                   alignItems: "center",
+                  boxShadow: "0 2px 8px rgba(15, 23, 42, 0.04)"
                 }}>
-                  <div style={{ position: "relative", width: "52px", height: "52px", borderRadius: "50%", overflow: "hidden", flexShrink: 0 }}>
+                  <div style={{ position: "relative", width: "52px", height: "52px", borderRadius: "50%", overflow: "hidden", flexShrink: 0, border: "2px solid #bfdbfe" }}>
                     <Image src={course.instructor.avatar} alt={course.instructor.name} fill style={{ objectFit: "cover" }} />
                   </div>
                   <div>
-                    <h5 style={{ fontSize: "15px", fontWeight: 700, margin: "0 0 4px", color: "#fff" }}>
+                    <h5 style={{ fontSize: "15px", fontWeight: 700, margin: "0 0 4px", color: "#0f172a" }}>
                       Taught by {course.instructor.name}
                     </h5>
-                    <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.65)", margin: 0 }}>
+                    <p style={{ fontSize: "13px", color: "#475569", margin: 0 }}>
                       {course.instructor.title} — {course.instructor.bio}
                     </p>
                   </div>
@@ -1701,7 +1703,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                                 <span style={{ fontSize: "11px", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", color: "#2563eb", display: "block", marginBottom: "4px" }}>
                                   AI Rubric Evaluation Report
                                 </span>
-                                <h4 style={{ fontSize: "20px", fontWeight: 800, color: "#fff", margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
+                                <h4 style={{ fontSize: "20px", fontWeight: 800, color: "#0f172a", margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
                                   <CheckCircle2 size={20} color="#2563eb" />
                                   Grade: {feedback.score ?? 88} / {maxPts}
                                 </h4>
@@ -1836,10 +1838,10 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                         {/* 6. Interactive Submission Studio */}
                         <form onSubmit={handleAssignmentSubmit} className="submissionSection">
                           <div className="submissionSectionHeader">
-                            <h4 style={{ fontSize: "18px", fontWeight: 800, color: "#fff", margin: "0 0 6px", letterSpacing: "-0.01em" }}>
+                            <h4 style={{ fontSize: "18px", fontWeight: 800, color: "#0f172a", margin: "0 0 6px", letterSpacing: "-0.01em" }}>
                               Student Solution Studio
                             </h4>
-                            <p style={{ fontSize: "13.5px", color: "rgba(255, 255, 255, 0.65)", margin: 0 }}>
+                            <p style={{ fontSize: "13.5px", color: "#475569", margin: 0 }}>
                               Submit your implementation code and architecture notes. Graded automatically by the Dual-AI Mentor.
                             </p>
                           </div>
@@ -1978,10 +1980,10 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                     );
                   })()
                 ) : (
-                  <div style={{ color: "#475569", padding: "40px", textAlign: "center", background: "rgba(15, 23, 42, 0.5)", borderRadius: "16px", border: "1px dashed rgba(37, 99, 235, 0.25)" }}>
+                  <div style={{ color: "#475569", padding: "40px", textAlign: "center", background: "#f8fafc", borderRadius: "16px", border: "1px dashed #cbd5e1" }}>
                     <Sparkles size={28} color="#2563eb" style={{ margin: "0 auto 12px", display: "block" }} />
-                    <h4 style={{ color: "#fff", margin: "0 0 6px" }}>No Assignment Active Yet</h4>
-                    <p style={{ margin: 0, fontSize: "13.5px" }}>The teacher is preparing the synthesis milestone for this lecture.</p>
+                    <h4 style={{ color: "#0f172a", margin: "0 0 6px", fontWeight: 700 }}>No Assignment Active Yet</h4>
+                    <p style={{ margin: 0, fontSize: "13.5px", color: "#475569" }}>The teacher is preparing the synthesis milestone for this lecture.</p>
                   </div>
                 )}
               </div>
@@ -1993,8 +1995,8 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                 {mcqLoading ? (
                   <div style={{ textAlign: "center", padding: "48px 20px" }}>
                     <RefreshCw size={28} color="#2563eb" className="animate-spin" style={{ margin: "0 auto 16px", display: "block" }} />
-                    <h4 style={{ color: "#fff", margin: "0 0 6px", fontSize: "16px" }}>Generating Randomized Practice Arena...</h4>
-                    <p style={{ color: "rgba(255, 255, 255, 0.6)", fontSize: "13px", margin: 0 }}>
+                    <h4 style={{ color: "#0f172a", margin: "0 0 6px", fontSize: "16px", fontWeight: 800 }}>Generating Randomized Practice Arena...</h4>
+                    <p style={{ color: "#475569", fontSize: "13.5px", margin: 0 }}>
                       Retrieving cheat-proof questions synthesized directly from lecture audio and video.
                     </p>
                   </div>
@@ -2011,7 +2013,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                             <ShieldCheck size={12} color="#2563eb" /> Zero Leakage Verified
                           </span>
                         </div>
-                        <h3 style={{ fontSize: "20px", fontWeight: 800, color: "#fff", margin: 0 }}>
+                        <h3 style={{ fontSize: "20px", fontWeight: 800, color: "#0f172a", margin: 0 }}>
                           Lecture Mastery Assessment
                         </h3>
                       </div>
@@ -2097,7 +2099,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                                 </span>
                               )}
                             </div>
-                            <h4 style={{ fontSize: "17.5px", fontWeight: 700, color: "#fff", margin: 0, lineHeight: "1.55" }}>
+                            <h4 style={{ fontSize: "17.5px", fontWeight: 700, color: "#0f172a", margin: 0, lineHeight: "1.55" }}>
                               {q.question}
                             </h4>
                           </div>
@@ -2127,7 +2129,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                                   <span className="mcqOptionLetter">
                                     {String.fromCharCode(65 + optIdx)}
                                   </span>
-                                  <span style={{ fontSize: "14.5px", color: "#fff", lineHeight: "1.5" }}>
+                                  <span style={{ fontSize: "14.5px", color: "#0f172a", lineHeight: "1.5" }}>
                                     {opt}
                                   </span>
                                 </div>
@@ -2264,17 +2266,17 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                           </div>
                         </div>
 
-                        <h4 style={{ fontSize: "20px", fontWeight: 800, color: "#fff", margin: "0 0 8px" }}>
+                        <h4 style={{ fontSize: "20px", fontWeight: 800, color: "#0f172a", margin: "0 0 8px" }}>
                           {mcqVerificationResult.percentage >= 80 ? "Outstanding Mastery Achieved! 🎉" : mcqVerificationResult.percentage >= 60 ? "Solid Effort! Review Timestamps Below" : "Keep Learning! Revisit Lecture Segments"}
                         </h4>
-                        <p style={{ color: "rgba(255, 255, 255, 0.7)", fontSize: "14px", margin: "0 auto 24px", maxWidth: "480px" }}>
+                        <p style={{ color: "#475569", fontSize: "14px", margin: "0 auto 24px", maxWidth: "480px" }}>
                           Your quiz was verified securely by the Cloud Run server. You can review each question and jump directly to relevant video timestamps above.
                         </p>
                       </div>
                     )}
                   </div>
                 ) : (
-                  <div style={{ color: "rgba(255,255,255,0.6)", padding: "36px", textAlign: "center", background: "rgba(15, 23, 42, 0.5)", borderRadius: "14px", border: "1px dashed rgba(255, 255, 255, 0.1)" }}>
+                  <div style={{ color: "#475569", padding: "36px", textAlign: "center", background: "#f8fafc", borderRadius: "14px", border: "1px dashed #cbd5e1" }}>
                     No quiz questions generated for this lesson yet.
                   </div>
                 )}
@@ -2282,14 +2284,14 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
             )}
 
             {activeTab === "resources" && (
-              <div>
+              <div className="tabContentFadeIn">
                 <div style={{ display: "grid", gap: "10px" }}>
                   {course.resources.map((res) => (
                     <div
                       key={res.id}
                       style={{
-                        background: "rgba(15, 23, 42, 0.75)",
-                        border: "1px solid rgba(255, 255, 255, 0.08)",
+                        background: "#ffffff",
+                        border: "1px solid #e2e8f0",
                         borderRadius: "14px",
                         padding: "16px 20px",
                         display: "flex",
@@ -2297,8 +2299,8 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                         justifyContent: "space-between",
                         flexWrap: "wrap",
                         gap: "16px",
-                        backdropFilter: "blur(12px)",
-                        transition: "all 160ms ease",
+                        boxShadow: "0 2px 8px rgba(15, 23, 42, 0.04)",
+                        transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
                       }}
                     >
                       <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
@@ -2306,8 +2308,8 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                           width: "42px",
                           height: "42px",
                           borderRadius: "10px",
-                          background: "rgba(37, 99, 235, 0.12)",
-                          border: "1px solid rgba(37, 99, 235, 0.25)",
+                          background: "#eff6ff",
+                          border: "1px solid #bfdbfe",
                           display: "grid",
                           placeItems: "center",
                           flexShrink: 0,
@@ -2315,11 +2317,11 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                           {res.fileType === "github" ? <Code2 size={20} color="#2563eb" /> : <FolderDown size={20} color="#2563eb" />}
                         </div>
                         <div>
-                          <div style={{ fontWeight: 700, fontSize: "14.5px", color: "#fff", marginBottom: "3px" }}>
+                          <div style={{ fontWeight: 700, fontSize: "14.5px", color: "#0f172a", marginBottom: "3px" }}>
                             {res.title}
                           </div>
-                          <div style={{ fontSize: "12.5px", color: "rgba(255, 255, 255, 0.65)" }}>
-                            {res.description} {res.fileSize && <span style={{ color: "rgba(255, 255, 255, 0.4)" }}> • {res.fileSize}</span>}
+                          <div style={{ fontSize: "12.5px", color: "#475569" }}>
+                            {res.description} {res.fileSize && <span style={{ color: "#64748b" }}> • {res.fileSize}</span>}
                           </div>
                         </div>
                       </div>
@@ -2329,9 +2331,9 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                         target="_blank"
                         rel="noreferrer"
                         style={{
-                          background: "rgba(37, 99, 235, 0.12)",
-                          color: "#2563eb",
-                          border: "1px solid rgba(37, 99, 235, 0.3)",
+                          background: "#eff6ff",
+                          color: "#1d4ed8",
+                          border: "1px solid #bfdbfe",
                           borderRadius: "8px",
                           padding: "8px 16px",
                           fontSize: "12.5px",
@@ -2342,7 +2344,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                           gap: "6px",
                           whiteSpace: "nowrap",
                           flexShrink: 0,
-                          transition: "all 150ms ease",
+                          transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
                         }}
                       >
                         Access Resource <ExternalLink size={13} />
@@ -2356,12 +2358,12 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
             {/* 5. Discussions Tab */}
             {activeTab === "discussions" && (
               <div>
-                <h3 style={{ fontSize: "18px", fontWeight: 700, color: "#fff", marginBottom: "14px" }}>
+                <h3 style={{ fontSize: "18px", fontWeight: 700, color: "#0f172a", marginBottom: "14px" }}>
                   Classroom Q&A Community
                 </h3>
                 <div style={{
-                  background: "rgba(7, 48, 73, 0.4)",
-                  border: "1px solid rgba(37, 99, 235, 0.2)",
+                  background: "#f8fafc",
+                  border: "1px solid #e2e8f0",
                   borderRadius: "14px",
                   padding: "16px",
                   marginBottom: "20px",
@@ -2418,32 +2420,33 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
 
             {/* 6. Certificate Tab */}
             {activeTab === "certificate" && (
-              <div style={{
-                background: "radial-gradient(circle at center, rgba(7, 48, 73, 0.8), rgba(2, 21, 38, 0.95))",
-                border: "1px solid rgba(37, 99, 235, 0.35)",
+              <div className="tabContentFadeIn" style={{
+                background: "#ffffff",
+                border: "1px solid #bfdbfe",
                 borderRadius: "20px",
                 padding: "40px 24px",
                 textAlign: "center",
+                boxShadow: "0 4px 20px rgba(15, 23, 42, 0.05)"
               }}>
                 <Award size={56} color="#2563eb" style={{ margin: "0 auto 16px" }} />
-                <h3 style={{ fontSize: "24px", fontWeight: 800, color: "#fff", marginBottom: "8px" }}>
+                <h3 style={{ fontSize: "24px", fontWeight: 800, color: "#0f172a", marginBottom: "8px" }}>
                   Official Course Certificate of Completion
                 </h3>
-                <p style={{ color: "rgba(255, 255, 255, 0.7)", maxWidth: "520px", margin: "0 auto 24px", fontSize: "14px" }}>
+                <p style={{ color: "#475569", maxWidth: "520px", margin: "0 auto 24px", fontSize: "14.5px", lineHeight: "1.6" }}>
                   Complete 100% of the lessons and submit all course assignments to unlock your verifiable, shareable digital credential.
                 </p>
 
                 <div style={{
                   maxWidth: "400px",
                   margin: "0 auto 24px",
-                  background: "rgba(255, 255, 255, 0.05)",
+                  background: "#f8fafc",
                   borderRadius: "12px",
                   padding: "16px",
-                  border: "1px solid rgba(37, 99, 235, 0.2)",
+                  border: "1px solid #e2e8f0",
                 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", marginBottom: "8px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13.5px", marginBottom: "8px", color: "#0f172a" }}>
                     <span>Curriculum Completion:</span>
-                    <strong style={{ color: "#2563eb" }}>{progressPercent}%</strong>
+                    <strong style={{ color: "#2563eb", fontWeight: 800 }}>{progressPercent}%</strong>
                   </div>
                   <div style={{ width: "100%", height: "8px", background: "#e2e8f0", borderRadius: "99px", overflow: "hidden" }}>
                     <div style={{ width: `${progressPercent}%`, height: "100%", background: "#2563eb" }} />
@@ -2460,14 +2463,16 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                     }
                   }}
                   style={{
-                    background: progressPercent >= 100 ? "linear-gradient(135deg, #38d399, #00c78c)" : "rgba(255, 255, 255, 0.1)",
-                    color: progressPercent >= 100 ? "#021526" : "rgba(255, 255, 255, 0.5)",
-                    border: "none",
+                    background: progressPercent >= 100 ? "linear-gradient(135deg, #2563eb, #1d4ed8)" : "#f1f5f9",
+                    color: progressPercent >= 100 ? "#ffffff" : "#64748b",
+                    border: progressPercent >= 100 ? "none" : "1px solid #cbd5e1",
                     borderRadius: "10px",
                     fontWeight: 800,
                     fontSize: "14px",
                     padding: "12px 24px",
-                    cursor: "pointer",
+                    cursor: progressPercent >= 100 ? "pointer" : "not-allowed",
+                    boxShadow: progressPercent >= 100 ? "0 4px 20px rgba(37, 99, 235, 0.35)" : "none",
+                    transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)"
                   }}
                 >
                   {progressPercent >= 100 ? "Download Verifiable PDF" : "Locked (Complete 100% to Unlock)"}
@@ -2502,12 +2507,12 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
 
             {/* 8. AI Doubt Assistant & RAG Mentor Tab (Unified View) */}
             {activeTab === "rag" && (
-              <div style={{
-                background: "linear-gradient(180deg, rgba(13, 22, 38, 0.92) 0%, rgba(6, 11, 20, 0.98) 100%)",
-                border: "1.5px solid rgba(37, 99, 235, 0.35)",
+              <div className="tabContentFadeIn" style={{
+                background: "#ffffff",
+                border: "1px solid #bfdbfe",
                 borderRadius: "20px",
                 overflow: "hidden",
-                boxShadow: "0 20px 50px rgba(0, 0, 0, 0.6), 0 0 35px rgba(37, 99, 235, 0.12)",
+                boxShadow: "0 10px 30px rgba(15, 23, 42, 0.06)",
                 height: "680px",
               }}>
                 {renderAiTutor("680px")}
