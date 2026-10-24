@@ -45,18 +45,24 @@ body.reading-mode .navbar {
 }
 
 .brand img {
-  width: 44px;
-  height: 44px;
+  width: 52px;
+  height: 52px;
   object-fit: contain;
   border-radius: 10px;
   flex-shrink: 0;
   filter: drop-shadow(0 2px 8px rgba(37, 99, 235, 0.15));
+  transition: transform 180ms ease;
+}
+
+.brand:hover img {
+  transform: scale(1.04);
 }
 
 .navLinks {
   display: flex;
   align-items: center;
   gap: 28px;
+  margin-left: auto;
 }
 
 .navLinks a {
@@ -93,9 +99,9 @@ body.reading-mode .navbar {
 .navActions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   flex-shrink: 0;
-  margin-left: auto;
+  margin-left: 12px;
 }
 
 .loginBtn, .signupBtn, .logoutBtn {
@@ -327,6 +333,7 @@ body.reading-mode .navbar {
     gap: 12px;
   }
   .navLinks { display: none; }
+  .navActions { margin-left: auto; }
   .mobileMenuBtn {
     display: flex !important;
     align-items: center;
@@ -349,8 +356,8 @@ body.reading-mode .navbar {
     gap: 8px;
   }
   .brand img {
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
   }
   .brand span {
     font-size: 19px;
