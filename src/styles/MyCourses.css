@@ -249,8 +249,10 @@
 
 .enrolledGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 22px;
+  justify-content: center;
+  width: 100%;
 }
 
 /* Enrolled Course Card */
@@ -492,5 +494,21 @@
 @keyframes spin {
   to {
     transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 768px) {
+  .enrolledGrid {
+    grid-template-columns: 1fr;
+    max-width: 420px;
+    margin: 0 auto;
+    justify-items: center;
+    gap: 20px;
+  }
+
+  .enrolledCard {
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
   }
 }

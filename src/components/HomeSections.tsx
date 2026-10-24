@@ -60,141 +60,78 @@ export default function HomeSections() {
   return (
     <div className="homeSections">
       {/* ── Section 1: Featured Courses ── */}
-      <section className="startupSection" id="featured-courses" style={{ padding: "64px 24px" }}>
-        <div className="sectionContainer" style={{ maxWidth: "1240px", margin: "0 auto" }}>
-          <div className="sectionIntro" style={{ textAlign: "center", marginBottom: "36px" }}>
-            <span style={{
-              color: "#60a5fa",
-              background: "rgba(37, 99, 235, 0.14)",
-              padding: "4px 14px",
-              borderRadius: "99px",
-              fontSize: "12px",
-              fontWeight: 700,
-              display: "inline-block",
-              marginBottom: "12px",
-              letterSpacing: "0.04em",
-              textTransform: "uppercase"
-            }}>
+      <section className="featuredCoursesSection" id="featured-courses">
+        <div className="featuredSectionContainer">
+          <div className="featuredSectionIntro">
+            <span className="featuredSectionLabel">
               Practical Skills Over Rote Learning
             </span>
-            <h2 style={{ fontSize: "32px", fontWeight: 800, color: "#fff", marginBottom: "8px", letterSpacing: "-0.02em" }}>
+            <h2 className="featuredSectionTitle">
               Hands-on Project Learning Paths
             </h2>
-            <p style={{ color: "#94a3b8", maxWidth: "660px", margin: "0 auto", fontSize: "15px", lineHeight: "1.6" }}>
+            <p className="featuredSectionDesc">
               Writing real code, resolving runtime errors, and building functional applications is how true developers are made. Theory gives definitions — building projects gives real engineering intuition.
             </p>
           </div>
 
-
-          {/* Course Cards Grid */}
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))",
-            gap: "28px",
-          }}>
+          {/* Course Cards Grid - Perfectly Centered on Mobile, Tablet & PC */}
+          <div className="featuredCoursesGrid">
             {displayedCourses.map((course) => (
-              <div
-                key={course.id}
-                style={{
-                  background: "linear-gradient(145deg, rgba(10, 21, 40, 0.85), rgba(6, 14, 28, 0.95))",
-                  border: "1px solid rgba(59, 130, 246, 0.25)",
-                  borderRadius: "18px",
-                  overflow: "hidden",
-                  display: "flex",
-                  flexDirection: "column",
-                  transition: "transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease",
-                  boxShadow: "0 10px 30px rgba(0, 0, 0, 0.3)",
-                }}
-              >
+              <div key={course.id} className="featuredCourseCard">
                 {/* Course Thumbnail */}
-                <div style={{ position: "relative", height: "190px", width: "100%", overflow: "hidden" }}>
+                <div className="featuredThumbnailWrapper">
                   <Image
                     src={course.thumbnail}
                     alt={course.title}
                     fill
-                    sizes="(max-width: 768px) 100vw, 380px"
-                    style={{ objectFit: "cover" }}
+                    sizes="(max-width: 768px) 100vw, 400px"
+                    className="featuredThumbnailImg"
                   />
-                  <div style={{
-                    position: "absolute",
-                    inset: 0,
-                    background: "linear-gradient(to top, rgba(6, 14, 28, 0.95), transparent)",
-                  }} />
+                  <div className="featuredThumbnailOverlay" />
 
-                  <span style={{
-                    position: "absolute",
-                    top: "12px",
-                    left: "12px",
-                    background: "rgba(6, 16, 34, 0.85)",
-                    color: "#60a5fa",
-                    border: "1px solid rgba(59, 130, 246, 0.4)",
-                    padding: "3px 10px",
-                    borderRadius: "8px",
-                    fontSize: "11px",
-                    fontWeight: 700,
-                  }}>
+                  <span className="featuredCategoryBadge">
                     {course.category}
                   </span>
 
-                  <span style={{
-                    position: "absolute",
-                    top: "12px",
-                    right: "12px",
-                    background: "rgba(0, 0, 0, 0.7)",
-                    color: "#fff",
-                    padding: "3px 8px",
-                    borderRadius: "6px",
-                    fontSize: "11px",
-                    fontWeight: 600,
-                  }}>
+                  <span className="featuredLevelBadge">
                     {course.level}
                   </span>
                 </div>
 
                 {/* Course Body */}
-                <div style={{ padding: "20px", display: "flex", flexDirection: "column", flexGrow: 1 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "8px" }}>
-                    <Star size={16} color="#f59e0b" fill="#f59e0b" />
-                    <strong style={{ color: "#fff", fontSize: "14px" }}>{course.rating}</strong>
-                    <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "12px" }}>
-                      ({course.reviewsCount.toLocaleString()} reviews)
+                <div className="featuredCardBody">
+                  <div className="featuredRatingRow">
+                    <div className="featuredRatingGroup">
+                      <Star size={15} color="#f59e0b" fill="#f59e0b" />
+                      <strong>{course.rating}</strong>
+                      <span className="featuredReviewsCount">
+                        ({course.reviewsCount.toLocaleString()} reviews)
+                      </span>
+                    </div>
+
+                    <span className="featuredLearnersCount">
+                      {course.studentsEnrolled?.toLocaleString() || "1,200+"} learners
                     </span>
                   </div>
 
-                  <h3 style={{ fontSize: "18px", fontWeight: 700, color: "#fff", marginBottom: "8px", lineHeight: "1.4" }}>
+                  <h3 className="featuredCardTitle">
                     {course.title}
                   </h3>
 
-                  <p style={{
-                    color: "rgba(255,255,255,0.65)",
-                    fontSize: "13px",
-                    lineHeight: "1.5",
-                    marginBottom: "16px",
-                    flexGrow: 1,
-                  }}>
+                  <p className="featuredCardTagline">
                     {course.tagline}
                   </p>
 
                   {/* Metadata Row */}
-                  <div style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    padding: "10px 0",
-                    borderTop: "1px solid rgba(255, 255, 255, 0.08)",
-                    borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
-                    marginBottom: "16px",
-                    fontSize: "12px",
-                    color: "rgba(255,255,255,0.7)",
-                  }}>
-                    <span style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                      <Clock size={14} color="#3b82f6" /> {course.duration}
+                  <div className="featuredMetadataRow">
+                    <span className="featuredMetaItem">
+                      <Clock size={14} /> {course.duration}
                     </span>
-                    <span style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                      <Layers size={14} color="#3b82f6" /> {course.totalLessons} Lessons
+                    <span className="featuredMetaItem">
+                      <Layers size={14} /> {course.totalLessons} Lessons
                     </span>
-                    <span style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                      <FileCheck size={14} color="#3b82f6" /> {course.assignments.length} Assignments
+                    <span className="featuredMetaItem">
+                      <FileCheck size={14} /> {course.assignments.length} Assignments
                     </span>
                   </div>
 
@@ -202,22 +139,7 @@ export default function HomeSections() {
                   {currentUser ? (
                     <Link
                       href={`/courses/${course.id}`}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: "8px",
-                        width: "100%",
-                        padding: "11px",
-                        background: "rgba(37, 99, 235, 0.14)",
-                        border: "1px solid rgba(59, 130, 246, 0.4)",
-                        borderRadius: "10px",
-                        color: "#60a5fa",
-                        fontWeight: 700,
-                        fontSize: "14px",
-                        textDecoration: "none",
-                        transition: "all 0.2s ease",
-                      }}
+                      className="featuredActionBtn"
                     >
                       Enter Classroom & Projects <ArrowRight size={15} />
                     </Link>
@@ -225,22 +147,7 @@ export default function HomeSections() {
                     <button
                       type="button"
                       onClick={() => openAuth("register")}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: "8px",
-                        width: "100%",
-                        padding: "11px",
-                        background: "rgba(37, 99, 235, 0.14)",
-                        border: "1px solid rgba(59, 130, 246, 0.4)",
-                        borderRadius: "10px",
-                        color: "#60a5fa",
-                        fontWeight: 700,
-                        fontSize: "14px",
-                        cursor: "pointer",
-                        transition: "all 0.2s ease",
-                      }}
+                      className="featuredActionBtn"
                     >
                       Login to Enter Classroom <ArrowRight size={15} />
                     </button>

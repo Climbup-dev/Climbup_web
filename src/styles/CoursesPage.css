@@ -243,8 +243,10 @@
 /* Course Grid */
 .coursesGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 26px;
+  justify-content: center;
+  width: 100%;
 }
 
 /* Individual Course Card */
@@ -521,8 +523,22 @@
 
 /* Responsive */
 @media (max-width: 768px) {
+  .coursesMain {
+    padding: 24px 16px 50px;
+  }
+
   .coursesGrid {
     grid-template-columns: 1fr;
+    max-width: 420px;
+    margin: 0 auto;
+    justify-items: center;
+    gap: 20px;
+  }
+
+  .courseCard {
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
   }
 
   .coursesHeroSection {
