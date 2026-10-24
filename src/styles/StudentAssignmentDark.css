@@ -1040,3 +1040,358 @@
   gap: 12px;
   flex-wrap: wrap;
 }
+
+
+/* ============================================================
+   NEW: GOAL-BY-GOAL STEPPER & WORKSPACE SYSTEM (THEORY & CODING)
+   ============================================================ */
+
+/* Archetype Badges */
+.darkArchetypeBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 800;
+  padding: 4px 12px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.darkArchetypeBadge.theory {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+.darkArchetypeBadge.coding {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}
+.darkArchetypeBadge.mixed {
+  background: #f5f3ff;
+  color: #6d28d9;
+  border: 1px solid #ddd6fe;
+}
+
+/* Goal Stepper Bar */
+.darkGoalStepper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 22px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.darkGoalStepper::-webkit-scrollbar {
+  display: none;
+}
+
+.darkGoalStepBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.darkGoalStepBtn:hover:not(.locked) {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+
+.darkGoalStepBtn.active {
+  background: #ffffff;
+  border-color: #2563eb;
+  color: #1d4ed8;
+  box-shadow: 0 2px 10px rgba(37, 99, 235, 0.12);
+}
+
+.darkGoalStepBtn.passed {
+  border-color: #a7f3d0;
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.darkGoalStepBtn.active.passed {
+  border-color: #059669;
+  box-shadow: 0 2px 10px rgba(5, 150, 105, 0.15);
+}
+
+.darkGoalStepBtn.needs_revision {
+  border-color: #fde68a;
+  background: #fffbeb;
+  color: #b45309;
+}
+
+.darkGoalStepBtn.locked {
+  opacity: 0.65;
+  cursor: not-allowed;
+  background: #f8fafc;
+}
+
+/* Goal Type Badge */
+.darkGoalTypeBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.darkGoalTypeBadge.theory {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+.darkGoalTypeBadge.coding {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}
+.darkGoalTypeBadge.practical {
+  background: #f5f3ff;
+  color: #6d28d9;
+  border: 1px solid #ddd6fe;
+}
+
+/* Conceptual Checkpoints in Theory */
+.darkCheckpointsContainer {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 12px;
+  padding: 14px 18px;
+  margin: 16px 0;
+}
+.darkCheckpointsTitle {
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #1d4ed8;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.darkCheckpointsList {
+  display: grid;
+  gap: 6px;
+}
+.darkCheckpointItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13px;
+  color: #1e3a8a;
+  line-height: 1.5;
+}
+
+/* Theory Descriptive Workspace */
+.darkTheoryCard {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 18px 20px;
+  margin-top: 16px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03);
+}
+.darkTheoryHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.darkTheoryTitle {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.darkTheoryWordCount {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 600;
+}
+.darkTheoryTextarea {
+  width: 100%;
+  box-sizing: border-box;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 14px 16px;
+  font-size: 14px;
+  color: #0f172a;
+  line-height: 1.65;
+  resize: vertical;
+  min-height: 180px;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+.darkTheoryTextarea:focus {
+  outline: none;
+  background: #ffffff;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* Test Cases Panel in Coding */
+.darkTestCasesContainer {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 14px 18px;
+  margin: 16px 0;
+}
+.darkTestCasesTitle {
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.darkTestCaseItem {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 9px 12px;
+  margin-bottom: 6px;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+.darkTestCaseInput {
+  color: #0f172a;
+  font-weight: 600;
+}
+.darkTestCaseExpected {
+  color: #059669;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  display: block;
+  margin-top: 3px;
+}
+
+/* Goal Live Verification Feedback */
+.darkGoalFeedbackBox {
+  border-radius: 12px;
+  padding: 16px 18px;
+  margin-top: 16px;
+  animation: fadeIn 0.3s ease;
+}
+.darkGoalFeedbackBox.passed {
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+}
+.darkGoalFeedbackBox.needs_revision {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+}
+.darkGoalFeedbackHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.darkGoalFeedbackTitle {
+  font-size: 13.5px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.darkGoalFeedbackTitle.passed {
+  color: #047857;
+}
+.darkGoalFeedbackTitle.needs_revision {
+  color: #b45309;
+}
+.darkGoalFeedbackMarks {
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #ffffff;
+}
+.darkGoalFeedbackMarks.passed {
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}
+.darkGoalFeedbackMarks.needs_revision {
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+
+.darkVerificationResultsList {
+  display: grid;
+  gap: 6px;
+  margin-top: 10px;
+}
+.darkVerificationResultItem {
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 12.5px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  line-height: 1.45;
+}
+.darkVerificationResultItem.passed {
+  border: 1px solid #a7f3d0;
+  color: #065f46;
+}
+.darkVerificationResultItem.failed {
+  border: 1px solid #fde68a;
+  color: #92400e;
+}
+
+/* Mobile Optimizations */
+@media (max-width: 768px) {
+  .darkGoalStepper {
+    gap: 8px;
+  }
+  .darkGoalStepBtn {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+  .darkTheoryTextarea {
+    font-size: 16px; /* Prevents auto-zoom on iOS */
+    padding: 12px;
+  }
+  .darkEditorTextarea {
+    font-size: 14px;
+    padding: 12px;
+  }
+  .darkBadgeRow {
+    gap: 6px;
+  }
+  .darkAssignmentRoot {
+    padding: 18px 14px;
+    border-radius: 14px;
+  }
+}
