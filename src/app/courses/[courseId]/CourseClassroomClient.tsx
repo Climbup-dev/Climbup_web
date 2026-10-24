@@ -82,6 +82,13 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
   const videoRef = useRef<HTMLVideoElement>(null);
   const videoContainerRef = useRef<HTMLDivElement>(null);
   const [videoPlaybackError, setVideoPlaybackError] = useState(false);
+  const [isVideoLoading, setIsVideoLoading] = useState(true);
+
+  // Reset video loading state whenever lesson changes
+  useEffect(() => {
+    setIsVideoLoading(true);
+    setVideoPlaybackError(false);
+  }, [activeLesson?.id, activeLesson?.videoUrl]);
 
   // Custom Video Player Controls State & Effective Playback Speed (1x, 1.5x, 2x, etc.)
   const [isPlaying, setIsPlaying] = useState(false);
@@ -281,6 +288,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
     }
 
     async function initEncryptedHLS() {
+      setIsVideoLoading(true);
       const backendBase = getBackendBaseUrl();
       // 1. Fetch short-lived signed stream token (with resilient proxy fallback)
       let token = authToken || "";
@@ -335,6 +343,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
             return;
           } catch {}
         }
+        setIsVideoLoading(false);
         setVideoPlaybackError(true);
       };
 
@@ -393,7 +402,9 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
           clearTimeout(streamWatchdog);
           setVideoPlaybackError(false);
-          videoRef.current?.play().catch(() => {});
+          videoRef.current?.play().catch(() => {
+            setIsVideoLoading(false);
+          });
         });
 
         hls.on(Hls.Events.ERROR, (_evt, data) => {
@@ -1413,7 +1424,19 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                       resetControlsTimeout();
                     }}
                     onPlay={() => setIsPlaying(true)}
+                    onPlaying={() => {
+                      setIsPlaying(true);
+                      setIsVideoLoading(false);
+                    }}
                     onPause={() => setIsPlaying(false)}
+                    onLoadStart={() => setIsVideoLoading(true)}
+                    onWaiting={() => setIsVideoLoading(true)}
+                    onSeeking={() => setIsVideoLoading(true)}
+                    onSeeked={() => {
+                      if (videoRef.current && videoRef.current.readyState >= 3) {
+                        setIsVideoLoading(false);
+                      }
+                    }}
                     onTimeUpdate={() => {
                       if (videoRef.current) {
                         setCurrentTime(videoRef.current.currentTime);
@@ -1436,19 +1459,24 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                         videoRef.current.playbackRate = playbackSpeed;
                       }
                       setVideoPlaybackError(false);
+                      setIsVideoLoading(false);
                     }}
-                    onLoadedData={() => setVideoPlaybackError(false)}
+                    onLoadedData={() => {
+                      setVideoPlaybackError(false);
+                      setIsVideoLoading(false);
+                    }}
                     onError={(e) => {
                       const err = e.currentTarget.error;
                       if (err) {
                         setVideoPlaybackError(true);
+                        setIsVideoLoading(false);
                       }
                     }}
                     style={{ width: "100%", height: "100%", objectFit: "contain", display: "block", cursor: "pointer" }}
                   />
 
-                  {/* Central Play Button Overlay when paused */}
-                  {!isPlaying && !videoPlaybackError && (
+                  {/* Central Play Button Overlay when paused and ready */}
+                  {!isPlaying && !videoPlaybackError && !isVideoLoading && (
                     <button
                       type="button"
                       className="customPlayerCenterPlay"
@@ -1461,6 +1489,16 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                     >
                       <Play size={32} fill="#ffffff" color="#ffffff" style={{ marginLeft: "4px" }} />
                     </button>
+                  )}
+
+                  {/* Video Loading & Buffering Spinner Overlay */}
+                  {isVideoLoading && !videoPlaybackError && (
+                    <div className="classroomVideoLoadingOverlay" aria-label="Loading video stream">
+                      <div className="classroomVideoSpinnerWrapper">
+                        <div className="classroomVideoSpinner" />
+                        <span className="classroomVideoLoadingText">Loading video...</span>
+                      </div>
+                    </div>
                   )}
 
                   {/* Custom Sleek Video Controls Bar */}
@@ -1602,6 +1640,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                           type="button"
                           onClick={async () => {
                             setVideoPlaybackError(false);
+                            setIsVideoLoading(true);
                             try {
                               const supabase = createClient();
                               const { data: { session } } = await supabase.auth.getSession();
@@ -1625,6 +1664,14 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                 </>
               ) : (
                 <>
+                  {isVideoLoading && !videoPlaybackError && (
+                    <div className="classroomVideoLoadingOverlay" style={{ zIndex: 11 }} aria-label="Loading video stream">
+                      <div className="classroomVideoSpinnerWrapper">
+                        <div className="classroomVideoSpinner" />
+                        <span className="classroomVideoLoadingText">Loading video...</span>
+                      </div>
+                    </div>
+                  )}
                   <iframe
                     key={activeLesson.id || activeLesson.videoUrl}
                     id="classroom-video-player"
@@ -1638,6 +1685,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                     title={activeLesson.title}
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                     allowFullScreen
+                    onLoad={() => setIsVideoLoading(false)}
                     style={{ width: "100%", height: "100%", border: "none" }}
                   />
                   {/* Google Drive Popout blocker: intercepts clicks to the external 'Open in new window' button to prevent downloads */}

@@ -26,8 +26,10 @@ export function SecureHLSVideoPlayer({
   const activeVideo = videoRef || localRef;
   const hlsInstanceRef = useRef<Hls | null>(null);
   const [playbackError, setPlaybackError] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    setIsLoading(true);
     let isDisposed = false;
     let timer: NodeJS.Timeout | null = null;
     const backendBase = getBackendBaseUrl();
@@ -75,10 +77,13 @@ export function SecureHLSVideoPlayer({
           }
           activeVideo.current.src = `/api/stream/drive/${driveId}${tokenParam}`;
           activeVideo.current.load();
-          activeVideo.current.play().catch(() => {});
+          activeVideo.current.play().catch(() => {
+            setIsLoading(false);
+          });
           setPlaybackError(false);
           return;
         }
+        setIsLoading(false);
         setPlaybackError(true);
       };
 
@@ -117,7 +122,9 @@ export function SecureHLSVideoPlayer({
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
           clearTimeout(watchdog);
           setPlaybackError(false);
-          activeVideo.current?.play().catch(() => {});
+          activeVideo.current?.play().catch(() => {
+            setIsLoading(false);
+          });
         });
 
         hls.on(Hls.Events.ERROR, (_evt, data) => {
@@ -188,9 +195,66 @@ export function SecureHLSVideoPlayer({
         onContextMenu={(e) => e.preventDefault()}
         onDragStart={(e) => e.preventDefault()}
         className="w-full h-full object-contain"
+        onLoadStart={() => setIsLoading(true)}
+        onWaiting={() => setIsLoading(true)}
+        onSeeking={() => setIsLoading(true)}
+        onSeeked={() => {
+          if (activeVideo.current && activeVideo.current.readyState >= 3) {
+            setIsLoading(false);
+          }
+        }}
+        onPlaying={() => setIsLoading(false)}
         onTimeUpdate={() => onTimeUpdate?.(activeVideo.current?.currentTime || 0)}
-        onCanPlay={() => setPlaybackError(false)}
+        onCanPlay={() => {
+          setPlaybackError(false);
+          setIsLoading(false);
+        }}
+        onLoadedData={() => {
+          setPlaybackError(false);
+          setIsLoading(false);
+        }}
+        onError={() => {
+          setIsLoading(false);
+          setPlaybackError(true);
+        }}
       />
+      {/* Video Loading & Buffering Spinner */}
+      {isLoading && !playbackError && (
+        <div
+          className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-20"
+          style={{
+            background: 'radial-gradient(circle at center, rgba(10, 15, 30, 0.5) 0%, rgba(2, 6, 23, 0.8) 100%)',
+            backdropFilter: 'blur(3px)',
+            WebkitBackdropFilter: 'blur(3px)',
+          }}
+          aria-label="Loading video"
+        >
+          <div
+            style={{
+              width: '48px',
+              height: '48px',
+              borderRadius: '50%',
+              border: '3.5px solid rgba(255, 255, 255, 0.15)',
+              borderTopColor: '#3b82f6',
+              borderRightColor: '#60a5fa',
+              boxShadow: '0 0 20px rgba(59, 130, 246, 0.45)',
+              animation: 'spin 0.85s linear infinite',
+            }}
+          />
+          <span
+            style={{
+              marginTop: '12px',
+              fontSize: '12.5px',
+              fontWeight: 600,
+              color: '#e2e8f0',
+              letterSpacing: '0.4px',
+              textShadow: '0 2px 4px rgba(0, 0, 0, 0.7)',
+            }}
+          >
+            Loading video...
+          </span>
+        </div>
+      )}
       {/* Floating forensic anti-piracy canvas watermark */}
       <canvas
         ref={canvasRef}
@@ -204,6 +268,7 @@ export function SecureHLSVideoPlayer({
           <button
             onClick={() => {
               setPlaybackError(false);
+              setIsLoading(true);
               activeVideo.current?.load();
               activeVideo.current?.play().catch(() => {});
             }}
