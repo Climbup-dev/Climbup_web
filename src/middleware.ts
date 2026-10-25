@@ -22,6 +22,7 @@ export async function middleware(request: NextRequest) {
     pathname === "/api/health" ||
     pathname.startsWith("/api/drive-upload") ||
     pathname.startsWith("/api/lessons/") ||
+    pathname.startsWith("/api/assignments/") ||
     pathname.startsWith("/api/stream/") ||
     pathname.includes("/stream")
   ) {

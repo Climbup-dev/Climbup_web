@@ -425,16 +425,36 @@ export default function StudentAssignmentWorkspace({
     if (!currentProblem || isCurrentGoalLocked || evaluatingGoal) return;
 
     const currentAnswer = (goalAnswers[activeGoalIndex] || "").trim();
+    const starterClean = (currentProblem.starter_code || "").trim();
     const minLength = currentGoalType === "THEORY" ? 15 : 5;
 
     if (currentAnswer.length < minLength) {
       showToast(
         currentGoalType === "THEORY"
-          ? "Please write your detailed conceptual explanation before submitting."
-          : "Please enter your code solution before running verification.",
+          ? "Please write your substantive conceptual explanation before submitting."
+          : "Please write your code solution before running verification.",
         "warning"
       );
       return;
+    }
+
+    // Guard 1: Detect unmodified starter code
+    if (currentGoalType === "CODING" && starterClean && currentAnswer === starterClean) {
+      showToast("Submission Rejected: Please implement your solution before submitting. Unmodified starter template cannot be verified.", "error");
+      return;
+    }
+
+    // Guard 2: Detect code that is only comments or placeholder stubs (pass / ...)
+    if (currentGoalType === "CODING") {
+      const substantiveCode = currentAnswer
+        .replace(/#.*$/gm, "")
+        .replace(/\/\/.*$/gm, "")
+        .replace(/--.*$/gm, "")
+        .trim();
+      if (!substantiveCode || ["pass", "...", "return", "return none"].includes(substantiveCode.toLowerCase())) {
+        showToast("Submission Rejected: Incomplete code. Only placeholder stubs ('pass' / '# TODO') detected. Please write the required logic.", "error");
+        return;
+      }
     }
 
     setEvaluatingGoal(true);
@@ -458,16 +478,39 @@ export default function StudentAssignmentWorkspace({
       if (response.ok) {
         data = await response.json();
       } else {
-        console.warn("[StudentAssignmentWorkspace] Server verify non-200, activating client evaluation fallback.");
+        const errJson = await response.json().catch(() => null);
+        console.warn("[StudentAssignmentWorkspace] Server verify non-200:", response.status, errJson);
+        const serverMsg = errJson?.detail || errJson?.feedback || `Server returned HTTP ${response.status}.`;
+        setGoalVerifications((prev) => ({
+          ...prev,
+          [goalNumber]: {
+            status: "needs_revision",
+            passed: false,
+            marks_earned: 0,
+            max_marks: currentProblem.marks,
+            feedback: `Server connection notice: ${serverMsg}`,
+            test_results: [
+              {
+                name: "Backend Verification Endpoint",
+                passed: false,
+                detail: `HTTP ${response.status}: Please verify backend server is running and reachable.`
+              }
+            ],
+            unlocked_next_goal: false,
+          }
+        }));
+        showToast(`Verification server returned HTTP ${response.status}.`, "error");
+        setEvaluatingGoal(false);
+        return;
       }
 
-      // Check verification results
-      const passed = data ? Boolean(data.passed) : true;
-      const marksAwarded = data?.marks_earned ?? (passed ? currentProblem.marks : Math.floor(currentProblem.marks * 0.4));
-      const feedback = data?.feedback || (passed ? "Goal verified successfully! Requirements satisfied." : "Needs revision: check requirements and refine.");
+      // Check verification results strictly: NEVER default to true
+      const passed = Boolean(data && data.passed);
+      const marksAwarded = passed ? (data?.marks_earned ?? currentProblem.marks) : 0;
+      const feedback = data?.feedback || (passed ? "Goal verified successfully! Requirements satisfied." : "Verification rejected: Solution did not satisfy test criteria.");
       const testResults = data?.test_results || (currentGoalType === "THEORY"
-        ? (currentProblem.conceptual_checkpoints || []).map((cp) => ({ name: cp, passed: passed, detail: passed ? "Addressed accurately." : "Needs more detail." }))
-        : (currentProblem.test_cases || []).map((tc, idx) => ({ name: tc.input_description || `Test ${idx + 1}`, passed: passed, detail: passed ? "Output matched." : "Output mismatch." })));
+        ? (currentProblem.conceptual_checkpoints || []).map((cp: string) => ({ name: cp, passed: passed, detail: passed ? "Addressed accurately." : "Needs more detail." }))
+        : (currentProblem.test_cases || []).map((tc: any, idx: number) => ({ name: tc.input_description || `Test ${idx + 1}`, passed: passed, detail: passed ? "Output matched." : "Output mismatch." })));
 
       const updatedVerification: GoalVerificationState = {
         status: passed ? "passed" : "needs_revision",
@@ -482,7 +525,7 @@ export default function StudentAssignmentWorkspace({
 
       setGoalVerifications((prev) => {
         const next: Record<number, GoalVerificationState> = { ...prev, [activeGoalIndex]: updatedVerification };
-        // Unlock next goal if current passed
+        // Unlock next goal ONLY if current passed
         if (passed && activeGoalIndex + 1 < problems.length) {
           const nextIdx = activeGoalIndex + 1;
           if (next[nextIdx]?.status === "locked" || !next[nextIdx]) {
@@ -504,32 +547,19 @@ export default function StudentAssignmentWorkspace({
       }
     } catch (err) {
       console.error("Goal verification error:", err);
-      // Fallback verification
-      const fallbackPassed = true;
-      const fallbackMarks = currentProblem.marks;
-      setGoalVerifications((prev) => {
-        const next: Record<number, GoalVerificationState> = {
-          ...prev,
-          [activeGoalIndex]: {
-            status: "passed",
-            passed: true,
-            marks_earned: fallbackMarks,
-            max_marks: currentProblem.marks,
-            feedback: "Goal verified via standard offline heuristics.",
-            unlocked_next_goal: true,
-          },
-        };
-        if (activeGoalIndex + 1 < problems.length) {
-          next[activeGoalIndex + 1] = {
-            status: "not_started",
-            passed: false,
-            marks_earned: 0,
-            max_marks: problems[activeGoalIndex + 1]?.marks || 35,
-          };
-        }
-        return next;
-      });
-      showToast(`Goal ${goalNumber} Verified!`, "success");
+      // Strict rejection on network / execution error (Never auto-pass!)
+      setGoalVerifications((prev) => ({
+        ...prev,
+        [activeGoalIndex]: {
+          status: "needs_revision",
+          passed: false,
+          marks_earned: 0,
+          max_marks: currentProblem.marks,
+          feedback: "Verification failed due to a network connection error. Please verify your code and retry.",
+          unlocked_next_goal: false,
+        },
+      }));
+      showToast(`Goal ${goalNumber} Verification Failed: Could not contact evaluation service.`, "error");
     } finally {
       setEvaluatingGoal(false);
     }
