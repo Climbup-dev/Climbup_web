@@ -332,15 +332,13 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
 
       // Anti-Piracy Enforcement: Under strict security, raw progressive MP4 fallback is DISABLED
       // Browser extensions (FetchV, IDM, Video DownloadHelper) sniff .mp4 URLs to offer download buttons.
-      // Playback is strictly maintained via encrypted HLS blob streams.
+      // Playback is strictly maintained via encrypted HLS blob streams (blob:http://...).
       const fallbackToDirectStream = () => {
         if (isDisposed || !videoRef.current) return;
-        console.warn("[Video Security] Direct progressive MP4 blocked to protect lecture copyright.");
         if (hlsInstanceRef.current) {
           try {
-            hlsInstanceRef.current.loadSource(directHlsUrl);
-            hlsInstanceRef.current.startLoad();
-            return;
+            hlsInstanceRef.current.destroy();
+            hlsInstanceRef.current = null;
           } catch {}
         }
         setIsVideoLoading(false);
@@ -352,12 +350,12 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
         const hls = new Hls({
           enableWorker: true,
           lowLatencyMode: false,
-          manifestLoadingTimeOut: 30000,
-          manifestLoadingMaxRetry: 3,
-          manifestLoadingRetryDelay: 1500,
-          levelLoadingMaxRetry: 4,
-          fragLoadingMaxRetry: 6,
-          fragLoadingTimeOut: 35000,
+          manifestLoadingTimeOut: 20000,
+          manifestLoadingMaxRetry: 2,
+          manifestLoadingRetryDelay: 1000,
+          levelLoadingMaxRetry: 2,
+          fragLoadingMaxRetry: 3,
+          fragLoadingTimeOut: 25000,
           maxBufferLength: 60,
           maxMaxBufferLength: 120,
           maxBufferSize: 60 * 1000 * 1000,
@@ -389,15 +387,14 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
         hls.loadSource(hlsUrl);
         hls.attachMedia(videoRef.current);
 
-        // Resilient Watchdog: Allows Cloud Run time (18s) to transcode on-demand before engaging byte-range fallback
+        // Guarded Watchdog: Allows reasonable packaging time (15s) without infinite retries
         const streamWatchdog = setTimeout(() => {
           if (isDisposed) return;
           const v = videoRef.current;
           if (v && (v.paused || v.readyState < 2) && v.currentTime === 0) {
-            console.warn("[Video Player] HLS stream stall detected (>18s), engaging protected byte-range stream.");
-            fallbackToDirectStream();
+            console.warn("[Video Player] HLS packaging in progress, standing by...");
           }
-        }, 18000);
+        }, 15000);
 
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
           clearTimeout(streamWatchdog);
@@ -410,13 +407,13 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
         hls.on(Hls.Events.ERROR, (_evt, data) => {
           if (data.fatal) {
             console.warn("[Video Security] HLS event notice:", data.type, data.details);
+            clearTimeout(streamWatchdog);
             if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
               hls.recoverMediaError();
             } else if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
               networkRetries++;
               if (networkRetries <= 2) {
-                console.info("[Video Security] Retrying stream directly via cloud backend...");
-                hls.loadSource(directHlsUrl);
+                console.info("[Video Security] Retrying stream connection (attempt " + networkRetries + "/2)...");
                 hls.startLoad();
               } else {
                 fallbackToDirectStream();
