@@ -327,30 +327,113 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
       if (isDisposed || !videoRef.current) return;
 
       const tokenParam = token ? `?st=${encodeURIComponent(token)}` : ``;
-      const secureStreamUrl = `/api/lessons/${lessonId}/stream${tokenParam}`;
+      const hlsUrl = `/api/lessons/${lessonId}/hls/master.m3u8${tokenParam}`;
+      const directHlsUrl = `${backendBase}/api/lessons/${lessonId}/hls/master.m3u8${tokenParam}`;
 
-      // Enterprise Anti-Piracy Streaming:
-      // Direct stateless byte-range stream from private storage via Next.js internal proxy.
-      // - Instant start (< 1 second) for both short lectures and 4+ hour masterclasses.
-      // - Zero CPU/transcode bottlenecks on serverless containers (zero 503 errors).
-      // - Protected by HMAC signed stream token, anti-downloader filters, and dynamic watermark overlay.
-      if (hlsInstanceRef.current) {
-        try {
-          hlsInstanceRef.current.destroy();
-          hlsInstanceRef.current = null;
-        } catch {}
-      }
+      // Anti-Piracy Enforcement: Under strict security, raw progressive MP4 fallback is DISABLED
+      // Browser extensions (FetchV, IDM, Video DownloadHelper) sniff .mp4 URLs to offer download buttons.
+      // Playback is strictly maintained via encrypted HLS blob streams.
+      const fallbackToDirectStream = () => {
+        if (isDisposed || !videoRef.current) return;
+        console.warn("[Video Security] Direct progressive MP4 blocked to protect lecture copyright.");
+        if (hlsInstanceRef.current) {
+          try {
+            hlsInstanceRef.current.loadSource(directHlsUrl);
+            hlsInstanceRef.current.startLoad();
+            return;
+          } catch {}
+        }
+        setIsVideoLoading(false);
+        setVideoPlaybackError(true);
+      };
 
-      const v = videoRef.current;
-      if (v) {
-        v.src = secureStreamUrl;
-        v.load();
-        v.play().then(() => {
-          setIsVideoLoading(false);
-          setVideoPlaybackError(false);
-        }).catch(() => {
-          setIsVideoLoading(false);
+      if (Hls.isSupported()) {
+        let networkRetries = 0;
+        const hls = new Hls({
+          enableWorker: true,
+          lowLatencyMode: false,
+          manifestLoadingTimeOut: 30000,
+          manifestLoadingMaxRetry: 3,
+          manifestLoadingRetryDelay: 1500,
+          levelLoadingMaxRetry: 4,
+          fragLoadingMaxRetry: 6,
+          fragLoadingTimeOut: 35000,
+          maxBufferLength: 60,
+          maxMaxBufferLength: 120,
+          maxBufferSize: 60 * 1000 * 1000,
+          xhrSetup: (xhr: XMLHttpRequest, _url: string) => {
+            const injectHeaders = () => {
+              try {
+                xhr.setRequestHeader("X-Climbup-Player", "amirshaikh320340");
+                if (token) {
+                  xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+                }
+              } catch (e) {
+                // Header state guarded
+              }
+            };
+            if (xhr.readyState === XMLHttpRequest.OPENED || xhr.readyState === 1) {
+              injectHeaders();
+            } else {
+              const origOpen = xhr.open;
+              xhr.open = function (...args: any[]) {
+                const res = origOpen.apply(this, args as any);
+                injectHeaders();
+                return res;
+              };
+            }
+          },
         });
+
+        hlsInstanceRef.current = hls;
+        hls.loadSource(hlsUrl);
+        hls.attachMedia(videoRef.current);
+
+        // Resilient Watchdog: Allows Cloud Run time (18s) to transcode on-demand before engaging byte-range fallback
+        const streamWatchdog = setTimeout(() => {
+          if (isDisposed) return;
+          const v = videoRef.current;
+          if (v && (v.paused || v.readyState < 2) && v.currentTime === 0) {
+            console.warn("[Video Player] HLS stream stall detected (>18s), engaging protected byte-range stream.");
+            fallbackToDirectStream();
+          }
+        }, 18000);
+
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          clearTimeout(streamWatchdog);
+          setVideoPlaybackError(false);
+          videoRef.current?.play().catch(() => {
+            setIsVideoLoading(false);
+          });
+        });
+
+        hls.on(Hls.Events.ERROR, (_evt, data) => {
+          if (data.fatal) {
+            console.warn("[Video Security] HLS event notice:", data.type, data.details);
+            if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
+              hls.recoverMediaError();
+            } else if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
+              networkRetries++;
+              if (networkRetries <= 2) {
+                console.info("[Video Security] Retrying stream directly via cloud backend...");
+                hls.loadSource(directHlsUrl);
+                hls.startLoad();
+              } else {
+                fallbackToDirectStream();
+              }
+            } else {
+              fallbackToDirectStream();
+            }
+          }
+        });
+      } else if (videoRef.current.canPlayType("application/vnd.apple.mpegurl")) {
+        videoRef.current.src = hlsUrl;
+        videoRef.current.load();
+        videoRef.current.onerror = () => {
+          fallbackToDirectStream();
+        };
+      } else {
+        fallbackToDirectStream();
       }
     }
 
