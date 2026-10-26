@@ -328,7 +328,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
 
       const tokenParam = token ? `?st=${encodeURIComponent(token)}` : ``;
       const hlsUrl = `/api/lessons/${lessonId}/hls/master.m3u8${tokenParam}`;
-      const directHlsUrl = `${backendBase}/api/lessons/${lessonId}/hls/master.m3u8${tokenParam}`;
+      const directHlsUrl = `/api/lessons/${lessonId}/hls/master.m3u8${tokenParam}`;
 
       // Anti-Piracy Enforcement: Under strict security, raw progressive MP4 fallback is DISABLED
       // Browser extensions (FetchV, IDM, Video DownloadHelper) sniff .mp4 URLs to offer download buttons.
