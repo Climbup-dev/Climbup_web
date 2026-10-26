@@ -15,7 +15,7 @@ export interface VideoInfo {
   driveId?: string;
 }
 
-export const DEFAULT_CLOUD_RUN_URL = "https://teacher-lecture-video-rag-28929614461.asia-south1.run.app";
+export const DEFAULT_CLOUD_RUN_URL = "https://practq45-28929614461.asia-south1.run.app";
 
 export function getBackendBaseUrl(): string {
   const envUrl = process.env.NEXT_PUBLIC_RAG_SERVER_URL || "";

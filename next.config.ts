@@ -66,7 +66,7 @@ const nextConfig: NextConfig = {
       });
     }
     // Internal backend RAG & Video Streaming proxy (Hides raw Cloud Run server URL from student browsers)
-    const ragServer = process.env.RAG_SERVER_INTERNAL_URL || process.env.NEXT_PUBLIC_RAG_SERVER_URL || 'https://teacher-lecture-video-rag-28929614461.asia-south1.run.app';
+    const ragServer = process.env.RAG_SERVER_INTERNAL_URL || process.env.NEXT_PUBLIC_RAG_SERVER_URL || 'https://practq45-28929614461.asia-south1.run.app';
     rewritesList.push({
       source: '/uploads/:path*',
       destination: `${ragServer}/uploads/:path*`,

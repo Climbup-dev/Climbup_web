@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 
 const RAG_BASE_URL = 
   process.env.NEXT_PUBLIC_RAG_SERVER_URL || 
-  'http://127.0.0.1:8000';
+  'https://practq45-28929614461.asia-south1.run.app';
 
 export interface RetrievedEvidence {
   chunk_index: number;
