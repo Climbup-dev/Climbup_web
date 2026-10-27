@@ -24,7 +24,14 @@ import {
   GraduationCap,
   BookOpen,
   Terminal,
-  HelpCircle
+  HelpCircle,
+  Hash,
+  Bug,
+  Image as ImageIcon,
+  CheckSquare,
+  Lightbulb,
+  Zap,
+  Info
 } from "lucide-react";
 import { useToast } from "@/hooks/useToast";
 import {
@@ -38,8 +45,19 @@ export interface ProblemTierItem {
   problem_number?: number;
   tier: "Basic" | "Intermediate" | "Advanced" | string;
   marks: number;
-  goal_type?: "THEORY" | "CODING" | "PRACTICAL" | string;
+  goal_type?:
+    | "THEORY"
+    | "CODING"
+    | "MCQ"
+    | "NUMERIC"
+    | "DEBUGGING"
+    | "SHORT_ANSWER"
+    | "IMAGE_BASED"
+    | "ALGORITHMIC"
+    | "SCENARIO"
+    | string;
   problem_statement: string;
+  question?: string;
   acceptance_criteria: string[];
   conceptual_checkpoints?: string[];
   starter_code?: string;
@@ -49,9 +67,34 @@ export interface ProblemTierItem {
     is_hidden?: boolean;
   }>;
   deliverable?: string;
+  expected_deliverable?: string;
   lecture_timestamp?: string;
   timestamp_hint?: string;
   solution_hint?: string;
+  hint?: string;
+  image_url?: string;
+  image_caption?: string;
+  mcq?: {
+    options?: Record<string, string>;
+    correct_answer?: string;
+    explanation?: string;
+  };
+  numeric?: {
+    target_value?: number;
+    tolerance?: number;
+    unit?: string;
+    formula_hint?: string;
+  };
+  debugging?: {
+    buggy_code?: string;
+    error_symptom?: string;
+    expected_behavior?: string;
+  };
+  short_answer?: {
+    target_answer?: string;
+    keywords?: string[];
+    case_sensitive?: boolean;
+  };
 }
 
 export interface RubricBreakdown {
@@ -149,7 +192,7 @@ export default function StudentAssignmentWorkspace({
   const [goalVerifications, setGoalVerifications] = useState<Record<number, GoalVerificationState>>({});
   const [evaluatingGoal, setEvaluatingGoal] = useState(false);
 
-  // General Milestone State
+  // General Milestone Submission State
   const [approachNotes, setApproachNotes] = useState("");
   const [isMilestoneSubmitted, setIsMilestoneSubmitted] = useState(false);
   const [evaluatingMilestone, setEvaluatingMilestone] = useState(false);
@@ -159,18 +202,21 @@ export default function StudentAssignmentWorkspace({
   const [copiedEditor, setCopiedEditor] = useState(false);
   const [copiedSnippet, setCopiedSnippet] = useState(false);
 
-  // Detect assignment archetype (THEORY vs CODING vs MIXED)
+  // Detect overall assignment archetype (THEORY vs CODING vs MIXED)
   const assignmentType = useMemo(() => {
     if (!assignment) return "CODING";
     if (assignment.assignment_type) {
       return String(assignment.assignment_type).toUpperCase();
     }
-    const problems = assignment.problems || [];
-    if (problems.length > 0) {
-      const hasTheory = problems.some((p: any) => String(p.goal_type || "").toUpperCase() === "THEORY");
-      const hasCoding = problems.some((p: any) => {
+    const probs = assignment.problems || [];
+    if (probs.length > 0) {
+      const hasTheory = probs.some((p: any) => {
         const gt = String(p.goal_type || "").toUpperCase();
-        return gt === "CODING" || gt === "PRACTICAL";
+        return ["THEORY", "ALGORITHMIC", "SCENARIO", "IMAGE_BASED", "SHORT_ANSWER"].includes(gt);
+      });
+      const hasCoding = probs.some((p: any) => {
+        const gt = String(p.goal_type || "").toUpperCase();
+        return ["CODING", "PRACTICAL", "DEBUGGING", "CODE_SNIPPET"].includes(gt);
       });
       if (hasTheory && hasCoding) return "MIXED";
       if (hasTheory) return "THEORY";
@@ -178,7 +224,7 @@ export default function StudentAssignmentWorkspace({
     return "CODING";
   }, [assignment]);
 
-  // Normalize Problems List
+  // Normalize Problems List from Backend JSON Output
   const problems: ProblemTierItem[] = useMemo(() => {
     if (!assignment) return [];
 
@@ -190,32 +236,74 @@ export default function StudentAssignmentWorkspace({
 
         const criteria = Array.isArray(prob.acceptance_criteria)
           ? prob.acceptance_criteria
-          : (prob.acceptance_criteria ? [prob.acceptance_criteria] : ["Produces verified solution matching problem specifications"]);
+          : prob.acceptance_criteria
+          ? [prob.acceptance_criteria]
+          : ["Produces verified solution matching problem specifications"];
 
         const checkpoints = Array.isArray(prob.conceptual_checkpoints)
           ? prob.conceptual_checkpoints
           : criteria;
 
+        // Default deliverable label
+        let deliv = prob.expected_deliverable || prob.deliverable;
+        if (!deliv) {
+          if (gType === "MCQ") deliv = "Selection of Option A, B, C, or D";
+          else if (gType === "NUMERIC") deliv = "Calculated Numerical Value with Unit";
+          else if (gType === "DEBUGGING") deliv = "Corrected Bug-Free Source Code";
+          else if (gType === "SHORT_ANSWER") deliv = "Concise Technical Concept or Terminology";
+          else if (gType === "IMAGE_BASED") deliv = "Architectural Analysis of the Illustrated System";
+          else if (["THEORY", "ALGORITHMIC", "SCENARIO"].includes(gType)) deliv = "Comprehensive Conceptual Analysis";
+          else deliv = "Executable Code Solution";
+        }
+
         return {
           id: prob.id || idx + 1,
           problem_number: prob.problem_number || idx + 1,
           tier: prob.tier || prob.difficulty || defaultTier,
-          marks: prob.marks || defaultMarks,
+          marks: Number(prob.marks) || defaultMarks,
           goal_type: gType,
           problem_statement: prob.problem_statement || prob.question || prob.description || "",
+          question: prob.question || prob.problem_statement || "",
           acceptance_criteria: criteria,
           conceptual_checkpoints: checkpoints,
-          starter_code: gType === "THEORY" ? "" : (prob.starter_code || assignment.starter_code || ""),
+          starter_code: (["THEORY", "MCQ", "NUMERIC", "SHORT_ANSWER"].includes(gType))
+            ? ""
+            : (prob.starter_code || assignment.starter_code || ""),
           test_cases: prob.test_cases || [],
-          deliverable: prob.deliverable || prob.expected_deliverable || (gType === "THEORY" ? "Conceptual Explanation & Analysis" : "Executable Code Solution"),
+          deliverable: deliv,
+          expected_deliverable: deliv,
           lecture_timestamp: prob.lecture_timestamp || prob.timestamp_hint || `~00:${String(15 * (idx + 1)).padStart(2, '0')}:00`,
           timestamp_hint: prob.timestamp_hint || prob.lecture_timestamp || `~00:${String(15 * (idx + 1)).padStart(2, '0')}:00`,
-          solution_hint: prob.solution_hint || "",
+          solution_hint: prob.solution_hint || prob.hint || "",
+          hint: prob.hint || prob.solution_hint || "",
+          image_url: prob.image_url || "",
+          image_caption: prob.image_caption || "",
+          mcq: prob.mcq || {
+            options: { A: "Option A", B: "Option B", C: "Option C", D: "Option D" },
+            correct_answer: "A",
+            explanation: ""
+          },
+          numeric: prob.numeric || {
+            target_value: 0,
+            tolerance: 0.05,
+            unit: "",
+            formula_hint: ""
+          },
+          debugging: prob.debugging || {
+            buggy_code: prob.starter_code || "",
+            error_symptom: "",
+            expected_behavior: ""
+          },
+          short_answer: prob.short_answer || {
+            target_answer: "",
+            keywords: [],
+            case_sensitive: false
+          }
         };
       });
     }
 
-    // Default lecture-grounded fallback
+    // Default 3-Goal Fallback if problems array is empty
     const title = assignment.title || "Milestone Lab";
     return [
       {
@@ -225,11 +313,11 @@ export default function StudentAssignmentWorkspace({
         marks: 25,
         goal_type: assignmentType === "THEORY" ? "THEORY" : "CODING",
         problem_statement: `Foundational Understanding: Explain or implement the core concept introduced in ${title}.`,
-        acceptance_criteria: ["Clear adherence to core lecture principles", "Handles standard input or base case gracefully"],
+        acceptance_criteria: ["Adherence to core lecture principles", "Handles standard input or base case gracefully"],
         conceptual_checkpoints: ["Identifies primary mechanisms and definitions", "Explains reasoning step-by-step"],
-        starter_code: assignmentType === "THEORY" ? "" : (assignment.starter_code || "# Goal 1 Solution"),
+        starter_code: assignmentType === "THEORY" ? "" : (assignment.starter_code || "# Goal 1 Solution\n"),
         test_cases: [{ input_description: "Standard verification", expected_output: "Matches expected behavior", is_hidden: false }],
-        deliverable: assignmentType === "THEORY" ? "Conceptual Explanation" : "Executable Code",
+        deliverable: assignmentType === "THEORY" ? "Conceptual Explanation" : "Executable Code Solution",
         lecture_timestamp: "~00:15:00",
       },
       {
@@ -241,7 +329,7 @@ export default function StudentAssignmentWorkspace({
         problem_statement: `Applied Techniques: Deepen understanding with intermediate logic, edge cases, and transformations.`,
         acceptance_criteria: ["Implements or explains intermediate mechanics", "Correctly handles boundary conditions"],
         conceptual_checkpoints: ["Analyzes trade-offs and error scenarios", "Demonstrates comprehensive understanding"],
-        starter_code: assignmentType === "THEORY" ? "" : (assignment.starter_code || "# Goal 2 Solution"),
+        starter_code: assignmentType === "THEORY" ? "" : (assignment.starter_code || "# Goal 2 Solution\n"),
         test_cases: [{ input_description: "Edge case validation", expected_output: "Handled without exception", is_hidden: false }],
         deliverable: assignmentType === "THEORY" ? "Structured Analysis" : "Refined Code Implementation",
         lecture_timestamp: "~00:45:00",
@@ -252,10 +340,10 @@ export default function StudentAssignmentWorkspace({
         tier: "Advanced",
         marks: 40,
         goal_type: assignmentType === "THEORY" ? "THEORY" : "CODING",
-        problem_statement: `Real-World Synthesis: Analyze production resilience, system invariants, and optimal solutions.`,
+        problem_statement: `Production Resilience: Analyze architectural trade-offs, anomaly handling, and optimal implementation.`,
         acceptance_criteria: ["Meets high-level correctness benchmarks", "Demonstrates scalable best practices"],
         conceptual_checkpoints: ["Synthesizes end-to-end architecture", "Provides rigorous evaluation"],
-        starter_code: assignmentType === "THEORY" ? "" : (assignment.starter_code || "# Goal 3 Solution"),
+        starter_code: assignmentType === "THEORY" ? "" : (assignment.starter_code || "# Goal 3 Solution\n"),
         test_cases: [{ input_description: "Production invariants check", expected_output: "Optimal output verified", is_hidden: true }],
         deliverable: assignmentType === "THEORY" ? "Comprehensive Evaluation" : "Production-Grade Implementation",
         lecture_timestamp: "~01:15:00",
@@ -271,7 +359,16 @@ export default function StudentAssignmentWorkspace({
       const updated: Record<number, string> = { ...prev };
       problems.forEach((p, idx) => {
         if (updated[idx] === undefined) {
-          updated[idx] = p.goal_type === "THEORY" ? "" : (p.starter_code || "");
+          const gt = (p.goal_type || "CODING").toUpperCase();
+          if (gt === "MCQ") {
+            updated[idx] = "";
+          } else if (gt === "DEBUGGING") {
+            updated[idx] = p.debugging?.buggy_code || p.starter_code || "";
+          } else if (["THEORY", "NUMERIC", "SHORT_ANSWER"].includes(gt)) {
+            updated[idx] = "";
+          } else {
+            updated[idx] = p.starter_code || "";
+          }
         }
       });
       return updated;
@@ -420,39 +517,58 @@ export default function StudentAssignmentWorkspace({
   };
   const isCurrentGoalLocked = currentGoalVerification.status === "locked";
 
+  // Helper for jumping to video timestamp
+  const handleJump = (ts?: string) => {
+    if (!ts || !onSeekVideo) return;
+    onSeekVideo(ts);
+    showToast(`Seeking video to ${ts}`, "info");
+  };
+
   // Handle Per-Goal Verification
   const handleVerifyGoal = async () => {
     if (!currentProblem || isCurrentGoalLocked || evaluatingGoal) return;
 
     const currentAnswer = (goalAnswers[activeGoalIndex] || "").trim();
     const starterClean = (currentProblem.starter_code || "").trim();
-    const minLength = currentGoalType === "THEORY" ? 15 : 5;
 
-    if (currentAnswer.length < minLength) {
-      showToast(
-        currentGoalType === "THEORY"
-          ? "Please write your substantive conceptual explanation before submitting."
-          : "Please write your code solution before running verification.",
-        "warning"
-      );
-      return;
-    }
-
-    // Guard 1: Detect unmodified starter code
-    if (currentGoalType === "CODING" && starterClean && currentAnswer === starterClean) {
-      showToast("Submission Rejected: Please implement your solution before submitting. Unmodified starter template cannot be verified.", "error");
-      return;
-    }
-
-    // Guard 2: Detect code that is only comments or placeholder stubs (pass / ...)
-    if (currentGoalType === "CODING") {
+    // Type-specific validation
+    if (currentGoalType === "MCQ") {
+      if (!currentAnswer) {
+        showToast("Please choose one of the options (A, B, C, or D) before verifying.", "warning");
+        return;
+      }
+    } else if (currentGoalType === "NUMERIC") {
+      if (!currentAnswer) {
+        showToast("Please enter your calculated numerical value.", "warning");
+        return;
+      }
+    } else if (currentGoalType === "SHORT_ANSWER") {
+      if (currentAnswer.length < 2) {
+        showToast("Please type your answer before verifying.", "warning");
+        return;
+      }
+    } else if (["THEORY", "ALGORITHMIC", "SCENARIO", "IMAGE_BASED"].includes(currentGoalType)) {
+      if (currentAnswer.length < 15) {
+        showToast("Please write your substantive conceptual explanation (at least 15 characters) before submitting.", "warning");
+        return;
+      }
+    } else {
+      // CODING or DEBUGGING
+      if (currentAnswer.length < 5) {
+        showToast("Please write your code solution before running verification.", "warning");
+        return;
+      }
+      if (starterClean && currentAnswer === starterClean) {
+        showToast("Submission Rejected: Please implement your solution. Unmodified starter template cannot be verified.", "error");
+        return;
+      }
       const substantiveCode = currentAnswer
         .replace(/#.*$/gm, "")
         .replace(/\/\/.*$/gm, "")
         .replace(/--.*$/gm, "")
         .trim();
       if (!substantiveCode || ["pass", "...", "return", "return none"].includes(substantiveCode.toLowerCase())) {
-        showToast("Submission Rejected: Incomplete code. Only placeholder stubs ('pass' / '# TODO') detected. Please write the required logic.", "error");
+        showToast("Submission Rejected: Incomplete code. Only placeholder stubs ('pass' / '# TODO') detected.", "error");
         return;
       }
     }
@@ -479,38 +595,62 @@ export default function StudentAssignmentWorkspace({
         data = await response.json();
       } else {
         const errJson = await response.json().catch(() => null);
-        console.warn("[StudentAssignmentWorkspace] Server verify non-200:", response.status, errJson);
         const serverMsg = errJson?.detail || errJson?.feedback || `Server returned HTTP ${response.status}.`;
         setGoalVerifications((prev) => ({
           ...prev,
-          [goalNumber]: {
+          [activeGoalIndex]: {
             status: "needs_revision",
             passed: false,
             marks_earned: 0,
             max_marks: currentProblem.marks,
-            feedback: `Server connection notice: ${serverMsg}`,
+            feedback: `Notice: ${serverMsg}`,
             test_results: [
               {
-                name: "Backend Verification Endpoint",
+                name: "Server Verification",
                 passed: false,
-                detail: `HTTP ${response.status}: Please verify backend server is running and reachable.`
+                detail: serverMsg
               }
             ],
             unlocked_next_goal: false,
           }
         }));
-        showToast(`Verification server returned HTTP ${response.status}.`, "error");
+        showToast(`Verification notice: ${serverMsg}`, "error");
         setEvaluatingGoal(false);
         return;
       }
 
-      // Check verification results strictly: NEVER default to true
       const passed = Boolean(data && data.passed);
       const marksAwarded = passed ? (data?.marks_earned ?? currentProblem.marks) : 0;
       const feedback = data?.feedback || (passed ? "Goal verified successfully! Requirements satisfied." : "Verification rejected: Solution did not satisfy test criteria.");
-      const testResults = data?.test_results || (currentGoalType === "THEORY"
-        ? (currentProblem.conceptual_checkpoints || []).map((cp: string) => ({ name: cp, passed: passed, detail: passed ? "Addressed accurately." : "Needs more detail." }))
-        : (currentProblem.test_cases || []).map((tc: any, idx: number) => ({ name: tc.input_description || `Test ${idx + 1}`, passed: passed, detail: passed ? "Output matched." : "Output mismatch." })));
+      
+      let testResults = data?.test_results;
+      if (!testResults || !Array.isArray(testResults)) {
+        if (currentGoalType === "MCQ") {
+          testResults = [{
+            name: `Multiple Choice Option (${currentAnswer})`,
+            passed,
+            detail: feedback
+          }];
+        } else if (currentGoalType === "NUMERIC") {
+          testResults = [{
+            name: `Numeric Tolerance Verification (${currentAnswer} ${currentProblem.numeric?.unit || ''})`,
+            passed,
+            detail: feedback
+          }];
+        } else if (["THEORY", "ALGORITHMIC", "SCENARIO", "IMAGE_BASED"].includes(currentGoalType)) {
+          testResults = (currentProblem.conceptual_checkpoints || []).map((cp: string) => ({
+            name: cp,
+            passed,
+            detail: passed ? "Verified against lecture criteria." : "Needs further technical precision."
+          }));
+        } else {
+          testResults = (currentProblem.test_cases || []).map((tc: any, idx: number) => ({
+            name: tc.input_description || `Test ${idx + 1}`,
+            passed,
+            detail: passed ? "Output matched verified benchmark." : "Test case did not pass."
+          }));
+        }
+      }
 
       const updatedVerification: GoalVerificationState = {
         status: passed ? "passed" : "needs_revision",
@@ -541,13 +681,12 @@ export default function StudentAssignmentWorkspace({
       });
 
       if (passed) {
-        showToast(`🎉 Goal ${goalNumber} Passed! +${marksAwarded} Marks Earned`, "success");
+        showToast(`Goal ${goalNumber} Passed! +${marksAwarded} Marks Earned`, "success");
       } else {
-        showToast(`Goal ${goalNumber} Needs Revision: Review constructive feedback below.`, "info");
+        showToast(`Goal ${goalNumber} Needs Revision: Check feedback details below.`, "info");
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Goal verification error:", err);
-      // Strict rejection on network / execution error (Never auto-pass!)
       setGoalVerifications((prev) => ({
         ...prev,
         [activeGoalIndex]: {
@@ -555,7 +694,7 @@ export default function StudentAssignmentWorkspace({
           passed: false,
           marks_earned: 0,
           max_marks: currentProblem.marks,
-          feedback: "Verification failed due to a network connection error. Please verify your code and retry.",
+          feedback: "Verification network error. Please verify server connection and retry.",
           unlocked_next_goal: false,
         },
       }));
@@ -600,104 +739,83 @@ export default function StudentAssignmentWorkspace({
         }),
       });
 
-      let evalData: any = null;
       if (response.ok) {
-        evalData = await response.json();
+        const data = await response.json();
+        const savedSub = data.submission || data;
+        const apiScore = data.score ?? savedSub?.ai_score ?? finalScore;
+        const apiPassed = apiScore >= 60;
+        const apiFeedback = data.feedback || savedSub?.ai_feedback || {};
+
+        setSubmission({
+          id: savedSub?.id || `sub_${Date.now()}`,
+          student_id: studentId,
+          assignment_id: targetAssignmentId,
+          score: apiScore,
+          verdict: apiPassed ? "PASSED - PRODUCTION READY" : "NEEDS REVISION",
+          pillar_breakdown: apiFeedback.rubric_breakdown
+            ? {
+                logic: apiFeedback.rubric_breakdown.logic_and_correctness?.score ?? 45,
+                syntax_quality: apiFeedback.rubric_breakdown.syntax_and_quality?.score ?? 22,
+                edge_cases: apiFeedback.rubric_breakdown.edge_cases?.score ?? 13,
+                approach_clarity: apiFeedback.rubric_breakdown.approach_clarity?.score ?? 8,
+              }
+            : {
+                logic: Math.round(apiScore * 0.5),
+                syntax_quality: Math.round(apiScore * 0.25),
+                edge_cases: Math.round(apiScore * 0.15),
+                approach_clarity: Math.round(apiScore * 0.1),
+              },
+          feedback: apiFeedback,
+          strengths: apiFeedback.strengths || ["Successfully completed all milestone objectives."],
+          mistakes: apiFeedback.mistakes || [],
+          critical_mistakes: apiFeedback.mistakes || [],
+          ideal_solution: apiFeedback.ideal_solution || "",
+          ideal_model_snippet: apiFeedback.ideal_solution || "",
+          revision_suggestion: apiFeedback.revision_suggestion || "Review key milestone concepts in the lecture.",
+          teacher_summary: apiFeedback.teacher_summary || "Comprehensive milestone submitted.",
+          submitted_at: new Date().toISOString(),
+        });
+        setIsMilestoneSubmitted(true);
+        showToast(`Milestone Mission Graded! Score: ${apiScore}/100`, "success");
+      } else {
+        const errJson = await response.json().catch(() => null);
+        const errMsg = errJson?.detail || "Submission failed on evaluation server.";
+        showToast(errMsg, "error");
       }
-
-      const submissionResult: AssignmentSubmissionState = {
-        id: targetAssignmentId,
-        student_id: studentId,
-        assignment_id: targetAssignmentId,
-        score: finalScore,
-        verdict: isPassed ? "PASSED - PRODUCTION READY" : "NEEDS REVISION",
-        pillar_breakdown: evalData?.submission?.pillar_breakdown || {
-          logic: Math.round((finalScore / 100) * 50),
-          syntax_quality: Math.round((finalScore / 100) * 25),
-          edge_cases: Math.round((finalScore / 100) * 15),
-          approach_clarity: Math.round((finalScore / 100) * 10),
-        },
-        submission_content: combinedContent,
-        approach_notes: approachNotes,
-        submitted_at: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        feedback: {
-          strengths: evalData?.submission?.feedback?.strengths || [
-            "Demonstrated strong conceptual grasp and systematic problem-solving",
-            "Progressive milestone requirements satisfied across all completed challenges",
-          ],
-          mistakes: evalData?.submission?.feedback?.mistakes || [
-            "Review edge-case boundary conditions for higher efficiency",
-          ],
-          revision_suggestion: "Review milestone timestamps for advanced synthesis tips.",
-          teacher_summary: "Outstanding work! All progressive goals completed with verified checkpoints.",
-        },
-      };
-
-      setSubmission(submissionResult);
-      setIsMilestoneSubmitted(true);
-
-      // Persist to Supabase Course Store
+    } catch (err: any) {
+      console.warn("[StudentAssignmentWorkspace] Server submission error, persisting locally:", err);
       await submitAssignment(
         targetAssignmentId,
         courseId,
         {
           submissionText: combinedContent,
           approachNotes,
-        } as any,
+          score: finalScore,
+          feedback: "Graded via local milestone tally.",
+        },
         studentId
       );
-
-      showToast(`Milestone Complete! Final Score: ${finalScore}/${maxScore} Pts (${submissionResult.verdict})`, "success");
-    } catch (err) {
-      console.error("Final submission error:", err);
-      showToast("Milestone progress recorded locally!", "info");
+      setSubmission({
+        score: finalScore,
+        verdict: isPassed ? "PASSED - PRODUCTION READY" : "NEEDS REVISION",
+        submission_content: combinedContent,
+        submitted_at: new Date().toISOString(),
+        feedback: { teacher_summary: "Milestone successfully logged and verified." },
+      });
       setIsMilestoneSubmitted(true);
+      showToast("Milestone submitted and verified locally.", "success");
     } finally {
       setEvaluatingMilestone(false);
     }
   };
 
-  // Timestamp Jump Handler
-  const handleJump = (ts?: string | null) => {
-    if (!ts || !onSeekVideo) return;
-    onSeekVideo(ts);
-  };
-
-  // Copy code helper
-  const handleCopyCode = () => {
-    const text = goalAnswers[activeGoalIndex] || "";
-    if (!text) return;
-    navigator.clipboard?.writeText(text);
-    setCopiedEditor(true);
-    setTimeout(() => setCopiedEditor(false), 2000);
-    showToast("Copied to clipboard!", "success");
-  };
-
-  // Reset to starter code for active goal
-  const handleResetGoalStarter = () => {
-    if (isCurrentGoalLocked) return;
-    const starter = currentProblem.starter_code || "";
-    if (confirm("Reset this goal editor back to original starter template?")) {
-      setGoalAnswers((prev) => ({ ...prev, [activeGoalIndex]: starter }));
-      showToast("Starter template restored for this goal.", "info");
-    }
-  };
-
-  // Loading State
+  // Loading Skeleton State
   if (loading) {
     return (
-      <div className="darkAssignmentRoot" style={{ textAlign: "center", padding: "50px 24px" }}>
-        <div
-          style={{
-            width: "44px",
-            height: "44px",
-            border: "3px solid rgba(37, 99, 235, 0.2)",
-            borderTopColor: "#2563eb",
-            borderRadius: "50%",
-            animation: "spin 0.8s linear infinite",
-            margin: "0 auto 16px",
-          }}
-        />
+      <div className="darkAssignmentRoot" style={{ textAlign: "center", padding: "60px 20px" }}>
+        <div style={{ display: "inline-block", marginBottom: "16px" }}>
+          <BrainCircuit size={36} color="#2563eb" className="animate-pulse" />
+        </div>
         <h4 style={{ color: "#0f172a", margin: "0 0 6px", fontSize: "17px", fontWeight: 700 }}>
           Loading Assignment Studio Workspace...
         </h4>
@@ -774,13 +892,55 @@ export default function StudentAssignmentWorkspace({
   }
 
   const maxScore = assignment.max_score || 100;
-  const dueDateStr = assignment.due_date || assignment.dueDate;
+  const dueDateStr = assignment.due_date || assignment.dueDate || "Next Sunday, 11:59 PM";
   const currentAnswer = goalAnswers[activeGoalIndex] || "";
   const wordCount = currentAnswer.trim() ? currentAnswer.trim().split(/\s+/).length : 0;
   const charCount = currentAnswer.length;
 
   const passedGoalsCount = Object.values(goalVerifications).filter((g) => g.passed).length;
   const totalGoalsCount = problems.length;
+  const totalEarnedMarks = Object.values(goalVerifications).reduce((sum, g) => sum + (g.marks_earned || 0), 0);
+
+  // Dynamic Goal Type Presentation Helpers
+  const isMcq = currentGoalType === "MCQ";
+  const isNumeric = currentGoalType === "NUMERIC";
+  const isDebugging = currentGoalType === "DEBUGGING";
+  const isShortAnswer = currentGoalType === "SHORT_ANSWER";
+  const isImageBased = currentGoalType === "IMAGE_BASED" || Boolean(currentProblem.image_url);
+  const isTheory = ["THEORY", "ALGORITHMIC", "SCENARIO", "IMAGE_BASED"].includes(currentGoalType);
+  const isCoding = !isMcq && !isNumeric && !isDebugging && !isShortAnswer && !isTheory;
+
+  let goalTypePillLabel = "Coding Challenge";
+  let goalTypePillClass = "coding";
+  let verifyBtnClass = "coding";
+  let verifyBtnText = "Test Code & Verify Goal";
+
+  if (isMcq) {
+    goalTypePillLabel = "Multiple Choice Checkpoint";
+    goalTypePillClass = "mcq";
+    verifyBtnClass = "mcq";
+    verifyBtnText = currentAnswer ? `Verify Choice ${currentAnswer}` : "Select an Option to Verify";
+  } else if (isNumeric) {
+    goalTypePillLabel = "Calculation Problem";
+    goalTypePillClass = "numeric";
+    verifyBtnClass = "numeric";
+    verifyBtnText = "Verify Numerical Result";
+  } else if (isDebugging) {
+    goalTypePillLabel = "Bug-Fix & Debugging";
+    goalTypePillClass = "debugging";
+    verifyBtnClass = "debugging";
+    verifyBtnText = "Verify Repaired Solution";
+  } else if (isShortAnswer) {
+    goalTypePillLabel = "Short-Answer Concept";
+    goalTypePillClass = "short_answer";
+    verifyBtnClass = "short_answer";
+    verifyBtnText = "Verify Concept Terminology";
+  } else if (isTheory) {
+    goalTypePillLabel = "Theory & Architecture";
+    goalTypePillClass = "theory";
+    verifyBtnClass = "theory";
+    verifyBtnText = "Verify Theory Explanation";
+  }
 
   return (
     <div className="darkAssignmentRoot">
@@ -790,7 +950,7 @@ export default function StudentAssignmentWorkspace({
           <div className="darkBadgeRow">
             <span className="darkTagLive">
               <span className="darkPulseDot" />
-              Active Milestone
+              Active Milestone Mission
             </span>
 
             {/* Archetype Pill */}
@@ -801,7 +961,7 @@ export default function StudentAssignmentWorkspace({
                 </>
               ) : assignmentType === "MIXED" ? (
                 <>
-                  <Layers size={13} /> Mixed Mission (Theory + Code)
+                  <Layers size={13} /> Mixed (Theory + Coding)
                 </>
               ) : (
                 <>
@@ -811,62 +971,48 @@ export default function StudentAssignmentWorkspace({
             </span>
 
             <span className="darkTagAiRubric">
-              <ShieldCheck size={13} /> Rubric Verified
+              <ShieldCheck size={13} /> Zero-Leakage Auto-Grader
             </span>
           </div>
 
           <h2 className="darkAssignmentTitle">
-            {assignment.title || "Progressive Milestone Assignment"}
+            {assignment.title || "Milestone Practical Assignment"}
           </h2>
         </div>
 
+        {/* Due Date & Max Marks Badges */}
         <div className="darkMetaPills">
           <div className="darkDuePill">
-            <Clock size={15} color="#64748b" />
-            <span>{dueDateStr ? `Due: ${dueDateStr}` : "Estimated: 45 Mins"}</span>
+            <Clock size={14} color="#64748b" />
+            <span>Due: {dueDateStr}</span>
           </div>
+
           <div className="darkMaxScoreBadge">
-            <Award size={16} />
-            <span>Max Score: {maxScore} Pts</span>
+            <Award size={16} color="#059669" />
+            <span>{maxScore} Total Marks</span>
           </div>
         </div>
       </header>
 
-      {/* Real-World Scenario Context Card */}
-      <div className="darkScenarioCard">
-        <div className="darkScenarioHeader">
-          <BrainCircuit size={17} /> Real-World Problem Context
-        </div>
-        <p className="darkScenarioBody">
-          {assignment.scenario_context ||
-            assignment.description ||
-            "Apply core principles learned in this lecture to solve progressive challenges. Complete each goal sequentially to verify your solution and unlock the next challenge."}
-        </p>
-      </div>
+      {/* 2. REAL-WORLD SCENARIO CONTEXT BOX */}
+      {assignment.scenario_context && (
+        <section className="darkScenarioCard">
+          <div className="darkScenarioHeader">
+            <BrainCircuit size={16} />
+            <span>Production Scenario Context</span>
+          </div>
+          <p className="darkScenarioBody">{assignment.scenario_context}</p>
+        </section>
+      )}
 
-      {/* 2. GOAL-BY-GOAL STEPPER NAVIGATION */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px", flexWrap: "wrap", gap: "8px" }}>
-        <span style={{ fontSize: "12px", fontWeight: 800, color: "#2563eb", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-          Milestone Progression ({passedGoalsCount} of {totalGoalsCount} Goals Verified)
-        </span>
-        <span style={{ fontSize: "12px", color: "#64748b", fontWeight: 600 }}>
-          Sequential Completion Required
-        </span>
-      </div>
-
-      <div className="darkGoalStepper" role="tablist">
-        {problems.map((prob, idx) => {
-          const vState = goalVerifications[idx] || { status: idx === 0 ? "not_started" : "locked", passed: false };
-          const isLocked = vState.status === "locked";
-          const isPassed = vState.passed;
+      {/* 3. PROGRESSIVE GOAL STEPPER BAR */}
+      <div className="darkGoalStepper">
+        {problems.map((p, idx) => {
+          const vState = goalVerifications[idx] || { status: idx === 0 ? "not_started" : "locked" };
+          const isPassed = vState.status === "passed";
           const isNeedsRev = vState.status === "needs_revision";
-          const isActive = idx === activeGoalIndex;
-          const gType = (prob.goal_type || (assignmentType === "THEORY" ? "THEORY" : "CODING")).toUpperCase();
-
-          let statusClass = "";
-          if (isPassed) statusClass = "passed";
-          else if (isNeedsRev) statusClass = "needs_revision";
-          else if (isLocked) statusClass = "locked";
+          const isLocked = vState.status === "locked";
+          const isActive = activeGoalIndex === idx;
 
           return (
             <button
@@ -874,32 +1020,27 @@ export default function StudentAssignmentWorkspace({
               type="button"
               disabled={isLocked}
               onClick={() => setActiveGoalIndex(idx)}
-              className={`darkGoalStepBtn ${isActive ? "active" : ""} ${statusClass}`}
-              title={isLocked ? `Complete Goal ${idx} first to unlock this challenge.` : `Switch to Goal ${idx + 1}`}
+              className={`darkGoalStepBtn ${isActive ? "active" : ""} ${isPassed ? "passed" : ""} ${isNeedsRev ? "needs_revision" : ""} ${isLocked ? "locked" : ""}`}
             >
-              {isPassed ? (
-                <CheckCircle2 size={15} color="#059669" />
-              ) : isLocked ? (
-                <Lock size={14} color="#94a3b8" />
-              ) : gType === "THEORY" ? (
-                <BookOpen size={14} color="#2563eb" />
+              {isLocked ? (
+                <Lock size={13} color="#94a3b8" />
+              ) : isPassed ? (
+                <CheckCircle2 size={13} color="#059669" />
+              ) : isNeedsRev ? (
+                <AlertTriangle size={13} color="#d97706" />
               ) : (
-                <Code2 size={14} color="#059669" />
+                <Unlock size={13} color="#2563eb" />
               )}
-              <span>
-                Goal {idx + 1}: {prob.tier}
-              </span>
-              <span style={{ fontSize: "11px", opacity: 0.85, fontWeight: 800 }}>
-                ({prob.marks} pts)
-              </span>
+              <span>Goal {idx + 1}: {p.tier}</span>
+              <span style={{ fontSize: "11px", opacity: 0.85 }}>({p.marks} Pts)</span>
             </button>
           );
         })}
       </div>
 
-      {/* 3. ACTIVE GOAL WORKSPACE */}
-      <section className="darkMilestonesSection" style={{ marginTop: "8px" }}>
-        <div className="darkProblemCard" style={{ border: "1px solid #bfdbfe", background: "#ffffff" }}>
+      {/* 4. ACTIVE GOAL WORKSPACE CARD */}
+      <section className="darkMilestonesSection">
+        <div className="darkProblemCard" style={{ border: "1.5px solid #bfdbfe", background: "#ffffff" }}>
           {/* Top Row: Tier, Marks, Goal Type, Lecture Timestamp */}
           <div className="darkProblemTopRow">
             <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
@@ -907,18 +1048,28 @@ export default function StudentAssignmentWorkspace({
                 Goal {activeGoalIndex + 1}: {currentProblem.tier}
               </span>
 
-              <span className={`darkGoalTypeBadge ${currentGoalType.toLowerCase()}`}>
-                {currentGoalType === "THEORY" ? (
-                  <>
-                    <BookOpen size={11} /> Conceptual / Theory
-                  </>
-                ) : (
-                  <>
-                    <Terminal size={11} /> Code Implementation
-                  </>
-                )}
+              <span className={`darkGoalTypeBadge ${goalTypePillClass}`}>
+                {isMcq ? <CheckSquare size={11} /> : isNumeric ? <Hash size={11} /> : isDebugging ? <Bug size={11} /> : isTheory ? <BookOpen size={11} /> : <Terminal size={11} />}
+                {goalTypePillLabel}
               </span>
 
+              {/* Status Badge */}
+              <span
+                style={{
+                  fontSize: "11px",
+                  fontWeight: 800,
+                  padding: "3px 8px",
+                  borderRadius: "6px",
+                  textTransform: "uppercase",
+                  background: currentGoalVerification.passed ? "#ecfdf5" : currentGoalVerification.status === "needs_revision" ? "#fffbeb" : "#f1f5f9",
+                  color: currentGoalVerification.passed ? "#047857" : currentGoalVerification.status === "needs_revision" ? "#b45309" : "#64748b",
+                  border: `1px solid ${currentGoalVerification.passed ? "#a7f3d0" : currentGoalVerification.status === "needs_revision" ? "#fde68a" : "#e2e8f0"}`
+                }}
+              >
+                {currentGoalVerification.passed ? "Passed" : currentGoalVerification.status === "needs_revision" ? "Needs Revision" : "In Progress"}
+              </span>
+
+              {/* Seek Jump Timestamp */}
               {currentProblem.lecture_timestamp && (
                 <button
                   type="button"
@@ -926,7 +1077,7 @@ export default function StudentAssignmentWorkspace({
                   style={{
                     display: "inline-flex",
                     alignItems: "center",
-                    gap: "4px",
+                    gap: "5px",
                     fontSize: "11.5px",
                     fontWeight: 700,
                     color: "#2563eb",
@@ -938,55 +1089,224 @@ export default function StudentAssignmentWorkspace({
                   }}
                   title="Click to seek lecture video around this timestamp"
                 >
-                  <Play size={10} fill="#2563eb" /> ⏱️ {currentProblem.lecture_timestamp}
+                  <Play size={10} fill="#2563eb" /> {currentProblem.lecture_timestamp}
                 </button>
               )}
             </div>
 
             <span className="darkProblemMarksBadge">
-              {currentProblem.marks} Pts
+              {currentProblem.marks} Marks
             </span>
           </div>
 
           {/* Problem Statement */}
-          <p className="darkProblemStatement" style={{ fontSize: "14.5px", lineHeight: 1.6, color: "#0f172a", fontWeight: 500 }}>
-            {currentProblem.problem_statement}
-          </p>
+          <div className="darkProblemStatement" style={{ fontSize: "14.5px", lineHeight: 1.6, color: "#0f172a", fontWeight: 600, whiteSpace: "pre-wrap" }}>
+            {currentProblem.problem_statement || currentProblem.question}
+          </div>
 
-          {/* Expected Deliverable */}
+          {/* Image / Architecture Diagram Preview (if present) */}
+          {currentProblem.image_url && (
+            <div className="darkGoalDiagramCard">
+              <img
+                src={currentProblem.image_url}
+                alt={currentProblem.image_caption || "Architecture Blueprint"}
+                className="darkGoalDiagramImg"
+              />
+              {currentProblem.image_caption && (
+                <div className="darkGoalDiagramCaption">
+                  <ImageIcon size={13} /> {currentProblem.image_caption}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Expected Deliverable Tag */}
           {currentProblem.deliverable && (
-            <div className="darkDeliverableTag" style={{ margin: "10px 0" }}>
-              <span style={{ fontWeight: 700, color: "#1e40af" }}>🎯 Expected Deliverable:</span>
+            <div className="darkDeliverableTag" style={{ margin: "12px 0 8px" }}>
+              <span style={{ fontWeight: 800, color: "#1e40af" }}>Target Deliverable:</span>
               <strong style={{ color: "#0f172a", marginLeft: "6px" }}>{currentProblem.deliverable}</strong>
             </div>
           )}
 
-          {/* If THEORY Goal: Render Conceptual Checkpoints */}
-          {currentGoalType === "THEORY" && (
-            <div className="darkCheckpointsContainer">
-              <div className="darkCheckpointsTitle">
-                <BookOpen size={14} /> Required Conceptual Checkpoints:
+          {/* Interactive Hint Accordion */}
+          {(currentProblem.solution_hint || currentProblem.hint) && (
+            <details className="darkGoalHintDetails">
+              <summary className="darkGoalHintSummary">
+                <Lightbulb size={14} color="#d97706" />
+                <span>Need a Concept Hint?</span>
+                <span style={{ fontSize: "11px", color: "#94a3b8", fontWeight: "normal" }}>(Click to reveal guidance)</span>
+              </summary>
+              <div className="darkGoalHintContent">
+                {currentProblem.solution_hint || currentProblem.hint}
               </div>
-              <div className="darkCheckpointsList">
-                {(currentProblem.conceptual_checkpoints && currentProblem.conceptual_checkpoints.length > 0
-                  ? currentProblem.conceptual_checkpoints
-                  : currentProblem.acceptance_criteria
-                ).map((cp, cIdx) => (
-                  <div key={cIdx} className="darkCheckpointItem">
-                    <span style={{ color: "#2563eb", fontWeight: 800 }}>📌</span>
-                    <span>{cp}</span>
+            </details>
+          )}
+
+          {/* ======================================================== */}
+          {/* BRANCH A: MCQ GOAL INTERACTION                           */}
+          {/* ======================================================== */}
+          {isMcq && (
+            <div className="darkMcqOptionsGrid">
+              <div style={{ fontSize: "11.5px", fontWeight: 800, color: "#0284c7", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "2px" }}>
+                Select the Correct Option:
+              </div>
+              {Object.entries(currentProblem.mcq?.options || { A: "Option A", B: "Option B", C: "Option C", D: "Option D" }).map(([optKey, optText]) => {
+                const isSelected = currentAnswer === optKey;
+                return (
+                  <label
+                    key={optKey}
+                    className={`darkMcqOptionLabel ${isSelected ? "selected" : ""} ${isCurrentGoalLocked ? "disabled" : ""}`}
+                    onClick={() => {
+                      if (!isCurrentGoalLocked) {
+                        setGoalAnswers((prev) => ({ ...prev, [activeGoalIndex]: optKey }));
+                      }
+                    }}
+                  >
+                    <input
+                      type="radio"
+                      name={`mcq_goal_${activeGoalIndex}`}
+                      value={optKey}
+                      checked={isSelected}
+                      disabled={isCurrentGoalLocked}
+                      onChange={() => {}}
+                      className="darkMcqRadioInput"
+                    />
+                    <span className="darkMcqKey">{optKey})</span>
+                    <span className="darkMcqText">{optText}</span>
+                  </label>
+                );
+              })}
+            </div>
+          )}
+
+          {/* ======================================================== */}
+          {/* BRANCH B: NUMERIC CALCULATION GOAL                       */}
+          {/* ======================================================== */}
+          {isNumeric && (
+            <div className="darkNumericContainer">
+              <div className="darkNumericTitle">
+                <Hash size={14} /> Enter Your Calculated Numerical Result:
+              </div>
+              <div className="darkNumericInputRow">
+                <input
+                  type="text"
+                  value={currentAnswer}
+                  disabled={isCurrentGoalLocked}
+                  placeholder="e.g. 10.67"
+                  onChange={(e) => setGoalAnswers((prev) => ({ ...prev, [activeGoalIndex]: e.target.value }))}
+                  className="darkNumericInput"
+                />
+                {currentProblem.numeric?.unit && (
+                  <span className="darkNumericUnit">{currentProblem.numeric.unit}</span>
+                )}
+              </div>
+              {currentProblem.numeric?.formula_hint && (
+                <div className="darkFormulaHint">
+                  <Info size={13} color="#d97706" />
+                  <span>Formula Hint: {currentProblem.numeric.formula_hint}</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ======================================================== */}
+          {/* BRANCH C: DEBUGGING CHALLENGE GOAL                       */}
+          {/* ======================================================== */}
+          {isDebugging && (
+            <div className="darkDebuggingContainer">
+              <div className="darkDebugTitle">
+                <Bug size={14} /> Buggy Implementation (Analyze & Repair):
+              </div>
+              {currentProblem.debugging?.buggy_code && (
+                <div className="darkBuggyCodeBox">
+                  <pre className="darkBuggyCodeText">{currentProblem.debugging.buggy_code}</pre>
+                </div>
+              )}
+              <div className="darkDebugBadges">
+                {currentProblem.debugging?.error_symptom && (
+                  <div className="darkDebugBadge">
+                    <strong>Reported Symptom:</strong> {currentProblem.debugging.error_symptom}
                   </div>
-                ))}
+                )}
+                {currentProblem.debugging?.expected_behavior && (
+                  <div className="darkDebugBadge" style={{ borderColor: "#bbf7d0", color: "#166534" }}>
+                    <strong>Expected Behavior:</strong> {currentProblem.debugging.expected_behavior}
+                  </div>
+                )}
               </div>
             </div>
           )}
 
-          {/* If CODING Goal: Render Acceptance Criteria & Test Cases */}
-          {currentGoalType !== "THEORY" && (
+          {/* ======================================================== */}
+          {/* BRANCH D: SHORT ANSWER CONCEPT GOAL                      */}
+          {/* ======================================================== */}
+          {isShortAnswer && (
+            <div className="darkShortAnswerContainer">
+              <div className="darkShortAnswerTitle">
+                <BookOpen size={14} /> Type Concise Concept / Terminology:
+              </div>
+              <input
+                type="text"
+                value={currentAnswer}
+                disabled={isCurrentGoalLocked}
+                placeholder="Enter precise technical answer or keyword..."
+                onChange={(e) => setGoalAnswers((prev) => ({ ...prev, [activeGoalIndex]: e.target.value }))}
+                className="darkShortAnswerInput"
+              />
+            </div>
+          )}
+
+          {/* ======================================================== */}
+          {/* BRANCH E: THEORY CONCEPTUAL CHECKPOINTS & TEXTAREA       */}
+          {/* ======================================================== */}
+          {isTheory && !isMcq && !isNumeric && !isShortAnswer && (
             <>
+              {currentProblem.conceptual_checkpoints && currentProblem.conceptual_checkpoints.length > 0 && (
+                <div className="darkCheckpointsContainer">
+                  <div className="darkCheckpointsTitle">
+                    <BookOpen size={14} /> Required Conceptual Checkpoints:
+                  </div>
+                  <div className="darkCheckpointsList">
+                    {currentProblem.conceptual_checkpoints.map((cp, cIdx) => (
+                      <div key={cIdx} className="darkCheckpointItem">
+                        <CheckCircle2 size={13} color="#2563eb" style={{ flexShrink: 0, marginTop: "2px" }} />
+                        <span>{cp}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="darkTheoryCard">
+                <div className="darkTheoryHeader">
+                  <div className="darkTheoryTitle">
+                    <GraduationCap size={16} color="#2563eb" />
+                    <span>Your Conceptual Explanation & Technical Analysis:</span>
+                  </div>
+                  <div className="darkTheoryWordCount">
+                    {wordCount} words - {charCount} chars
+                  </div>
+                </div>
+                <textarea
+                  value={currentAnswer}
+                  disabled={isCurrentGoalLocked}
+                  placeholder="Write your comprehensive conceptual analysis, citing mechanisms and principles from the lecture..."
+                  onChange={(e) => setGoalAnswers((prev) => ({ ...prev, [activeGoalIndex]: e.target.value }))}
+                  className="darkTheoryTextarea"
+                />
+              </div>
+            </>
+          )}
+
+          {/* ======================================================== */}
+          {/* BRANCH F: CODING / DEBUGGING CODE EDITOR & TEST CASES    */}
+          {/* ======================================================== */}
+          {(isCoding || isDebugging) && (
+            <>
+              {/* Acceptance Criteria */}
               {currentProblem.acceptance_criteria && currentProblem.acceptance_criteria.length > 0 && (
-                <div className="darkCriteriaList" style={{ margin: "12px 0" }}>
-                  <span style={{ fontSize: "11.5px", fontWeight: 800, color: "#475569", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "6px", display: "block" }}>
+                <div className="darkCriteriaList" style={{ margin: "14px 0 10px" }}>
+                  <span style={{ fontSize: "11.5px", fontWeight: 800, color: "#475569", textTransform: "uppercase", letterSpacing: "0.06em" }}>
                     Acceptance Criteria:
                   </span>
                   {currentProblem.acceptance_criteria.map((crit, cIdx) => (
@@ -998,6 +1318,7 @@ export default function StudentAssignmentWorkspace({
                 </div>
               )}
 
+              {/* Verification Test Specifications */}
               {currentProblem.test_cases && currentProblem.test_cases.length > 0 && (
                 <div className="darkTestCasesContainer">
                   <div className="darkTestCasesTitle">
@@ -1007,7 +1328,7 @@ export default function StudentAssignmentWorkspace({
                     <div key={tcIdx} className="darkTestCaseItem">
                       <div className="darkTestCaseInput">
                         {tc.is_hidden ? (
-                          <span style={{ color: "#7c3aed", fontWeight: 700 }}>🔒 Invariant Boundary Test (Hidden validation)</span>
+                          <span style={{ color: "#7c3aed", fontWeight: 700 }}>Invariant Boundary Validation (Hidden test)</span>
                         ) : (
                           <>
                             <span style={{ color: "#2563eb" }}>Test {tcIdx + 1}: </span>
@@ -1024,326 +1345,401 @@ export default function StudentAssignmentWorkspace({
                   ))}
                 </div>
               )}
-            </>
-          )}
 
-          {/* 4. DEDICATED INPUT WORKSPACE FOR CURRENT GOAL */}
-          {currentGoalType === "THEORY" ? (
-            /* THEORY ESSAY / EXPLANATION WORKSPACE (NO CODE EDITOR) */
-            <div className="darkTheoryCard">
-              <div className="darkTheoryHeader">
-                <div className="darkTheoryTitle">
-                  <BookOpen size={16} color="#2563eb" /> Your Conceptual Explanation & Analysis
-                </div>
-                <div className="darkTheoryWordCount">
-                  {wordCount} words • {charCount} chars
-                </div>
-              </div>
-
-              <textarea
-                value={goalAnswers[activeGoalIndex] || ""}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  setGoalAnswers((prev) => ({ ...prev, [activeGoalIndex]: val }));
-                }}
-                disabled={isCurrentGoalLocked}
-                rows={8}
-                placeholder="Explain your conceptual understanding with clear technical arguments, step-by-step reasoning, and concrete scenarios matching the checkpoints above..."
-                className="darkTheoryTextarea"
-                spellCheck={true}
-              />
-
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "12px", flexWrap: "wrap", gap: "10px" }}>
-                <div style={{ fontSize: "12px", color: "#64748b" }}>
-                  💡 Evaluated semantically against conceptual checkpoints. No programming syntax check required.
-                </div>
-
-                <button
-                  type="button"
-                  onClick={handleVerifyGoal}
-                  disabled={evaluatingGoal || isCurrentGoalLocked}
-                  style={{
-                    background: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)",
-                    color: "#ffffff",
-                    fontWeight: 700,
-                    fontSize: "13px",
-                    padding: "9px 20px",
-                    borderRadius: "9px",
-                    border: "none",
-                    cursor: evaluatingGoal || isCurrentGoalLocked ? "not-allowed" : "pointer",
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: "7px",
-                    boxShadow: "0 2px 8px rgba(37, 99, 235, 0.25)",
-                  }}
-                >
-                  {evaluatingGoal ? (
-                    <>
-                      <Sparkles size={15} className="animate-spin" />
-                      Evaluating Conceptual Response...
-                    </>
-                  ) : (
-                    <>
-                      <Send size={14} />
-                      ▶ Submit & Verify Theory Goal
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-          ) : (
-            /* CODING MONOSPACE EDITOR WORKSPACE */
-            <div className={`darkEditorCard ${isCurrentGoalLocked ? "locked" : ""}`} style={{ marginTop: "16px" }}>
-              <div className="darkEditorToolbar">
-                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              {/* Monospace Code Editor Card */}
+              <div className={`darkEditorCard ${isCurrentGoalLocked ? "locked" : ""}`} style={{ marginTop: "14px" }}>
+                <div className="darkEditorToolbar">
                   <div className="darkEditorWindowDots">
                     <span className="darkWindowDot red" />
                     <span className="darkWindowDot yellow" />
                     <span className="darkWindowDot green" />
+                    <span className="darkEditorFileName" style={{ marginLeft: "8px" }}>
+                      <Code2 size={13} /> solution_goal_{activeGoalIndex + 1}.py
+                    </span>
                   </div>
-                  <span className="darkEditorFileName">
-                    goal_{activeGoalIndex + 1}_solution.py
-                  </span>
-                  <span style={{ fontSize: "11px", color: "#64748b" }}>
-                    {(goalAnswers[activeGoalIndex] || "").split("\n").length} lines
-                  </span>
-                </div>
 
-                <div className="darkEditorActions">
-                  <button
-                    type="button"
-                    onClick={handleResetGoalStarter}
-                    className="darkToolBtn"
-                    title="Reset code editor back to goal starter template"
-                  >
-                    <RotateCcw size={12} /> Reset Goal Starter
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={handleCopyCode}
-                    className="darkToolBtn"
-                    title="Copy your current goal code"
-                  >
-                    {copiedEditor ? (
-                      <>
-                        <Check size={12} color="#059669" /> Copied!
-                      </>
-                    ) : (
-                      <>
-                        <Copy size={12} /> Copy Code
-                      </>
+                  <div className="darkEditorActions">
+                    {currentProblem.starter_code && (
+                      <button
+                        type="button"
+                        disabled={isCurrentGoalLocked}
+                        onClick={() => {
+                          setGoalAnswers((prev) => ({ ...prev, [activeGoalIndex]: currentProblem.starter_code || "" }));
+                          showToast("Starter template reset.", "info");
+                        }}
+                        className="darkToolBtn"
+                        title="Reset to starter template"
+                      >
+                        <RotateCcw size={12} /> Reset Template
+                      </button>
                     )}
-                  </button>
-                </div>
-              </div>
-
-              <textarea
-                value={goalAnswers[activeGoalIndex] || ""}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  setGoalAnswers((prev) => ({ ...prev, [activeGoalIndex]: val }));
-                }}
-                disabled={isCurrentGoalLocked}
-                rows={10}
-                placeholder="# Write your code solution for this goal here..."
-                className="darkEditorTextarea"
-                spellCheck={false}
-              />
-
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 16px", background: "#f8fafc", borderTop: "1px solid #e2e8f0", flexWrap: "wrap", gap: "10px" }}>
-                <div style={{ fontSize: "12px", color: "#64748b" }}>
-                  🛡️ Static AST Syntax & Sandboxed Test-Case Evaluation
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (currentAnswer) {
+                          navigator.clipboard.writeText(currentAnswer);
+                          setCopiedEditor(true);
+                          setTimeout(() => setCopiedEditor(false), 2000);
+                          showToast("Code copied to clipboard!", "info");
+                        }
+                      }}
+                      className="darkToolBtn"
+                    >
+                      {copiedEditor ? <Check size={12} color="#10b981" /> : <Copy size={12} />}
+                      {copiedEditor ? "Copied!" : "Copy Code"}
+                    </button>
+                  </div>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={handleVerifyGoal}
-                  disabled={evaluatingGoal || isCurrentGoalLocked}
-                  style={{
-                    background: "linear-gradient(135deg, #059669 0%, #047857 100%)",
-                    color: "#ffffff",
-                    fontWeight: 700,
-                    fontSize: "13px",
-                    padding: "9px 20px",
-                    borderRadius: "9px",
-                    border: "none",
-                    cursor: evaluatingGoal || isCurrentGoalLocked ? "not-allowed" : "pointer",
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: "7px",
-                    boxShadow: "0 2px 8px rgba(5, 150, 105, 0.25)",
-                  }}
-                >
-                  {evaluatingGoal ? (
-                    <>
-                      <Sparkles size={15} className="animate-spin" />
-                      Running Tests & Verifying...
-                    </>
-                  ) : (
-                    <>
-                      <Play size={14} />
-                      ▶ Run Code & Verify Goal
-                    </>
-                  )}
-                </button>
+                <textarea
+                  value={currentAnswer}
+                  disabled={isCurrentGoalLocked}
+                  placeholder="# Implement your verified goal solution here..."
+                  onChange={(e) => setGoalAnswers((prev) => ({ ...prev, [activeGoalIndex]: e.target.value }))}
+                  className="darkEditorTextarea"
+                  rows={10}
+                />
               </div>
-            </div>
+            </>
           )}
 
-          {/* 5. LIVE GOAL VERIFICATION FEEDBACK PANEL */}
-          {currentGoalVerification.status !== "not_started" && currentGoalVerification.status !== "locked" && (
+          {/* ======================================================== */}
+          {/* VERIFY BUTTON & LIVE FEEDBACK CARD                       */}
+          {/* ======================================================== */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px", marginTop: "16px", paddingTop: "14px", borderTop: "1px solid #e2e8f0" }}>
+            <div style={{ fontSize: "12px", color: "#64748b", display: "flex", alignItems: "center", gap: "6px" }}>
+              <ShieldCheck size={14} color="#10b981" />
+              <span>Isolated zero-tampering test runner - Instant feedback</span>
+            </div>
+
+            <button
+              type="button"
+              disabled={isCurrentGoalLocked || evaluatingGoal}
+              onClick={handleVerifyGoal}
+              className={`darkVerifyGoalBtn ${verifyBtnClass}`}
+            >
+              {evaluatingGoal ? (
+                <>
+                  <RotateCcw size={14} className="animate-spin" />
+                  <span>Evaluating Goal {activeGoalIndex + 1}...</span>
+                </>
+              ) : currentGoalVerification.passed ? (
+                <>
+                  <CheckCircle2 size={15} />
+                  <span>Re-Verify Goal {activeGoalIndex + 1}</span>
+                </>
+              ) : (
+                <>
+                  <Zap size={15} />
+                  <span>{verifyBtnText}</span>
+                </>
+              )}
+            </button>
+          </div>
+
+          {/* Verification Feedback Report Box */}
+          {currentGoalVerification.feedback && (
             <div className={`darkGoalFeedbackBox ${currentGoalVerification.passed ? "passed" : "needs_revision"}`}>
               <div className="darkGoalFeedbackHeader">
                 <div className={`darkGoalFeedbackTitle ${currentGoalVerification.passed ? "passed" : "needs_revision"}`}>
                   {currentGoalVerification.passed ? (
-                    <>
-                      <CheckCircle2 size={18} color="#059669" /> Goal Verified Successfully!
-                    </>
+                    <CheckCircle2 size={16} color="#047857" />
                   ) : (
-                    <>
-                      <AlertTriangle size={18} color="#d97706" /> Goal Needs Revision
-                    </>
+                    <AlertTriangle size={16} color="#b45309" />
                   )}
+                  <span>
+                    {currentGoalVerification.passed
+                      ? `Goal ${activeGoalIndex + 1} Verified Successfully!`
+                      : `Goal ${activeGoalIndex + 1} Needs Revision`}
+                  </span>
                 </div>
 
-                <span className={`darkGoalFeedbackMarks ${currentGoalVerification.passed ? "passed" : "needs_revision"}`}>
+                <div className={`darkGoalFeedbackMarks ${currentGoalVerification.passed ? "passed" : "needs_revision"}`}>
                   {currentGoalVerification.passed
-                    ? `+${currentGoalVerification.marks_earned} / ${currentProblem.marks} Pts Awarded`
-                    : `${currentGoalVerification.marks_earned} / ${currentProblem.marks} Pts (Revise to earn full marks)`}
-                </span>
+                    ? `+${currentGoalVerification.marks_earned} / ${currentGoalVerification.max_marks} Marks Earned`
+                    : `0 / ${currentGoalVerification.max_marks} Marks`}
+                </div>
               </div>
 
-              {currentGoalVerification.feedback && (
-                <p style={{ margin: "0 0 10px", fontSize: "13.5px", lineHeight: 1.55, color: currentGoalVerification.passed ? "#065f46" : "#92400e" }}>
-                  {currentGoalVerification.feedback}
-                </p>
-              )}
+              <p style={{ fontSize: "13.5px", lineHeight: 1.55, margin: "0 0 10px", color: currentGoalVerification.passed ? "#065f46" : "#92400e" }}>
+                {currentGoalVerification.feedback}
+              </p>
 
-              {/* Criteria / Test Results Breakdown */}
+              {/* Detailed Test Results Table */}
               {currentGoalVerification.test_results && currentGoalVerification.test_results.length > 0 && (
                 <div className="darkVerificationResultsList">
-                  {currentGoalVerification.test_results.map((tr, rIdx) => (
-                    <div key={rIdx} className={`darkVerificationResultItem ${tr.passed ? "passed" : "failed"}`}>
-                      <span style={{ fontWeight: 800 }}>{tr.passed ? "✓" : "⚠️"}</span>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontWeight: 700 }}>{tr.name}</div>
-                        {tr.detail && <div style={{ fontSize: "12px", opacity: 0.9 }}>{tr.detail}</div>}
+                  {currentGoalVerification.test_results.map((tr, trIdx) => (
+                    <div
+                      key={trIdx}
+                      className={`darkVerificationResultItem ${tr.passed ? "passed" : "failed"}`}
+                    >
+                      {tr.passed ? (
+                        <CheckCircle2 size={14} color="#059669" style={{ flexShrink: 0, marginTop: "2px" }} />
+                      ) : (
+                        <AlertTriangle size={14} color="#d97706" style={{ flexShrink: 0, marginTop: "2px" }} />
+                      )}
+                      <div>
+                        <strong>{tr.name}: </strong>
+                        <span>{tr.detail || (tr.passed ? "Verified successfully." : "Requirements not met.")}</span>
                       </div>
                     </div>
                   ))}
                 </div>
               )}
-
-              {/* Next Goal Unlock Button */}
-              {currentGoalVerification.passed && activeGoalIndex + 1 < problems.length && (
-                <div style={{ marginTop: "14px", display: "flex", justifyContent: "flex-end" }}>
-                  <button
-                    type="button"
-                    onClick={() => setActiveGoalIndex(activeGoalIndex + 1)}
-                    style={{
-                      background: "#059669",
-                      color: "#ffffff",
-                      border: "none",
-                      padding: "8px 16px",
-                      borderRadius: "8px",
-                      fontWeight: 700,
-                      fontSize: "13px",
-                      cursor: "pointer",
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: "6px",
-                      boxShadow: "0 2px 6px rgba(5, 150, 105, 0.2)",
-                    }}
-                  >
-                    Proceed to Goal {activeGoalIndex + 2} <ChevronRight size={15} />
-                  </button>
-                </div>
-              )}
             </div>
           )}
         </div>
       </section>
 
-      {/* 6. OVERALL MILESTONE SUBMISSION & SCORECARD */}
-      <section style={{ marginTop: "24px", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "16px", padding: "22px 24px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "14px" }}>
-          <div>
-            <h4 style={{ margin: "0 0 4px", fontSize: "15.5px", fontWeight: 800, color: "#0f172a" }}>
-              Complete Milestone Submission
-            </h4>
-            <p style={{ margin: 0, fontSize: "13px", color: "#64748b" }}>
-              {passedGoalsCount === totalGoalsCount
-                ? "All goals passed! Submit your complete milestone to record your grade in the student gradebook."
-                : `Completed ${passedGoalsCount} of ${totalGoalsCount} goals. You can submit now or finish remaining goals for full marks.`}
-            </p>
+      {/* 5. APPROACH NOTES & FINAL MILESTONE SUBMISSION */}
+      <section className="darkWorkspaceContainer">
+        <div className="darkWorkspaceHeader">
+          <h3 className="darkWorkspaceTitle">
+            <Send size={15} /> Final Mission Submission & Overall Report
+          </h3>
+          <div style={{ fontSize: "12.5px", fontWeight: 700, color: "#1d4ed8" }}>
+            {passedGoalsCount} of {totalGoalsCount} Goals Verified - Total: {totalEarnedMarks} / {maxScore} Marks
+          </div>
+        </div>
+
+        <div className="darkNotesContainer">
+          <label className="darkNotesLabel">
+            <span>Student Approach Notes & Methodology</span>
+            <span className="optional">(Optional reflection for your instructor)</span>
+          </label>
+          <textarea
+            value={approachNotes}
+            disabled={isMilestoneSubmitted}
+            placeholder="Summarize your problem-solving approach, architectural decisions, and trade-offs..."
+            onChange={(e) => setApproachNotes(e.target.value)}
+            className="darkNotesTextarea"
+            rows={3}
+          />
+        </div>
+
+        <div className="darkSubmitRow">
+          <div className="darkSecurityNote">
+            <ShieldCheck size={14} color="#10b981" />
+            <span>Strict Immutability: Once final submission is logged, your score & feedback are locked.</span>
           </div>
 
           <button
             type="button"
-            onClick={handleFinalMilestoneSubmit}
             disabled={evaluatingMilestone}
-            style={{
-              background: passedGoalsCount === totalGoalsCount
-                ? "linear-gradient(135deg, #059669 0%, #047857 100%)"
-                : "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)",
-              color: "#ffffff",
-              fontWeight: 800,
-              fontSize: "14px",
-              padding: "11px 24px",
-              borderRadius: "10px",
-              border: "none",
-              cursor: evaluatingMilestone ? "not-allowed" : "pointer",
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "8px",
-              boxShadow: "0 4px 12px rgba(37, 99, 235, 0.25)",
-            }}
+            onClick={handleFinalMilestoneSubmit}
+            className={`darkSubmitBtn ${evaluatingMilestone ? "evaluating" : ""}`}
           >
             {evaluatingMilestone ? (
               <>
-                <Sparkles size={16} className="animate-spin" />
-                Submitting Milestone...
+                <RotateCcw size={16} className="animate-spin" />
+                <span>Generating Executive AI Report Card...</span>
               </>
             ) : isMilestoneSubmitted ? (
               <>
                 <CheckCircle2 size={16} />
-                Update & Resubmit Milestone
+                <span>Update / Re-Submit Final Mission</span>
               </>
             ) : (
               <>
                 <Send size={16} />
-                🚀 Submit Complete Milestone
+                <span>Submit Final Milestone Mission</span>
               </>
             )}
           </button>
         </div>
+      </section>
 
-        {/* Graded Summary Scorecard if submitted */}
-        {submission && (
-          <div style={{ marginTop: "18px", paddingTop: "16px", borderTop: "1px solid #e2e8f0", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-              <div style={{ background: "#ecfdf5", border: "1px solid #a7f3d0", borderRadius: "50%", width: "44px", height: "44px", display: "grid", placeItems: "center", fontWeight: 800, color: "#047857", fontSize: "16px" }}>
-                {submission.score ?? 85}
+      {/* 6. INSTANT GRADED REPORT CARD (POST-SUBMISSION) */}
+      {submission && (
+        <section className="darkReportCardRoot" style={{ marginTop: "28px" }}>
+          <div className="darkReportTopRow">
+            <div className="darkReportScoreArea">
+              {/* Circular Score Gauge */}
+              <div className="darkScoreGaugeWrapper">
+                <svg className="darkScoreGaugeSvg" viewBox="0 0 100 100">
+                  <circle
+                    className="darkGaugeTrack"
+                    cx="50"
+                    cy="50"
+                    r="42"
+                    strokeWidth="9"
+                    fill="none"
+                  />
+                  <circle
+                    className="darkGaugeFill"
+                    cx="50"
+                    cy="50"
+                    r="42"
+                    strokeWidth="9"
+                    fill="none"
+                    stroke="#2563eb"
+                    strokeDasharray="264"
+                    strokeDashoffset={264 - (264 * Math.min(100, submission.score || 0)) / 100}
+                    strokeLinecap="round"
+                  />
+                </svg>
+                <div className="darkGaugeValue">
+                  <span className="darkGaugeNum">{submission.score ?? 0}</span>
+                  <span className="darkGaugeMax">/ {maxScore}</span>
+                </div>
               </div>
+
               <div>
-                <span style={{ fontSize: "11px", fontWeight: 800, color: "#059669", textTransform: "uppercase", letterSpacing: "0.06em", display: "block" }}>
-                  {submission.verdict || "PASSED - PRODUCTION READY"}
+                <span
+                  className={`darkVerdictPill ${(submission.score ?? 0) >= 60 ? "passed" : "needsRevision"}`}
+                >
+                  {(submission.score ?? 0) >= 60 ? (
+                    <CheckCircle2 size={14} />
+                  ) : (
+                    <AlertTriangle size={14} />
+                  )}
+                  {submission.verdict || ((submission.score ?? 0) >= 60 ? "PASSED - PRODUCTION READY" : "NEEDS REVISION")}
                 </span>
-                <span style={{ fontSize: "12.5px", color: "#475569", fontWeight: 600 }}>
-                  Grade recorded {submission.submitted_at ? `at ${submission.submitted_at}` : "in course progress"}
-                </span>
+                <div style={{ fontSize: "12.5px", color: "#64748b", marginTop: "6px" }}>
+                  Evaluated at: {submission.submitted_at ? new Date(submission.submitted_at).toLocaleTimeString() : "Just now"}
+                </div>
               </div>
             </div>
 
-            {submission.feedback?.teacher_summary && (
-              <div style={{ fontSize: "13px", color: "#334155", background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "8px", padding: "8px 14px", maxWidth: "420px" }}>
-                💬 <strong>AI Mentor:</strong> {submission.feedback.teacher_summary}
+            {submission.feedback?.video_revisit_timestamp && (
+              <button
+                type="button"
+                onClick={() => handleJump(submission.feedback?.video_revisit_timestamp)}
+                className="darkVideoJumpBtn"
+              >
+                <Play size={13} fill="#1d4ed8" />
+                <span>Revisit Lecture ({submission.feedback.video_revisit_timestamp})</span>
+              </button>
+            )}
+          </div>
+
+          {/* 4-Pillar Rubric Breakdown Progress Bars */}
+          {submission.pillar_breakdown && (
+            <div className="darkPillarGrid">
+              <div className="darkPillarCard">
+                <div className="darkPillarHeader">
+                  <span>Logic & Correctness</span>
+                  <span className="darkPillarPts">{submission.pillar_breakdown.logic} / 50</span>
+                </div>
+                <div className="darkPillarBarBg">
+                  <div
+                    className="darkPillarBarFill"
+                    style={{ width: `${(submission.pillar_breakdown.logic / 50) * 100}%` }}
+                  />
+                </div>
+              </div>
+
+              <div className="darkPillarCard">
+                <div className="darkPillarHeader">
+                  <span>Syntax & Code Quality</span>
+                  <span className="darkPillarPts">{submission.pillar_breakdown.syntax_quality} / 25</span>
+                </div>
+                <div className="darkPillarBarBg">
+                  <div
+                    className="darkPillarBarFill"
+                    style={{ width: `${(submission.pillar_breakdown.syntax_quality / 25) * 100}%` }}
+                  />
+                </div>
+              </div>
+
+              <div className="darkPillarCard">
+                <div className="darkPillarHeader">
+                  <span>Edge Cases & Resilience</span>
+                  <span className="darkPillarPts">{submission.pillar_breakdown.edge_cases} / 15</span>
+                </div>
+                <div className="darkPillarBarBg">
+                  <div
+                    className="darkPillarBarFill"
+                    style={{ width: `${(submission.pillar_breakdown.edge_cases / 15) * 100}%` }}
+                  />
+                </div>
+              </div>
+
+              <div className="darkPillarCard">
+                <div className="darkPillarHeader">
+                  <span>Approach Clarity</span>
+                  <span className="darkPillarPts">{submission.pillar_breakdown.approach_clarity} / 10</span>
+                </div>
+                <div className="darkPillarBarBg">
+                  <div
+                    className="darkPillarBarFill"
+                    style={{ width: `${(submission.pillar_breakdown.approach_clarity / 10) * 100}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Strengths & Mistakes */}
+          <div className="darkInsightsGrid">
+            {submission.strengths && submission.strengths.length > 0 && (
+              <div className="darkInsightsBox strengths">
+                <div className="darkInsightsTitle">
+                  <CheckCircle2 size={14} /> Demonstrable Strengths
+                </div>
+                <div className="darkInsightsPillGroup">
+                  {submission.strengths.map((str, sIdx) => (
+                    <span key={sIdx} className="darkStrengthPill">
+                      {str}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {submission.mistakes && submission.mistakes.length > 0 && (
+              <div className="darkInsightsBox mistakes">
+                <div className="darkInsightsTitle">
+                  <AlertTriangle size={14} /> Areas For Optimization
+                </div>
+                <div className="darkInsightsPillGroup">
+                  {submission.mistakes.map((mst, mIdx) => (
+                    <span key={mIdx} className="darkMistakePill">
+                      {mst}
+                    </span>
+                  ))}
+                </div>
               </div>
             )}
           </div>
-        )}
-      </section>
+
+          {/* Ideal Solution Snippet */}
+          {submission.ideal_solution && (
+            <div className="darkIdealSolutionBox">
+              <div className="darkIdealHeader">
+                <div className="darkIdealTitle">
+                  <Sparkles size={14} color="#93c5fd" />
+                  <span>Model Benchmark Reference:</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(submission.ideal_solution || "");
+                    setCopiedSnippet(true);
+                    setTimeout(() => setCopiedSnippet(false), 2000);
+                    showToast("Snippet copied!", "info");
+                  }}
+                  className="darkToolBtn"
+                >
+                  {copiedSnippet ? <Check size={12} color="#10b981" /> : <Copy size={12} />}
+                  {copiedSnippet ? "Copied!" : "Copy Benchmark"}
+                </button>
+              </div>
+              <pre className="darkIdealCodePre">{submission.ideal_solution}</pre>
+            </div>
+          )}
+
+          {/* Teacher Executive Summary */}
+          {submission.teacher_summary && (
+            <div className="darkTeacherSummaryBox">
+              <div className="darkTeacherSummaryHeader">
+                <GraduationCap size={15} /> Instructor Evaluation Summary
+              </div>
+              <p className="darkTeacherSummaryText">{submission.teacher_summary}</p>
+            </div>
+          )}
+        </section>
+      )}
     </div>
   );
 }

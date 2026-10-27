@@ -1395,3 +1395,329 @@
     border-radius: 14px;
   }
 }
+
+
+/* ============================================================
+   ENTERPRISE MULTI-TYPE QUESTION EXTENSIONS (MCQ, NUMERIC, DEBUGGING, DIAGRAMS)
+   ============================================================ */
+
+/* Goal Type Badges Extension */
+.darkGoalTypeBadge.mcq {
+  background: #f0f9ff;
+  color: #0284c7;
+  border: 1px solid #bae6fd;
+}
+.darkGoalTypeBadge.numeric {
+  background: #fffbeb;
+  color: #d97706;
+  border: 1px solid #fde68a;
+}
+.darkGoalTypeBadge.debugging {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+.darkGoalTypeBadge.short_answer {
+  background: #faf5ff;
+  color: #7c3aed;
+  border: 1px solid #e9d5ff;
+}
+
+/* Architecture Diagram Card */
+.darkGoalDiagramCard {
+  background: #040914;
+  border: 1.5px solid #1e3a8a;
+  border-radius: 14px;
+  padding: 16px;
+  text-align: center;
+  margin: 14px 0 18px;
+  box-shadow: 0 4px 18px rgba(15, 23, 42, 0.12);
+}
+.darkGoalDiagramImg {
+  max-height: 320px;
+  max-width: 100%;
+  border-radius: 8px;
+  object-fit: contain;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+  display: inline-block;
+}
+.darkGoalDiagramCaption {
+  font-size: 12px;
+  color: #93c5fd;
+  margin-top: 10px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+/* Interactive Hint Accordion */
+.darkGoalHintDetails {
+  background: #fffbeb;
+  border: 1px dashed #fde68a;
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin: 14px 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.darkGoalHintDetails[open] {
+  background: #fffdf5;
+  border-color: #f59e0b;
+}
+.darkGoalHintSummary {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #b45309;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  user-select: none;
+  outline: none;
+}
+.darkGoalHintContent {
+  font-size: 13px;
+  color: #92400e;
+  line-height: 1.55;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #fef3c7;
+}
+
+/* MCQ Interactive Options */
+.darkMcqOptionsGrid {
+  display: grid;
+  gap: 10px;
+  margin: 16px 0;
+}
+.darkMcqOptionLabel {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  padding: 12px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+.darkMcqOptionLabel:hover:not(.disabled) {
+  background: #f0f9ff;
+  border-color: #7dd3fc;
+  transform: translateX(2px);
+}
+.darkMcqOptionLabel.selected {
+  background: #f0f9ff;
+  border-color: #0284c7;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.12);
+}
+.darkMcqOptionLabel.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.darkMcqRadioInput {
+  accent-color: #0284c7;
+  width: 17px;
+  height: 17px;
+  cursor: pointer;
+}
+.darkMcqKey {
+  font-size: 14px;
+  font-weight: 800;
+  color: #0284c7;
+  min-width: 24px;
+}
+.darkMcqText {
+  font-size: 13.5px;
+  color: #1e293b;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+/* Numeric Calculation Input */
+.darkNumericContainer {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 12px;
+  padding: 16px 18px;
+  margin: 16px 0;
+}
+.darkNumericTitle {
+  font-size: 12px;
+  font-weight: 800;
+  color: #b45309;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.darkNumericInputRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.darkNumericInput {
+  background: #ffffff;
+  border: 1.5px solid #f59e0b;
+  border-radius: 8px;
+  padding: 9px 14px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+  max-width: 220px;
+  outline: none;
+}
+.darkNumericInput:focus {
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+}
+.darkNumericUnit {
+  font-size: 14px;
+  font-weight: 700;
+  color: #b45309;
+}
+.darkFormulaHint {
+  font-size: 12px;
+  color: #92400e;
+  margin-top: 10px;
+  background: rgba(255, 255, 255, 0.65);
+  padding: 8px 12px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Debugging Challenge */
+.darkDebuggingContainer {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+  padding: 16px 18px;
+  margin: 16px 0;
+}
+.darkDebugTitle {
+  font-size: 12px;
+  font-weight: 800;
+  color: #b91c1c;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.darkBuggyCodeBox {
+  background: #040914;
+  border: 1px solid #ef4444;
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin: 10px 0;
+  overflow-x: auto;
+}
+.darkBuggyCodeText {
+  color: #fca5a5;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12.5px;
+  line-height: 1.55;
+  margin: 0;
+}
+.darkDebugBadges {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+.darkDebugBadge {
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: #ffffff;
+  border: 1px solid #fee2e2;
+  color: #991b1b;
+  line-height: 1.4;
+}
+
+/* Short Answer Input */
+.darkShortAnswerContainer {
+  background: #faf5ff;
+  border: 1px solid #e9d5ff;
+  border-radius: 12px;
+  padding: 16px 18px;
+  margin: 16px 0;
+}
+.darkShortAnswerTitle {
+  font-size: 12px;
+  font-weight: 800;
+  color: #7c3aed;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.darkShortAnswerInput {
+  width: 100%;
+  background: #ffffff;
+  border: 1.5px solid #a855f7;
+  border-radius: 8px;
+  padding: 11px 14px;
+  font-size: 14.5px;
+  color: #0f172a;
+  outline: none;
+  box-sizing: border-box;
+}
+.darkShortAnswerInput:focus {
+  box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.2);
+}
+
+/* Dynamic Goal Verification Buttons */
+.darkVerifyGoalBtn {
+  border: none;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 800;
+  padding: 11px 22px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  color: #ffffff;
+}
+.darkVerifyGoalBtn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+.darkVerifyGoalBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+.darkVerifyGoalBtn.coding {
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+}
+.darkVerifyGoalBtn.theory {
+  background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%);
+  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.3);
+}
+.darkVerifyGoalBtn.mcq {
+  background: linear-gradient(135deg, #0284c7 0%, #38bdf8 100%);
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.3);
+}
+.darkVerifyGoalBtn.numeric {
+  background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
+  box-shadow: 0 4px 14px rgba(217, 119, 6, 0.3);
+}
+.darkVerifyGoalBtn.debugging {
+  background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.3);
+}
+.darkVerifyGoalBtn.short_answer {
+  background: linear-gradient(135deg, #6d28d9 0%, #a855f7 100%);
+  box-shadow: 0 4px 14px rgba(109, 40, 217, 0.3);
+}
