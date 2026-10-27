@@ -31,7 +31,10 @@ import {
   CheckSquare,
   Lightbulb,
   Zap,
-  Info
+  Info,
+  Target,
+  Briefcase,
+  ChevronDown,
 } from "lucide-react";
 import { useToast } from "@/hooks/useToast";
 import {
@@ -39,6 +42,110 @@ import {
   submitAssignment,
 } from "@/lib/courses/coursesService";
 import "@/styles/StudentAssignmentDark.css";
+
+interface ParsedProblemStatement {
+  scenario?: string;
+  task?: string;
+  edgeCases?: string;
+  isStructured: boolean;
+  raw: string;
+}
+
+function parseProblemStatement(text: string): ParsedProblemStatement {
+  if (!text) return { raw: "", isStructured: false };
+  const clean = text.trim();
+
+  // Pattern A: "REAL-WORLD SCENARIO: <story>. Write a ... If ..."
+  const scenarioMatch = clean.match(/^(?:REAL-WORLD\s+SCENARIO|SCENARIO)\s*:\s*/i);
+  if (scenarioMatch) {
+    const afterPrefix = clean.slice(scenarioMatch[0].length).trim();
+    const taskRegex = /(?:^|\.\s+)(Write\s+a\s+|Implement\s+|Create\s+|Calculate\s+|Determine\s+|Design\s+|Develop\s+|Your\s+task\s+is\s+to\s+)([\s\S]+)$/i;
+    const taskMatch = afterPrefix.match(taskRegex);
+
+    if (taskMatch && taskMatch.index !== undefined) {
+      let scenarioPart = afterPrefix.slice(0, taskMatch.index).trim();
+      if (!scenarioPart.endsWith('.')) scenarioPart += '.';
+      const taskRemaining = (taskMatch[1] + taskMatch[2]).trim();
+
+      const edgeRegex = /(?:^|\.\s+)(If\s+[a-zA-Z0-9_]+\s+is\s+|If\s+the\s+|If\s+inputs\s+|Note\s*:|Constraints\s*:|Handle\s+edge\s+cases)([\s\S]+)$/i;
+      const edgeMatch = taskRemaining.match(edgeRegex);
+
+      let taskPart = taskRemaining;
+      let edgePart = "";
+      if (edgeMatch && edgeMatch.index !== undefined && edgeMatch.index > 5) {
+        taskPart = taskRemaining.slice(0, edgeMatch.index).trim();
+        if (!taskPart.endsWith('.')) taskPart += '.';
+        edgePart = (edgeMatch[1] + edgeMatch[2]).trim();
+      }
+
+      return {
+        scenario: scenarioPart,
+        task: taskPart,
+        edgeCases: edgePart || undefined,
+        isStructured: true,
+        raw: clean,
+      };
+    } else {
+      return {
+        scenario: afterPrefix,
+        isStructured: true,
+        raw: clean,
+      };
+    }
+  }
+
+  // Pattern B: No "REAL-WORLD SCENARIO:" but has "Write a Python function..."
+  const genericTaskRegex = /(?:^|\.\s+)(Write\s+a\s+Python\s+function|Write\s+a\s+function|Implement\s+a\s+function|Create\s+a\s+function)([\s\S]+)$/i;
+  const genericTaskMatch = clean.match(genericTaskRegex);
+  if (genericTaskMatch && genericTaskMatch.index !== undefined && genericTaskMatch.index > 15) {
+    let background = clean.slice(0, genericTaskMatch.index).trim();
+    if (!background.endsWith('.')) background += '.';
+    const taskRemaining = (genericTaskMatch[1] + genericTaskMatch[2]).trim();
+
+    const edgeRegex = /(?:^|\.\s+)(If\s+[a-zA-Z0-9_]+\s+is\s+|If\s+the\s+|If\s+inputs\s+|Note\s*:|Constraints\s*:)([\s\S]+)$/i;
+    const edgeMatch = taskRemaining.match(edgeRegex);
+
+    let taskPart = taskRemaining;
+    let edgePart = "";
+    if (edgeMatch && edgeMatch.index !== undefined && edgeMatch.index > 5) {
+      taskPart = taskRemaining.slice(0, edgeMatch.index).trim();
+      if (!taskPart.endsWith('.')) taskPart += '.';
+      edgePart = (edgeMatch[1] + edgeMatch[2]).trim();
+    }
+
+    return {
+      scenario: background,
+      task: taskPart,
+      edgeCases: edgePart || undefined,
+      isStructured: true,
+      raw: clean,
+    };
+  }
+
+  return { raw: clean, isStructured: false };
+}
+
+function renderHighlightedText(text: string) {
+  if (!text) return null;
+  const parts = text.split(/(`[^`]+`|\b[a-zA-Z_][a-zA-Z0-9_]*\s*\([a-zA-Z0-9_,\s]*\))/g);
+  return parts.map((part, i) => {
+    if (part.startsWith('`') && part.endsWith('`')) {
+      return (
+        <code key={i} className="darkInlineCodeBadge">
+          {part.slice(1, -1)}
+        </code>
+      );
+    }
+    if (/\b[a-zA-Z_][a-zA-Z0-9_]*\s*\([a-zA-Z0-9_,\s]*\)/.test(part)) {
+      return (
+        <code key={i} className="darkInlineCodeBadge fnSignature">
+          {part}
+        </code>
+      );
+    }
+    return <span key={i}>{part}</span>;
+  });
+}
 
 export interface ProblemTierItem {
   id?: string | number;
@@ -1060,6 +1167,7 @@ export default function StudentAssignmentWorkspace({
           const isNeedsRev = vState.status === "needs_revision";
           const isLocked = vState.status === "locked";
           const isActive = activeGoalIndex === idx;
+          const tierLower = (p.tier || "basic").toLowerCase();
 
           return (
             <button
@@ -1067,19 +1175,25 @@ export default function StudentAssignmentWorkspace({
               type="button"
               disabled={isLocked}
               onClick={() => setActiveGoalIndex(idx)}
-              className={`darkGoalStepBtn ${isActive ? "active" : ""} ${isPassed ? "passed" : ""} ${isNeedsRev ? "needs_revision" : ""} ${isLocked ? "locked" : ""}`}
+              className={`darkGoalStepBtn ${isActive ? "active" : ""} ${isPassed ? "passed" : ""} ${isNeedsRev ? "needs_revision" : ""} ${isLocked ? "locked" : ""} tier-${tierLower}`}
+              title={isLocked ? `Goal ${idx + 1} locked - complete earlier milestones` : `Goal ${idx + 1}: ${p.tier}`}
             >
-              {isLocked ? (
-                <Lock size={13} color="#94a3b8" />
-              ) : isPassed ? (
-                <CheckCircle2 size={13} color="#059669" />
-              ) : isNeedsRev ? (
-                <AlertTriangle size={13} color="#d97706" />
-              ) : (
-                <Unlock size={13} color="#2563eb" />
-              )}
-              <span>Goal {idx + 1}: {p.tier}</span>
-              <span style={{ fontSize: "11px", opacity: 0.85 }}>({p.marks} Pts)</span>
+              <div className="darkGoalStepBadge">
+                {isPassed ? (
+                  <Check size={12} strokeWidth={3} />
+                ) : isLocked ? (
+                  <Lock size={11} />
+                ) : isNeedsRev ? (
+                  <AlertTriangle size={11} />
+                ) : (
+                  <span>{idx + 1}</span>
+                )}
+              </div>
+              <div className="darkGoalStepInfo">
+                <span className="darkGoalStepTitle">Goal {idx + 1}: {p.tier}</span>
+                <span className="darkGoalStepMarks">+{p.marks} Pts</span>
+              </div>
+              {isActive && <div className="darkGoalActiveIndicator" />}
             </button>
           );
         })}
@@ -1105,7 +1219,7 @@ export default function StudentAssignmentWorkspace({
                 style={{
                   fontSize: "11px",
                   fontWeight: 800,
-                  padding: "3px 8px",
+                  padding: "4px 9px",
                   borderRadius: "6px",
                   textTransform: "uppercase",
                   background: currentGoalVerification.passed ? "#ecfdf5" : currentGoalVerification.status === "needs_revision" ? "#fffbeb" : "#f1f5f9",
@@ -1146,10 +1260,57 @@ export default function StudentAssignmentWorkspace({
             </span>
           </div>
 
-          {/* Problem Statement */}
-          <div className="darkProblemStatement" style={{ fontSize: "14.5px", lineHeight: 1.6, color: "#0f172a", fontWeight: 600, whiteSpace: "pre-wrap" }}>
-            {currentProblem.problem_statement || currentProblem.question}
-          </div>
+          {/* Structured Problem Statement Breakdown */}
+          {(() => {
+            const statementText = currentProblem.problem_statement || currentProblem.question || "";
+            const parsed = parseProblemStatement(statementText);
+
+            if (parsed.isStructured) {
+              return (
+                <div className="darkStructuredProblemBlock">
+                  {parsed.scenario && (
+                    <div className="darkProblemContextCard">
+                      <div className="darkProblemCardSubheader">
+                        <Briefcase size={14} color="#2563eb" />
+                        <span>Real-World Engineering Scenario</span>
+                      </div>
+                      <p className="darkProblemContextText">{parsed.scenario}</p>
+                    </div>
+                  )}
+
+                  {parsed.task && (
+                    <div className="darkProblemObjectiveCard">
+                      <div className="darkProblemCardSubheader objective">
+                        <Target size={14} color="#059669" />
+                        <span>Implementation Objective & Task</span>
+                      </div>
+                      <div className="darkProblemObjectiveText">
+                        {renderHighlightedText(parsed.task)}
+                      </div>
+                    </div>
+                  )}
+
+                  {parsed.edgeCases && (
+                    <div className="darkProblemEdgeCaseCard">
+                      <div className="darkProblemCardSubheader edge">
+                        <AlertTriangle size={14} color="#d97706" />
+                        <span>Edge Cases & Validation Constraints</span>
+                      </div>
+                      <p className="darkProblemEdgeText">{parsed.edgeCases}</p>
+                    </div>
+                  )}
+                </div>
+              );
+            }
+
+            return (
+              <div className="darkProblemPromptStandard">
+                <div className="darkProblemPromptText">
+                  {renderHighlightedText(statementText)}
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Image / Architecture Diagram Preview (if present) */}
           {currentProblem.image_url && (
@@ -1169,9 +1330,16 @@ export default function StudentAssignmentWorkspace({
 
           {/* Expected Deliverable Tag */}
           {currentProblem.deliverable && (
-            <div className="darkDeliverableTag" style={{ margin: "12px 0 8px" }}>
-              <span style={{ fontWeight: 800, color: "#1e40af" }}>Target Deliverable:</span>
-              <strong style={{ color: "#0f172a", marginLeft: "6px" }}>{currentProblem.deliverable}</strong>
+            <div className="darkTargetDeliverableCard">
+              <div className="darkDeliverableHeader">
+                <div className="darkDeliverableBadge">
+                  <Award size={14} color="#1d4ed8" /> Target Deliverable
+                </div>
+                <span className="darkDeliverableHint">Expected output specification</span>
+              </div>
+              <div className="darkDeliverableContent">
+                {renderHighlightedText(currentProblem.deliverable)}
+              </div>
             </div>
           )}
 
@@ -1179,12 +1347,17 @@ export default function StudentAssignmentWorkspace({
           {(currentProblem.solution_hint || currentProblem.hint) && (
             <details className="darkGoalHintDetails">
               <summary className="darkGoalHintSummary">
-                <Lightbulb size={14} color="#d97706" />
-                <span>Need a Concept Hint?</span>
-                <span style={{ fontSize: "11px", color: "#94a3b8", fontWeight: "normal" }}>(Click to reveal guidance)</span>
+                <div className="darkGoalHintSummaryLeft">
+                  <span className="darkHintIconWrap">
+                    <Lightbulb size={15} color="#d97706" />
+                  </span>
+                  <span className="darkGoalHintTitle">Need a Concept Hint?</span>
+                  <span className="darkGoalHintSubtitle">(Click to reveal guided clues & references)</span>
+                </div>
+                <ChevronDown size={16} className="darkHintChevron" />
               </summary>
               <div className="darkGoalHintContent">
-                {currentProblem.solution_hint || currentProblem.hint}
+                <p style={{ margin: 0 }}>{currentProblem.solution_hint || currentProblem.hint}</p>
               </div>
             </details>
           )}
@@ -1193,36 +1366,72 @@ export default function StudentAssignmentWorkspace({
           {/* BRANCH A: MCQ GOAL INTERACTION                           */}
           {/* ======================================================== */}
           {isMcq && (
-            <div className="darkMcqOptionsGrid">
-              <div style={{ fontSize: "11.5px", fontWeight: 800, color: "#0284c7", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "2px" }}>
-                Select the Correct Option:
+            <div className="darkMcqSection">
+              <div className="darkMcqPromptHeader">
+                <div className="darkMcqSectionTitle">
+                  <CheckSquare size={16} color="#2563eb" />
+                  <span>Multiple Choice Challenge</span>
+                </div>
+                <span className="darkMcqInstruction">Select the single correct option below:</span>
               </div>
-              {Object.entries(currentProblem.mcq?.options || { A: "Option A", B: "Option B", C: "Option C", D: "Option D" }).map(([optKey, optText]) => {
-                const isSelected = currentAnswer === optKey;
-                return (
-                  <label
-                    key={optKey}
-                    className={`darkMcqOptionLabel ${isSelected ? "selected" : ""} ${isCurrentGoalLocked ? "disabled" : ""}`}
-                    onClick={() => {
-                      if (!isCurrentGoalLocked) {
-                        setGoalAnswers((prev) => ({ ...prev, [activeGoalIndex]: optKey }));
-                      }
-                    }}
-                  >
-                    <input
-                      type="radio"
-                      name={`mcq_goal_${activeGoalIndex}`}
-                      value={optKey}
-                      checked={isSelected}
-                      disabled={isCurrentGoalLocked}
-                      onChange={() => {}}
-                      className="darkMcqRadioInput"
-                    />
-                    <span className="darkMcqKey">{optKey})</span>
-                    <span className="darkMcqText">{optText}</span>
-                  </label>
-                );
-              })}
+
+              <div className="darkMcqOptionsGrid">
+                {Object.entries(currentProblem.mcq?.options || { A: "Option A", B: "Option B", C: "Option C", D: "Option D" }).map(([optKey, optText]) => {
+                  const isSelected = currentAnswer === optKey;
+                  const isGoalPassed = currentGoalVerification.passed;
+                  const isGoalNeedsRev = currentGoalVerification.status === "needs_revision";
+                  const isCorrectKey = currentProblem.mcq?.correct_answer === optKey;
+
+                  let stateClass = "";
+                  if (isSelected) stateClass = "selected";
+                  if (isGoalPassed && isSelected) stateClass = "correct";
+                  if (isGoalNeedsRev && isSelected) stateClass = "wrong";
+                  if (isGoalNeedsRev && isCorrectKey) stateClass = "reveal-correct";
+
+                  return (
+                    <div
+                      key={optKey}
+                      className={`darkMcqOptionCard ${stateClass} ${isCurrentGoalLocked ? "disabled" : ""}`}
+                      onClick={() => {
+                        if (!isCurrentGoalLocked) {
+                          setGoalAnswers((prev) => ({ ...prev, [activeGoalIndex]: optKey }));
+                        }
+                      }}
+                    >
+                      <div className="darkMcqOptionLetter">
+                        {optKey}
+                      </div>
+                      <div className="darkMcqOptionText">
+                        {optText}
+                      </div>
+                      <div className="darkMcqOptionIndicator">
+                        {isGoalPassed && isSelected ? (
+                          <div className="darkMcqIconBadge correct"><Check size={14} strokeWidth={3} /></div>
+                        ) : isGoalNeedsRev && isSelected ? (
+                          <div className="darkMcqIconBadge wrong"><AlertTriangle size={14} /></div>
+                        ) : isGoalNeedsRev && isCorrectKey ? (
+                          <span className="darkMcqCorrectAnswerPill">Correct Answer</span>
+                        ) : (
+                          <div className={`darkMcqRadioCircle ${isSelected ? "checked" : ""}`} />
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Pedagogical Explanation if verified */}
+              {currentProblem.mcq?.explanation && (currentGoalVerification.passed || currentGoalVerification.status === "needs_revision") && (
+                <div className="darkMcqExplanationCard">
+                  <div className="darkMcqExplanationHeader">
+                    <BrainCircuit size={15} color="#2563eb" />
+                    <span>Pedagogical Explanation & Concept Breakdown</span>
+                  </div>
+                  <p className="darkMcqExplanationText">
+                    {currentProblem.mcq.explanation}
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
@@ -1352,44 +1561,59 @@ export default function StudentAssignmentWorkspace({
             <>
               {/* Acceptance Criteria */}
               {currentProblem.acceptance_criteria && currentProblem.acceptance_criteria.length > 0 && (
-                <div className="darkCriteriaList" style={{ margin: "14px 0 10px" }}>
-                  <span style={{ fontSize: "11.5px", fontWeight: 800, color: "#475569", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-                    Acceptance Criteria:
-                  </span>
-                  {currentProblem.acceptance_criteria.map((crit, cIdx) => (
-                    <div key={cIdx} className="darkCriterionItem">
-                      <CheckCircle2 size={14} className="darkCriterionCheckIcon" />
-                      <span>{crit}</span>
-                    </div>
-                  ))}
+                <div className="darkCriteriaSection">
+                  <div className="darkSectionMiniTitle">
+                    <ShieldCheck size={14} color="#059669" />
+                    <span>Acceptance Criteria & Grading Rubric:</span>
+                  </div>
+                  <div className="darkCriteriaGrid">
+                    {currentProblem.acceptance_criteria.map((crit, cIdx) => (
+                      <div key={cIdx} className="darkCriterionCard">
+                        <div className="darkCriterionCheckBadge">
+                          <Check size={13} strokeWidth={3} />
+                        </div>
+                        <span className="darkCriterionText">{crit}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
 
               {/* Verification Test Specifications */}
               {currentProblem.test_cases && currentProblem.test_cases.length > 0 && (
-                <div className="darkTestCasesContainer">
-                  <div className="darkTestCasesTitle">
-                    <Terminal size={14} /> Verification Test Specifications:
+                <div className="darkTestCasesSection">
+                  <div className="darkSectionMiniTitle">
+                    <Terminal size={14} color="#2563eb" />
+                    <span>Verification Test Specifications & Assertions:</span>
                   </div>
-                  {currentProblem.test_cases.map((tc, tcIdx) => (
-                    <div key={tcIdx} className="darkTestCaseItem">
-                      <div className="darkTestCaseInput">
-                        {tc.is_hidden ? (
-                          <span style={{ color: "#7c3aed", fontWeight: 700 }}>Invariant Boundary Validation (Hidden test)</span>
-                        ) : (
-                          <>
-                            <span style={{ color: "#2563eb" }}>Test {tcIdx + 1}: </span>
-                            {tc.input_description}
-                          </>
-                        )}
-                      </div>
-                      {!tc.is_hidden && tc.expected_output && (
-                        <div className="darkTestCaseExpected">
-                          Expected: {tc.expected_output}
+                  <div className="darkTestCasesGrid">
+                    {currentProblem.test_cases.map((tc, tcIdx) => (
+                      <div key={tcIdx} className="darkTestCaseCard">
+                        <div className="darkTestCaseHeader">
+                          <span className="darkTestCasePill">Test {tcIdx + 1}</span>
+                          {tc.is_hidden ? (
+                            <span className="darkTestCaseHiddenBadge">
+                              <Lock size={11} /> Hidden Invariant Test
+                            </span>
+                          ) : (
+                            <span className="darkTestCasePublicBadge">Automated Test Case</span>
+                          )}
                         </div>
-                      )}
-                    </div>
-                  ))}
+                        <div className="darkTestCaseBody">
+                          <div className="darkTestRow">
+                            <span className="darkTestRowLabel">Input:</span>
+                            <code className="darkTestCode">{tc.input_description}</code>
+                          </div>
+                          {!tc.is_hidden && tc.expected_output && (
+                            <div className="darkTestRow">
+                              <span className="darkTestRowLabel">Expected:</span>
+                              <code className="darkTestCode expected">{tc.expected_output}</code>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
 

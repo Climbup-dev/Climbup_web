@@ -1436,77 +1436,54 @@
 }
 
 .mcqOptionCard.selected {
-  border-color: #2563eb;
-  background: #eff6ff;
-  box-shadow: 0 0 15px rgba(37, 99, 235, 0.15);
+  border-color: #2563eb !important;
+  background: #eff6ff !important;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.12) !important;
 }
 
 .mcqOptionCard.correct {
-  border-color: #2563eb !important;
-  background: rgba(37, 99, 235, 0.18) !important;
-  box-shadow: 0 0 20px rgba(37, 99, 235, 0.2) !important;
+  border-color: #059669 !important;
+  background: #ecfdf5 !important;
+  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.15) !important;
 }
 
 .mcqOptionCard.wrong {
-  border-color: #ef4444 !important;
-  background: rgba(239, 68, 68, 0.18) !important;
-  box-shadow: 0 0 20px rgba(239, 68, 68, 0.2) !important;
+  border-color: #e11d48 !important;
+  background: #fff1f2 !important;
+  box-shadow: 0 4px 14px rgba(225, 29, 72, 0.12) !important;
 }
 
 .mcqOptionLetter {
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   border: 1.5px solid #cbd5e1;
+  background: #f1f5f9;
   display: grid;
   place-items: center;
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 800;
-  color: #0f172a;
+  color: #334155;
   flex-shrink: 0;
   transition: all 0.2s ease;
 }
 
 .mcqOptionCard.selected .mcqOptionLetter {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  border: 1.5px solid #cbd5e1;
-  display: grid;
-  place-items: center;
-  font-size: 13px;
-  font-weight: 800;
-  color: #0f172a;
-  flex-shrink: 0;
-  transition: all 0.2s ease;
+  border-color: #2563eb !important;
+  background: #2563eb !important;
+  color: #ffffff !important;
 }
 
 .mcqOptionCard.correct .mcqOptionLetter {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  border: 1.5px solid #cbd5e1;
-  display: grid;
-  place-items: center;
-  font-size: 13px;
-  font-weight: 800;
-  color: #0f172a;
-  flex-shrink: 0;
-  transition: all 0.2s ease;
+  border-color: #059669 !important;
+  background: #059669 !important;
+  color: #ffffff !important;
 }
 
 .mcqOptionCard.wrong .mcqOptionLetter {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  border: 1.5px solid #cbd5e1;
-  display: grid;
-  place-items: center;
-  font-size: 13px;
-  font-weight: 800;
-  color: #0f172a;
-  flex-shrink: 0;
-  transition: all 0.2s ease;
+  border-color: #e11d48 !important;
+  background: #e11d48 !important;
+  color: #ffffff !important;
 }
 
 /* Results Screen */

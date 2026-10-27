@@ -1317,7 +1317,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
   );
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#f4f8fc", color: "#0f172a" }}>
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#f4f8fc", color: "#0f172a", fontFamily: "var(--font-sans, 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif)" }}>
       <Navbar onLogin={() => { setAuthMode("login"); setAuthOpen(true); }} onSignUp={() => { setAuthMode("register"); setAuthOpen(true); }} />
       <MobileNavTabs />
 
