@@ -20,6 +20,7 @@ import {
   Code2,
   ExternalLink,
   ChevronRight,
+  ChevronLeft,
   Layers,
   GraduationCap,
   BookOpen,
@@ -307,6 +308,7 @@ export default function StudentAssignmentWorkspace({
   const [goalAnswers, setGoalAnswers] = useState<Record<number, string>>({});
   const [goalVerifications, setGoalVerifications] = useState<Record<number, GoalVerificationState>>({});
   const [evaluatingGoal, setEvaluatingGoal] = useState(false);
+  const [showHint, setShowHint] = useState<Record<number, boolean>>({});
 
   // General Milestone Submission State
   const [approachNotes, setApproachNotes] = useState("");
@@ -1098,68 +1100,14 @@ export default function StudentAssignmentWorkspace({
 
   return (
     <div className="darkAssignmentRoot">
-      {/* 1. HEADER & ARCHETYPE BADGES */}
-      <header className="darkAssignmentHeader">
-        <div>
-          <div className="darkBadgeRow">
-            <span className="darkTagLive">
-              <span className="darkPulseDot" />
-              Active Milestone Mission
-            </span>
-
-            {/* Archetype Pill */}
-            <span className={`darkArchetypeBadge ${assignmentType.toLowerCase()}`}>
-              {assignmentType === "THEORY" ? (
-                <>
-                  <BookOpen size={13} /> Theory Mission
-                </>
-              ) : assignmentType === "MIXED" ? (
-                <>
-                  <Layers size={13} /> Mixed (Theory + Coding)
-                </>
-              ) : (
-                <>
-                  <Terminal size={13} /> Coding Mission
-                </>
-              )}
-            </span>
-
-            <span className="darkTagAiRubric">
-              <ShieldCheck size={13} /> Zero-Leakage Auto-Grader
-            </span>
-          </div>
-
-          <h2 className="darkAssignmentTitle">
-            {assignment.title || "Milestone Practical Assignment"}
-          </h2>
-        </div>
-
-        {/* Due Date & Max Marks Badges */}
-        <div className="darkMetaPills">
-          <div className="darkDuePill">
-            <Clock size={14} color="#64748b" />
-            <span>Due: {dueDateStr}</span>
-          </div>
-
-          <div className="darkMaxScoreBadge">
-            <Award size={16} color="#059669" />
-            <span>{maxScore} Total Marks</span>
-          </div>
-        </div>
+      {/* 1. CLEAN MINIMAL HEADER */}
+      <header className="darkAssignmentHeader" style={{ borderBottom: "none", paddingBottom: "0px", marginBottom: "14px" }}>
+        <h2 className="darkAssignmentTitle" style={{ fontSize: "22px", fontWeight: 800, color: "#0f172a", margin: 0 }}>
+          {assignment.title || "Milestone Assignment"}
+        </h2>
       </header>
 
-      {/* 2. REAL-WORLD SCENARIO CONTEXT BOX */}
-      {assignment.scenario_context && (
-        <section className="darkScenarioCard">
-          <div className="darkScenarioHeader">
-            <BrainCircuit size={16} />
-            <span>Production Scenario Context</span>
-          </div>
-          <p className="darkScenarioBody">{assignment.scenario_context}</p>
-        </section>
-      )}
-
-      {/* 3. PROGRESSIVE GOAL STEPPER BAR */}
+      {/* 2. PROGRESSIVE GOAL STEPPER BAR */}
       <div className="darkGoalStepper">
         {problems.map((p, idx) => {
           const vState = goalVerifications[idx] || { status: idx === 0 ? "not_started" : "locked" };
@@ -1176,7 +1124,7 @@ export default function StudentAssignmentWorkspace({
               disabled={isLocked}
               onClick={() => setActiveGoalIndex(idx)}
               className={`darkGoalStepBtn ${isActive ? "active" : ""} ${isPassed ? "passed" : ""} ${isNeedsRev ? "needs_revision" : ""} ${isLocked ? "locked" : ""} tier-${tierLower}`}
-              title={isLocked ? `Goal ${idx + 1} locked - complete earlier milestones` : `Goal ${idx + 1}: ${p.tier}`}
+              title={isLocked ? `Goal ${idx + 1} locked` : `Question ${idx + 1}`}
             >
               <div className="darkGoalStepBadge">
                 {isPassed ? (
@@ -1190,7 +1138,7 @@ export default function StudentAssignmentWorkspace({
                 )}
               </div>
               <div className="darkGoalStepInfo">
-                <span className="darkGoalStepTitle">Goal {idx + 1}: {p.tier}</span>
+                <span className="darkGoalStepTitle">Q{idx + 1}: {p.tier}</span>
                 <span className="darkGoalStepMarks">+{p.marks} Pts</span>
               </div>
               {isActive && <div className="darkGoalActiveIndicator" />}
@@ -1199,38 +1147,20 @@ export default function StudentAssignmentWorkspace({
         })}
       </div>
 
-      {/* 4. ACTIVE GOAL WORKSPACE CARD */}
+      {/* 3. ACTIVE GOAL WORKSPACE CARD */}
       <section className="darkMilestonesSection">
-        <div className="darkProblemCard" style={{ border: "1.5px solid #bfdbfe", background: "#ffffff" }}>
-          {/* Top Row: Tier, Marks, Goal Type, Lecture Timestamp */}
-          <div className="darkProblemTopRow">
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
-              <span className={`darkProblemTierBadge ${currentProblem.tier.toLowerCase()}`}>
-                Goal {activeGoalIndex + 1}: {currentProblem.tier}
+        <div className="darkProblemCard" style={{ border: "1.5px solid #bfdbfe", background: "#ffffff", padding: "24px 28px" }}>
+          {/* Question Card Top Bar: Simple Counter + Corner Hint Bulb */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "14px", flexWrap: "wrap", gap: "8px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <span style={{ fontSize: "13px", fontWeight: 800, color: "#2563eb", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                Question {activeGoalIndex + 1} of {problems.length}
               </span>
-
-              <span className={`darkGoalTypeBadge ${goalTypePillClass}`}>
-                {isMcq ? <CheckSquare size={11} /> : isNumeric ? <Hash size={11} /> : isDebugging ? <Bug size={11} /> : isTheory ? <BookOpen size={11} /> : <Terminal size={11} />}
-                {goalTypePillLabel}
-              </span>
-
-              {/* Status Badge */}
-              <span
-                style={{
-                  fontSize: "11px",
-                  fontWeight: 800,
-                  padding: "4px 9px",
-                  borderRadius: "6px",
-                  textTransform: "uppercase",
-                  background: currentGoalVerification.passed ? "#ecfdf5" : currentGoalVerification.status === "needs_revision" ? "#fffbeb" : "#f1f5f9",
-                  color: currentGoalVerification.passed ? "#047857" : currentGoalVerification.status === "needs_revision" ? "#b45309" : "#64748b",
-                  border: `1px solid ${currentGoalVerification.passed ? "#a7f3d0" : currentGoalVerification.status === "needs_revision" ? "#fde68a" : "#e2e8f0"}`
-                }}
-              >
-                {currentGoalVerification.passed ? "Passed" : currentGoalVerification.status === "needs_revision" ? "Needs Revision" : "In Progress"}
-              </span>
-
-              {/* Seek Jump Timestamp */}
+              {currentProblem.marks ? (
+                <span style={{ fontSize: "12px", color: "#64748b", fontWeight: 600 }}>
+                  ({currentProblem.marks} Marks)
+                </span>
+              ) : null}
               {currentProblem.lecture_timestamp && (
                 <button
                   type="button"
@@ -1238,83 +1168,87 @@ export default function StudentAssignmentWorkspace({
                   style={{
                     display: "inline-flex",
                     alignItems: "center",
-                    gap: "5px",
-                    fontSize: "11.5px",
+                    gap: "4px",
+                    fontSize: "11px",
                     fontWeight: 700,
                     color: "#2563eb",
                     background: "#eff6ff",
                     border: "1px solid #bfdbfe",
                     borderRadius: "6px",
-                    padding: "3px 8px",
+                    padding: "2px 7px",
                     cursor: onSeekVideo ? "pointer" : "default",
                   }}
-                  title="Click to seek lecture video around this timestamp"
+                  title="Click to seek lecture video"
                 >
                   <Play size={10} fill="#2563eb" /> {currentProblem.lecture_timestamp}
                 </button>
               )}
             </div>
 
-            <span className="darkProblemMarksBadge">
-              {currentProblem.marks} Marks
-            </span>
+            {/* Hint Lightbulb in Corner */}
+            {(currentProblem.solution_hint || currentProblem.hint) && (
+              <button
+                type="button"
+                onClick={() => setShowHint((prev) => ({ ...prev, [activeGoalIndex]: !prev[activeGoalIndex] }))}
+                title={showHint[activeGoalIndex] ? "Hide Hint" : "Click for Hint"}
+                style={{
+                  background: showHint[activeGoalIndex] ? "#fef3c7" : "#f8fafc",
+                  border: `1.5px solid ${showHint[activeGoalIndex] ? "#f59e0b" : "#e2e8f0"}`,
+                  color: showHint[activeGoalIndex] ? "#d97706" : "#64748b",
+                  width: "36px",
+                  height: "36px",
+                  borderRadius: "50%",
+                  display: "grid",
+                  placeItems: "center",
+                  cursor: "pointer",
+                  transition: "all 0.2s ease",
+                  boxShadow: showHint[activeGoalIndex] ? "0 0 10px rgba(245, 158, 11, 0.3)" : "none",
+                }}
+              >
+                <Lightbulb size={18} />
+              </button>
+            )}
           </div>
 
-          {/* Structured Problem Statement Breakdown */}
-          {(() => {
-            const statementText = currentProblem.problem_statement || currentProblem.question || "";
-            const parsed = parseProblemStatement(statementText);
-
-            if (parsed.isStructured) {
-              return (
-                <div className="darkStructuredProblemBlock">
-                  {parsed.scenario && (
-                    <div className="darkProblemContextCard">
-                      <div className="darkProblemCardSubheader">
-                        <Briefcase size={14} color="#2563eb" />
-                        <span>Real-World Engineering Scenario</span>
-                      </div>
-                      <p className="darkProblemContextText">{parsed.scenario}</p>
-                    </div>
-                  )}
-
-                  {parsed.task && (
-                    <div className="darkProblemObjectiveCard">
-                      <div className="darkProblemCardSubheader objective">
-                        <Target size={14} color="#059669" />
-                        <span>Implementation Objective & Task</span>
-                      </div>
-                      <div className="darkProblemObjectiveText">
-                        {renderHighlightedText(parsed.task)}
-                      </div>
-                    </div>
-                  )}
-
-                  {parsed.edgeCases && (
-                    <div className="darkProblemEdgeCaseCard">
-                      <div className="darkProblemCardSubheader edge">
-                        <AlertTriangle size={14} color="#d97706" />
-                        <span>Edge Cases & Validation Constraints</span>
-                      </div>
-                      <p className="darkProblemEdgeText">{parsed.edgeCases}</p>
-                    </div>
-                  )}
-                </div>
-              );
-            }
-
-            return (
-              <div className="darkProblemPromptStandard">
-                <div className="darkProblemPromptText">
-                  {renderHighlightedText(statementText)}
-                </div>
+          {/* Discreet Inline Hint (shown only when Bulb is clicked) */}
+          {showHint[activeGoalIndex] && (currentProblem.solution_hint || currentProblem.hint) && (
+            <div style={{
+              display: "flex",
+              alignItems: "flex-start",
+              gap: "8px",
+              background: "#fffbeb",
+              border: "1px solid #fde68a",
+              borderRadius: "10px",
+              padding: "10px 14px",
+              marginBottom: "16px",
+              fontSize: "13.5px",
+              color: "#92400e",
+              lineHeight: 1.55,
+              animation: "fadeIn 0.2s ease",
+            }}>
+              <Lightbulb size={16} color="#d97706" style={{ flexShrink: 0, marginTop: "2px" }} />
+              <div>
+                <strong style={{ color: "#b45309" }}>Hint: </strong>
+                <span>{currentProblem.solution_hint || currentProblem.hint}</span>
               </div>
-            );
-          })()}
+            </div>
+          )}
+
+          {/* Clean, Prominent Question Prompt */}
+          <h3 style={{
+            fontSize: "17px",
+            fontWeight: 700,
+            color: "#0f172a",
+            lineHeight: 1.6,
+            margin: "0 0 18px",
+            whiteSpace: "pre-wrap"
+          }}>
+            {currentProblem.question || currentProblem.problem_statement}
+          </h3>
 
           {/* Image / Architecture Diagram Preview (if present) */}
           {currentProblem.image_url && (
-            <div className="darkGoalDiagramCard">
+            <div className="darkGoalDiagramCard" style={{ marginBottom: "18px" }}>
               <img
                 src={currentProblem.image_url}
                 alt={currentProblem.image_caption || "Architecture Blueprint"}
@@ -1328,54 +1262,12 @@ export default function StudentAssignmentWorkspace({
             </div>
           )}
 
-          {/* Expected Deliverable Tag */}
-          {currentProblem.deliverable && (
-            <div className="darkTargetDeliverableCard">
-              <div className="darkDeliverableHeader">
-                <div className="darkDeliverableBadge">
-                  <Award size={14} color="#1d4ed8" /> Target Deliverable
-                </div>
-                <span className="darkDeliverableHint">Expected output specification</span>
-              </div>
-              <div className="darkDeliverableContent">
-                {renderHighlightedText(currentProblem.deliverable)}
-              </div>
-            </div>
-          )}
-
-          {/* Interactive Hint Accordion */}
-          {(currentProblem.solution_hint || currentProblem.hint) && (
-            <details className="darkGoalHintDetails">
-              <summary className="darkGoalHintSummary">
-                <div className="darkGoalHintSummaryLeft">
-                  <span className="darkHintIconWrap">
-                    <Lightbulb size={15} color="#d97706" />
-                  </span>
-                  <span className="darkGoalHintTitle">Need a Concept Hint?</span>
-                  <span className="darkGoalHintSubtitle">(Click to reveal guided clues & references)</span>
-                </div>
-                <ChevronDown size={16} className="darkHintChevron" />
-              </summary>
-              <div className="darkGoalHintContent">
-                <p style={{ margin: 0 }}>{currentProblem.solution_hint || currentProblem.hint}</p>
-              </div>
-            </details>
-          )}
-
           {/* ======================================================== */}
           {/* BRANCH A: MCQ GOAL INTERACTION                           */}
           {/* ======================================================== */}
           {isMcq && (
-            <div className="darkMcqSection">
-              <div className="darkMcqPromptHeader">
-                <div className="darkMcqSectionTitle">
-                  <CheckSquare size={16} color="#2563eb" />
-                  <span>Multiple Choice Challenge</span>
-                </div>
-                <span className="darkMcqInstruction">Select the single correct option below:</span>
-              </div>
-
-              <div className="darkMcqOptionsGrid">
+            <div style={{ marginTop: "14px" }}>
+              <div className="darkMcqOptionsGrid" style={{ display: "grid", gap: "10px" }}>
                 {Object.entries(currentProblem.mcq?.options || { A: "Option A", B: "Option B", C: "Option C", D: "Option D" }).map(([optKey, optText]) => {
                   const isSelected = currentAnswer === optKey;
                   const isGoalPassed = currentGoalVerification.passed;
@@ -1397,38 +1289,175 @@ export default function StudentAssignmentWorkspace({
                           setGoalAnswers((prev) => ({ ...prev, [activeGoalIndex]: optKey }));
                         }
                       }}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "14px",
+                        padding: "14px 18px",
+                        borderRadius: "12px",
+                        border: isGoalPassed && isSelected
+                          ? "2px solid #059669"
+                          : isGoalNeedsRev && isSelected
+                          ? "2px solid #e11d48"
+                          : isGoalNeedsRev && isCorrectKey
+                          ? "2px dashed #059669"
+                          : isSelected
+                          ? "2px solid #2563eb"
+                          : "1.5px solid #e2e8f0",
+                        background: isGoalPassed && isSelected
+                          ? "#ecfdf5"
+                          : isGoalNeedsRev && isSelected
+                          ? "#fff1f2"
+                          : isGoalNeedsRev && isCorrectKey
+                          ? "#f0fdf4"
+                          : isSelected
+                          ? "#eff6ff"
+                          : "#ffffff",
+                        cursor: isCurrentGoalLocked ? "not-allowed" : "pointer",
+                        transition: "all 0.15s ease",
+                      }}
                     >
-                      <div className="darkMcqOptionLetter">
+                      <div className="darkMcqOptionLetter" style={{
+                        width: "32px",
+                        height: "32px",
+                        borderRadius: "50%",
+                        background: isGoalPassed && isSelected
+                          ? "#059669"
+                          : isGoalNeedsRev && isSelected
+                          ? "#e11d48"
+                          : isSelected
+                          ? "#2563eb"
+                          : "#f1f5f9",
+                        color: (isSelected || (isGoalNeedsRev && isCorrectKey)) ? "#ffffff" : "#334155",
+                        fontWeight: 800,
+                        fontSize: "13.5px",
+                        display: "grid",
+                        placeItems: "center",
+                        flexShrink: 0
+                      }}>
                         {optKey}
                       </div>
-                      <div className="darkMcqOptionText">
+
+                      <div className="darkMcqOptionText" style={{ flex: 1, fontSize: "14.5px", fontWeight: isSelected ? 700 : 500, color: isGoalPassed && isSelected ? "#047857" : isGoalNeedsRev && isSelected ? "#9f1239" : isSelected ? "#1d4ed8" : "#1e293b", lineHeight: 1.5 }}>
                         {optText}
                       </div>
-                      <div className="darkMcqOptionIndicator">
-                        {isGoalPassed && isSelected ? (
-                          <div className="darkMcqIconBadge correct"><Check size={14} strokeWidth={3} /></div>
-                        ) : isGoalNeedsRev && isSelected ? (
-                          <div className="darkMcqIconBadge wrong"><AlertTriangle size={14} /></div>
-                        ) : isGoalNeedsRev && isCorrectKey ? (
-                          <span className="darkMcqCorrectAnswerPill">Correct Answer</span>
-                        ) : (
-                          <div className={`darkMcqRadioCircle ${isSelected ? "checked" : ""}`} />
-                        )}
-                      </div>
+
+                      {isGoalPassed && isSelected && (
+                        <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#059669", display: "grid", placeItems: "center", color: "#fff", flexShrink: 0 }}>
+                          <Check size={14} strokeWidth={3} />
+                        </div>
+                      )}
+
+                      {isGoalNeedsRev && isSelected && (
+                        <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#e11d48", display: "grid", placeItems: "center", color: "#fff", flexShrink: 0 }}>
+                          <AlertTriangle size={13} />
+                        </div>
+                      )}
+
+                      {isGoalNeedsRev && isCorrectKey && (
+                        <span style={{ fontSize: "11px", fontWeight: 800, textTransform: "uppercase", color: "#047857", background: "#d1fae5", border: "1px solid #a7f3d0", padding: "3px 9px", borderRadius: "999px", flexShrink: 0 }}>
+                          Correct Answer
+                        </span>
+                      )}
+
+                      {!isGoalPassed && !isGoalNeedsRev && isSelected && (
+                        <div style={{ width: "22px", height: "22px", borderRadius: "50%", background: "#2563eb", display: "grid", placeItems: "center", flexShrink: 0 }}>
+                          <Check size={13} color="#ffffff" strokeWidth={3} />
+                        </div>
+                      )}
                     </div>
                   );
                 })}
               </div>
 
-              {/* Pedagogical Explanation if verified */}
-              {currentProblem.mcq?.explanation && (currentGoalVerification.passed || currentGoalVerification.status === "needs_revision") && (
-                <div className="darkMcqExplanationCard">
-                  <div className="darkMcqExplanationHeader">
-                    <BrainCircuit size={15} color="#2563eb" />
-                    <span>Pedagogical Explanation & Concept Breakdown</span>
+              {/* Check Answer Action Button Row */}
+              <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: "10px", marginTop: "16px" }}>
+                <button
+                  type="button"
+                  disabled={isCurrentGoalLocked || evaluatingGoal || !currentAnswer}
+                  onClick={handleVerifyGoal}
+                  style={{
+                    background: currentGoalVerification.passed ? "#059669" : "#2563eb",
+                    color: "#ffffff",
+                    border: "none",
+                    borderRadius: "10px",
+                    padding: "10px 24px",
+                    fontSize: "14px",
+                    fontWeight: 700,
+                    cursor: !currentAnswer || isCurrentGoalLocked ? "not-allowed" : "pointer",
+                    opacity: !currentAnswer ? 0.6 : 1,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    transition: "all 0.15s ease",
+                    boxShadow: "0 2px 8px rgba(37, 99, 235, 0.2)",
+                  }}
+                >
+                  {evaluatingGoal ? (
+                    <>
+                      <RotateCcw size={15} className="animate-spin" />
+                      <span>Checking...</span>
+                    </>
+                  ) : currentGoalVerification.passed ? (
+                    <>
+                      <CheckCircle2 size={16} />
+                      <span>Verified Correct</span>
+                    </>
+                  ) : (
+                    <>
+                      <Check size={16} />
+                      <span>Check Answer</span>
+                    </>
+                  )}
+                </button>
+
+                {currentGoalVerification.passed && activeGoalIndex < problems.length - 1 && (
+                  <button
+                    type="button"
+                    onClick={() => setActiveGoalIndex((prev) => Math.min(problems.length - 1, prev + 1))}
+                    style={{
+                      background: "#f1f5f9",
+                      color: "#1e293b",
+                      border: "1px solid #cbd5e1",
+                      borderRadius: "10px",
+                      padding: "10px 18px",
+                      fontSize: "14px",
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      transition: "all 0.15s ease",
+                    }}
+                  >
+                    <span>Next Question</span>
+                    <ChevronRight size={15} />
+                  </button>
+                )}
+              </div>
+
+              {/* Clean Inline Pedagogical Explanation */}
+              {(currentGoalVerification.feedback || currentProblem.mcq?.explanation) && (currentGoalVerification.passed || currentGoalVerification.status === "needs_revision") && (
+                <div style={{
+                  marginTop: "16px",
+                  background: currentGoalVerification.passed ? "#f0fdf4" : "#fef2f2",
+                  border: `1.5px solid ${currentGoalVerification.passed ? "#86efac" : "#fecaca"}`,
+                  borderLeft: `4px solid ${currentGoalVerification.passed ? "#10b981" : "#ef4444"}`,
+                  borderRadius: "12px",
+                  padding: "16px 20px",
+                  boxShadow: currentGoalVerification.passed ? "0 2px 8px rgba(16, 185, 129, 0.08)" : "0 2px 8px rgba(239, 68, 68, 0.08)",
+                  animation: "fadeIn 0.2s ease"
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", fontWeight: 800, color: currentGoalVerification.passed ? "#047857" : "#b91c1c", marginBottom: "6px" }}>
+                    {currentGoalVerification.passed ? (
+                      <CheckCircle2 size={17} color="#059669" />
+                    ) : (
+                      <AlertTriangle size={17} color="#ef4444" />
+                    )}
+                    <span>{currentGoalVerification.passed ? "Explanation & Key Concept:" : "Explanation & Review:"}</span>
                   </div>
-                  <p className="darkMcqExplanationText">
-                    {currentProblem.mcq.explanation}
+                  <p style={{ margin: 0, fontSize: "14.5px", lineHeight: 1.6, color: currentGoalVerification.passed ? "#064e3b" : "#7f1d1d", fontWeight: 500 }}>
+                    {currentProblem.mcq?.explanation || currentGoalVerification.feedback}
                   </p>
                 </div>
               )}
@@ -1675,153 +1704,218 @@ export default function StudentAssignmentWorkspace({
           )}
 
           {/* ======================================================== */}
-          {/* VERIFY BUTTON & LIVE FEEDBACK CARD                       */}
+          {/* VERIFY BUTTON & LIVE FEEDBACK CARD (CODING/THEORY ONLY)  */}
           {/* ======================================================== */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px", marginTop: "16px", paddingTop: "14px", borderTop: "1px solid #e2e8f0" }}>
-            <div style={{ fontSize: "12px", color: "#64748b", display: "flex", alignItems: "center", gap: "6px" }}>
-              <ShieldCheck size={14} color="#10b981" />
-              <span>Isolated zero-tampering test runner - Instant feedback</span>
-            </div>
+          {!isMcq && (
+            <>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px", marginTop: "16px", paddingTop: "14px", borderTop: "1px solid #e2e8f0" }}>
+                <div style={{ fontSize: "12px", color: "#64748b", display: "flex", alignItems: "center", gap: "6px" }}>
+                  <ShieldCheck size={14} color="#10b981" />
+                  <span>Automated test runner - Instant feedback</span>
+                </div>
 
-            <button
-              type="button"
-              disabled={isCurrentGoalLocked || evaluatingGoal}
-              onClick={handleVerifyGoal}
-              className={`darkVerifyGoalBtn ${verifyBtnClass}`}
-            >
-              {evaluatingGoal ? (
-                <>
-                  <RotateCcw size={14} className="animate-spin" />
-                  <span>Evaluating Goal {activeGoalIndex + 1}...</span>
-                </>
-              ) : currentGoalVerification.passed ? (
-                <>
-                  <CheckCircle2 size={15} />
-                  <span>Re-Verify Goal {activeGoalIndex + 1}</span>
-                </>
-              ) : (
-                <>
-                  <Zap size={15} />
-                  <span>{verifyBtnText}</span>
-                </>
-              )}
-            </button>
-          </div>
-
-          {/* Verification Feedback Report Box */}
-          {currentGoalVerification.feedback && (
-            <div className={`darkGoalFeedbackBox ${currentGoalVerification.passed ? "passed" : "needs_revision"}`}>
-              <div className="darkGoalFeedbackHeader">
-                <div className={`darkGoalFeedbackTitle ${currentGoalVerification.passed ? "passed" : "needs_revision"}`}>
-                  {currentGoalVerification.passed ? (
-                    <CheckCircle2 size={16} color="#047857" />
+                <button
+                  type="button"
+                  disabled={isCurrentGoalLocked || evaluatingGoal}
+                  onClick={handleVerifyGoal}
+                  className={`darkVerifyGoalBtn ${verifyBtnClass}`}
+                >
+                  {evaluatingGoal ? (
+                    <>
+                      <RotateCcw size={14} className="animate-spin" />
+                      <span>Evaluating Goal {activeGoalIndex + 1}...</span>
+                    </>
+                  ) : currentGoalVerification.passed ? (
+                    <>
+                      <CheckCircle2 size={15} />
+                      <span>Re-Verify Goal {activeGoalIndex + 1}</span>
+                    </>
                   ) : (
-                    <AlertTriangle size={16} color="#b45309" />
+                    <>
+                      <Zap size={15} />
+                      <span>{verifyBtnText}</span>
+                    </>
                   )}
-                  <span>
-                    {currentGoalVerification.passed
-                      ? `Goal ${activeGoalIndex + 1} Verified Successfully!`
-                      : `Goal ${activeGoalIndex + 1} Needs Revision`}
-                  </span>
-                </div>
-
-                <div className={`darkGoalFeedbackMarks ${currentGoalVerification.passed ? "passed" : "needs_revision"}`}>
-                  {currentGoalVerification.passed
-                    ? `+${currentGoalVerification.marks_earned} / ${currentGoalVerification.max_marks} Marks Earned`
-                    : `0 / ${currentGoalVerification.max_marks} Marks`}
-                </div>
+                </button>
               </div>
 
-              <p style={{ fontSize: "13.5px", lineHeight: 1.55, margin: "0 0 10px", color: currentGoalVerification.passed ? "#065f46" : "#92400e" }}>
-                {currentGoalVerification.feedback}
-              </p>
-
-              {/* Detailed Test Results Table */}
-              {currentGoalVerification.test_results && currentGoalVerification.test_results.length > 0 && (
-                <div className="darkVerificationResultsList">
-                  {currentGoalVerification.test_results.map((tr, trIdx) => (
-                    <div
-                      key={trIdx}
-                      className={`darkVerificationResultItem ${tr.passed ? "passed" : "failed"}`}
-                    >
-                      {tr.passed ? (
-                        <CheckCircle2 size={14} color="#059669" style={{ flexShrink: 0, marginTop: "2px" }} />
+              {/* Verification Feedback Report Box */}
+              {currentGoalVerification.feedback && (
+                <div className={`darkGoalFeedbackBox ${currentGoalVerification.passed ? "passed" : "needs_revision"}`}>
+                  <div className="darkGoalFeedbackHeader">
+                    <div className={`darkGoalFeedbackTitle ${currentGoalVerification.passed ? "passed" : "needs_revision"}`}>
+                      {currentGoalVerification.passed ? (
+                        <CheckCircle2 size={16} color="#047857" />
                       ) : (
-                        <AlertTriangle size={14} color="#d97706" style={{ flexShrink: 0, marginTop: "2px" }} />
+                        <AlertTriangle size={16} color="#b45309" />
                       )}
-                      <div>
-                        <strong>{tr.name}: </strong>
-                        <span>{tr.detail || (tr.passed ? "Verified successfully." : "Requirements not met.")}</span>
-                      </div>
+                      <span>
+                        {currentGoalVerification.passed
+                          ? `Goal ${activeGoalIndex + 1} Verified Successfully!`
+                          : `Goal ${activeGoalIndex + 1} Needs Revision`}
+                      </span>
                     </div>
-                  ))}
+
+                    <div className={`darkGoalFeedbackMarks ${currentGoalVerification.passed ? "passed" : "needs_revision"}`}>
+                      {currentGoalVerification.passed
+                        ? `+${currentGoalVerification.marks_earned} / ${currentGoalVerification.max_marks} Marks Earned`
+                        : `0 / ${currentGoalVerification.max_marks} Marks`}
+                    </div>
+                  </div>
+
+                  <p style={{ fontSize: "13.5px", lineHeight: 1.55, margin: "0 0 10px", color: currentGoalVerification.passed ? "#065f46" : "#92400e" }}>
+                    {currentGoalVerification.feedback}
+                  </p>
+
+                  {/* Detailed Test Results Table */}
+                  {currentGoalVerification.test_results && currentGoalVerification.test_results.length > 0 && (
+                    <div className="darkVerificationResultsList">
+                      {currentGoalVerification.test_results.map((tr, trIdx) => (
+                        <div
+                          key={trIdx}
+                          className={`darkVerificationResultItem ${tr.passed ? "passed" : "failed"}`}
+                        >
+                          {tr.passed ? (
+                            <CheckCircle2 size={14} color="#059669" style={{ flexShrink: 0, marginTop: "2px" }} />
+                          ) : (
+                            <AlertTriangle size={14} color="#d97706" style={{ flexShrink: 0, marginTop: "2px" }} />
+                          )}
+                          <div>
+                            <strong>{tr.name}: </strong>
+                            <span>{tr.detail || (tr.passed ? "Verified successfully." : "Requirements not met.")}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
-            </div>
+            </>
           )}
-        </div>
-      </section>
 
-      {/* 5. APPROACH NOTES & FINAL MILESTONE SUBMISSION */}
-      <section className="darkWorkspaceContainer">
-        <div className="darkWorkspaceHeader">
-          <h3 className="darkWorkspaceTitle">
-            <Send size={15} /> Final Mission Submission & Overall Report
-          </h3>
-          <div style={{ fontSize: "12.5px", fontWeight: 700, color: "#1d4ed8" }}>
-            {passedGoalsCount} of {totalGoalsCount} Goals Verified - Total: {totalEarnedMarks} / {maxScore} Marks
-          </div>
-        </div>
+          {/* Question Card Bottom Navigation */}
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginTop: "20px",
+            paddingTop: "16px",
+            borderTop: "1px solid #f1f5f9"
+          }}>
+            <button
+              type="button"
+              disabled={activeGoalIndex === 0}
+              onClick={() => setActiveGoalIndex((prev) => Math.max(0, prev - 1))}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                padding: "8px 16px",
+                borderRadius: "8px",
+                fontSize: "13px",
+                fontWeight: 600,
+                color: activeGoalIndex === 0 ? "#94a3b8" : "#475569",
+                background: "#f8fafc",
+                border: "1px solid #e2e8f0",
+                cursor: activeGoalIndex === 0 ? "not-allowed" : "pointer",
+                opacity: activeGoalIndex === 0 ? 0.6 : 1,
+              }}
+            >
+              <ChevronLeft size={15} /> Previous Question
+            </button>
 
-        <div className="darkNotesContainer">
-          <label className="darkNotesLabel">
-            <span>Student Approach Notes & Methodology</span>
-            <span className="optional">(Optional reflection for your instructor)</span>
-          </label>
-          <textarea
-            value={approachNotes}
-            disabled={isMilestoneSubmitted}
-            placeholder="Summarize your problem-solving approach, architectural decisions, and trade-offs..."
-            onChange={(e) => setApproachNotes(e.target.value)}
-            className="darkNotesTextarea"
-            rows={3}
-          />
-        </div>
-
-        <div className="darkSubmitRow">
-          <div className="darkSecurityNote">
-            <ShieldCheck size={14} color="#10b981" />
-            <span>Strict Immutability: Once final submission is logged, your score & feedback are locked.</span>
-          </div>
-
-          <button
-            type="button"
-            disabled={evaluatingMilestone}
-            onClick={handleFinalMilestoneSubmit}
-            className={`darkSubmitBtn ${evaluatingMilestone ? "evaluating" : ""}`}
-          >
-            {evaluatingMilestone ? (
-              <>
-                <RotateCcw size={16} className="animate-spin" />
-                <span>Generating Executive AI Report Card...</span>
-              </>
-            ) : isMilestoneSubmitted ? (
-              <>
-                <CheckCircle2 size={16} />
-                <span>Update / Re-Submit Final Mission</span>
-              </>
+            {activeGoalIndex < problems.length - 1 ? (
+              <button
+                type="button"
+                onClick={() => setActiveGoalIndex((prev) => Math.min(problems.length - 1, prev + 1))}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  padding: "8px 16px",
+                  borderRadius: "8px",
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  color: "#2563eb",
+                  background: "#eff6ff",
+                  border: "1px solid #bfdbfe",
+                  cursor: "pointer",
+                }}
+              >
+                <span>Next Question</span>
+                <ChevronRight size={15} />
+              </button>
             ) : (
-              <>
-                <Send size={16} />
-                <span>Submit Final Milestone Mission</span>
-              </>
+              <span style={{ fontSize: "12.5px", color: "#64748b", fontWeight: 600 }}>
+                Final Question
+              </span>
             )}
-          </button>
+          </div>
         </div>
       </section>
+
+      {/* 5. MINIMAL FINAL SUBMISSION ACTION AT THE END */}
+      <div style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        flexWrap: "wrap",
+        gap: "14px",
+        marginTop: "22px",
+        padding: "16px 22px",
+        background: "#ffffff",
+        border: "1px solid #e2e8f0",
+        borderRadius: "14px",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.04)"
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "14px", color: "#334155", fontWeight: 600 }}>
+          <CheckCircle2 size={18} color={passedGoalsCount === totalGoalsCount ? "#10b981" : "#2563eb"} />
+          <span>
+            {passedGoalsCount} of {totalGoalsCount} Questions Completed
+          </span>
+        </div>
+
+        <button
+          type="button"
+          disabled={evaluatingMilestone}
+          onClick={handleFinalMilestoneSubmit}
+          style={{
+            background: "#2563eb",
+            color: "#ffffff",
+            padding: "11px 26px",
+            borderRadius: "10px",
+            fontSize: "14.5px",
+            fontWeight: 700,
+            border: "none",
+            cursor: evaluatingMilestone ? "wait" : "pointer",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "8px",
+            boxShadow: "0 4px 12px rgba(37, 99, 235, 0.25)",
+            transition: "all 0.15s ease"
+          }}
+        >
+          {evaluatingMilestone ? (
+            <>
+              <RotateCcw size={16} className="animate-spin" />
+              <span>Submitting Assignment...</span>
+            </>
+          ) : isMilestoneSubmitted ? (
+            <>
+              <CheckCircle2 size={16} />
+              <span>Update / Re-Submit Assignment</span>
+            </>
+          ) : (
+            <>
+              <Send size={16} />
+              <span>Submit Assignment</span>
+            </>
+          )}
+        </button>
+      </div>
 
       {/* 6. INSTANT GRADED REPORT CARD (POST-SUBMISSION) */}
-      {submission && (
+      {isMilestoneSubmitted && submission && (
         <section className="darkReportCardRoot" style={{ marginTop: "28px" }}>
           <div className="darkReportTopRow">
             <div className="darkReportScoreArea">
