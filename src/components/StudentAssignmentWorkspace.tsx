@@ -444,6 +444,31 @@ export default function StudentAssignmentWorkspace({
                 return;
               }
             }
+
+            // Fallback: match latest assignment for this course
+            for (const row of data) {
+              let extra: any = {};
+              try { extra = JSON.parse(row.description); } catch (_) {}
+              if (row.course_id === courseId || extra.course_id === courseId) {
+                setAssignment({
+                  id: row.id,
+                  course_id: row.course_id,
+                  lesson_id: extra.lesson_id || lessonId,
+                  title: row.title,
+                  description: extra.summary || row.description,
+                  scenario_context: extra.scenario_context || extra.summary || row.description,
+                  problems: extra.problems || [],
+                  rubric: extra.rubric || null,
+                  starter_code: row.starter_code || "",
+                  max_score: row.max_score || 100,
+                  due_date: row.due_date || "Open",
+                  status: extra.status || "published"
+                });
+                setIsNotFound(false);
+                setLoading(false);
+                return;
+              }
+            }
           }
         } catch (_) {}
 
