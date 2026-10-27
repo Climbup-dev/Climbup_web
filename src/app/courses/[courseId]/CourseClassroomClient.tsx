@@ -520,6 +520,13 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
     const currentLessonId = activeLesson.id;
 
     async function loadLessonAssignment() {
+      // 1. Immediately match assignment from course data if already present
+      const match = course?.assignments?.find((a: any) => a.lessonId === currentLessonId || a.id === `assign_${currentLessonId}`);
+      if (match && isMounted) {
+        setLiveAssignment(match);
+        setSelectedAssignment(match);
+      }
+      // 2. Query live from backend API rewrite
       try {
         const res = await fetch(`/api/lessons/${currentLessonId}/assignment`);
         if (res.ok) {
@@ -534,7 +541,11 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
         console.warn("Could not fetch lesson assignment from backend, falling back to course assignment:", err);
       }
       if (isMounted) {
-        setLiveAssignment(selectedAssignment || (course?.assignments ? course.assignments[0] : null));
+        const fallback = match || selectedAssignment || (course?.assignments && course.assignments.length > 0 ? course.assignments[0] : null);
+        if (fallback) {
+          setLiveAssignment(fallback);
+          setSelectedAssignment(fallback);
+        }
       }
     }
 
@@ -1826,7 +1837,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                 studentId={currentUser?.id || "student_user"}
                 studentName={currentUser?.user_metadata?.full_name || currentUser?.email?.split("@")[0] || "Student"}
                 studentEmail={currentUser?.email || "student@climbup.dev"}
-                initialAssignment={liveAssignment || selectedAssignment || (course?.assignments ? course.assignments[0] : null)}
+                initialAssignment={liveAssignment || selectedAssignment || (course?.assignments ? (course.assignments.find((a: any) => a.lessonId === activeLesson?.id) || course.assignments[0]) : null)}
                 onSeekVideo={handleTimestampJump}
                 onSwitchTab={(tab) => setActiveTab(tab as TabType)}
               />

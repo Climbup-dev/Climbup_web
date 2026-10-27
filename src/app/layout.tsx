@@ -1,15 +1,7 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import Script from "next/script";
 import { Providers } from "@/components/Providers";
 import "./globals.css";
-import { Plus_Jakarta_Sans } from "next/font/google";
-
-const plusJakartaSans = Plus_Jakarta_Sans({
-  subsets: ["latin"],
-  display: "swap",
-  variable: "--font-sans",
-  weight: ["400", "500", "600", "700", "800"],
-});
 
 export const metadata: Metadata = {
   metadataBase: new URL(
@@ -56,8 +48,11 @@ export default function RootLayout({
     <html lang="en" data-scroll-behavior="smooth">
       <head>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
       </head>
-      <body className={`${plusJakartaSans.variable} ${plusJakartaSans.className}`}>
+      <body className="antialiased">
         <Script id="disable-rightclick" strategy="beforeInteractive">
           {`document.addEventListener('contextmenu', event => event.preventDefault());`}
         </Script>

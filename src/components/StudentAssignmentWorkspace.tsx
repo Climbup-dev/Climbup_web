@@ -184,6 +184,15 @@ export default function StudentAssignmentWorkspace({
   const [loading, setLoading] = useState(true);
   const [isNotFound, setIsNotFound] = useState(false);
   const [assignment, setAssignment] = useState<any>(initialAssignment || null);
+
+  // Sync initialAssignment prop whenever it arrives from parent
+  useEffect(() => {
+    if (initialAssignment) {
+      setAssignment(initialAssignment);
+      setIsNotFound(false);
+      setLoading(false);
+    }
+  }, [initialAssignment]);
   const [submission, setSubmission] = useState<AssignmentSubmissionState | null>(null);
 
   // Goal-by-Goal Workflow State
@@ -403,28 +412,41 @@ export default function StudentAssignmentWorkspace({
       if (res.status === 404) {
         if (initialAssignment) {
           setAssignment(initialAssignment);
-          const targetId = initialAssignment.id || lessonId;
-          const saved = await getAssignmentSubmissionAsync(targetId, studentId);
-          if (saved && (saved.submissionText || saved.score !== undefined)) {
-            setSubmission({
-              id: targetId,
-              student_id: studentId,
-              assignment_id: targetId,
-              score: saved.score ?? 85,
-              verdict: (saved.score ?? 85) >= 60 ? "PASSED - PRODUCTION READY" : "NEEDS REVISION",
-              submission_content: saved.submissionText,
-              approach_notes: (saved as any).approachNotes || "",
-              submitted_at: saved.submittedAt,
-              feedback: {
-                actionable_advice: saved.feedback,
-                teacher_summary: saved.feedback,
-              },
-            });
-            setIsMilestoneSubmitted(true);
-          }
           setLoading(false);
           return;
         }
+        // Direct Supabase fallback if backend rewrite returned 404
+        try {
+          const { createClient } = await import("@/lib/supabase/client");
+          const supabase = createClient();
+          const { data } = await supabase.from("course_assignments").select("*").order("created_at", { ascending: false }).limit(25);
+          if (data && data.length > 0) {
+            for (const row of data) {
+              let extra: any = {};
+              try { extra = JSON.parse(row.description); } catch (_) {}
+              if (extra.lesson_id === lessonId || row.id === `assign_${lessonId}`) {
+                setAssignment({
+                  id: row.id,
+                  course_id: row.course_id,
+                  lesson_id: extra.lesson_id || lessonId,
+                  title: row.title,
+                  description: extra.summary || row.description,
+                  scenario_context: extra.scenario_context || extra.summary || row.description,
+                  problems: extra.problems || [],
+                  rubric: extra.rubric || null,
+                  starter_code: row.starter_code || "",
+                  max_score: row.max_score || 100,
+                  due_date: row.due_date || "Open",
+                  status: extra.status || "published"
+                });
+                setIsNotFound(false);
+                setLoading(false);
+                return;
+              }
+            }
+          }
+        } catch (_) {}
+
         setIsNotFound(true);
         setAssignment(null);
         setSubmission(null);
