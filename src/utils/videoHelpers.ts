@@ -18,6 +18,13 @@ export interface VideoInfo {
 export const DEFAULT_CLOUD_RUN_URL = "https://practq45-28929614461.asia-south1.run.app";
 
 export function getBackendBaseUrl(): string {
+  // If running in browser on localhost or 127.0.0.1, auto-route to local backend on port 8000
+  if (typeof window !== "undefined") {
+    const hostname = window.location.hostname;
+    if (hostname === "localhost" || hostname === "127.0.0.1") {
+      return "http://127.0.0.1:8000";
+    }
+  }
   const envUrl = process.env.NEXT_PUBLIC_RAG_SERVER_URL || "";
   if (envUrl && (envUrl.includes("run.app") || envUrl.includes("localhost") || envUrl.includes("127.0.0.1") || envUrl.startsWith("http"))) {
     return envUrl.replace(/\/$/, "");
