@@ -143,14 +143,28 @@ export function SecureHLSVideoPlayer({
           fragLoadingMaxRetry: 4,
           fragLoadingTimeOut: 20000,
           fragLoadingRetryDelay: 800,
-          xhrSetup: (xhr) => {
-            try {
-              xhr.setRequestHeader('X-Climbup-Player', 'amirshaikh320340');
-              if (token) {
-                xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+          xhrSetup: (xhr: XMLHttpRequest) => {
+            const injectHeaders = () => {
+              try {
+                if (xhr.readyState === 1) {
+                  xhr.setRequestHeader('X-Climbup-Player', 'amirshaikh320340');
+                  if (token) {
+                    xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+                  }
+                }
+              } catch (e) {
+                // Header state guarded
               }
-            } catch (e) {
-              console.warn('XHR header error:', e);
+            };
+            if (xhr.readyState === 1) {
+              injectHeaders();
+            } else {
+              const origOpen = xhr.open;
+              xhr.open = function (...args: any[]) {
+                const res = origOpen.apply(this, args as any);
+                injectHeaders();
+                return res;
+              };
             }
           }
         });

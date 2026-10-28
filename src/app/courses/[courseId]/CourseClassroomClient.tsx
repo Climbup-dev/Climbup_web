@@ -534,9 +534,11 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
           xhrSetup: (xhr: XMLHttpRequest, _url: string) => {
             const injectHeaders = () => {
               try {
-                xhr.setRequestHeader("X-Climbup-Player", "amirshaikh320340");
-                if (token) {
-                  xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+                if (xhr.readyState === 1) {
+                  xhr.setRequestHeader("X-Climbup-Player", "amirshaikh320340");
+                  if (authToken) {
+                    xhr.setRequestHeader("Authorization", `Bearer ${authToken}`);
+                  }
                 }
               } catch (e) {
                 // Header state guarded
