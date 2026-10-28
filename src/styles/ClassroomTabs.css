@@ -1549,3 +1549,157 @@
   top: 0;
   z-index: 5;
 }
+
+
+/* ============================================================
+   Live Classroom Banner (Google Meet Invite-Only Integration)
+   ============================================================ */
+.liveClassroomBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  gap: 16px;
+  flex-wrap: wrap;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(12px);
+  position: relative;
+  overflow: hidden;
+}
+
+.liveClassroomBanner.bannerLiveActive {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(185, 28, 28, 0.25));
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  box-shadow: 0 4px 20px rgba(239, 68, 68, 0.18);
+}
+
+.liveClassroomBanner.bannerLiveScheduled {
+  background: linear-gradient(135deg, rgba(30, 58, 138, 0.2), rgba(15, 23, 42, 0.8));
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.1);
+}
+
+.liveBannerLeft {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+  min-width: 260px;
+}
+
+.liveIndicatorBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.bannerLiveActive .liveIndicatorBadge {
+  background: #ef4444;
+  color: #ffffff;
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.5);
+}
+
+.bannerLiveScheduled .liveIndicatorBadge {
+  background: rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.4);
+}
+
+.livePulseDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ffffff;
+  animation: liveDotPulse 1.5s infinite;
+}
+
+@keyframes liveDotPulse {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7); }
+  70% { transform: scale(1.1); box-shadow: 0 0 0 8px rgba(255, 255, 255, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+}
+
+.liveBannerInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.liveBannerTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.liveBannerMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #94a3b8;
+  flex-wrap: wrap;
+}
+
+.liveSecurityBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.15);
+  padding: 2px 7px;
+  border-radius: 4px;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.btnJoinGoogleMeet {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 10px 18px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+  white-space: nowrap;
+}
+
+.btnJoinGoogleMeet:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(16, 185, 129, 0.45);
+  background: linear-gradient(135deg, #059669, #047857);
+}
+
+.btnJoinGoogleMeet:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.scheduledNoticeBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #93c5fd;
+  font-size: 13px;
+  font-weight: 600;
+  background: rgba(59, 130, 246, 0.15);
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}

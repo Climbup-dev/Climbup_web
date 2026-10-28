@@ -68,6 +68,83 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
   const { currentUser, loading } = useAuth();
   const { showToast } = useToast();
 
+  // Google Meet Live Class Session State
+  const [liveSession, setLiveSession] = useState<{
+    id: string;
+    title: string;
+    description?: string;
+    scheduled_at: string;
+    status: "scheduled" | "live" | "completed" | "cancelled";
+    host_name?: string;
+    has_meet_url?: boolean;
+  } | null>(null);
+  const [isJoiningLiveMeet, setIsJoiningLiveMeet] = useState(false);
+
+  useEffect(() => {
+    if (!courseId) return;
+    const fetchCurrentLiveSession = async () => {
+      try {
+        const baseUrl = getBackendBaseUrl();
+        // Check for 'live' first
+        const resLive = await fetch(`${baseUrl}/api/live/sessions?course_id=${encodeURIComponent(courseId)}&status=live`);
+        if (resLive.ok) {
+          const dataLive = await resLive.json();
+          if (dataLive.sessions && dataLive.sessions.length > 0) {
+            setLiveSession(dataLive.sessions[0]);
+            return;
+          }
+        }
+        // Fallback check for upcoming 'scheduled' session
+        const resSched = await fetch(`${baseUrl}/api/live/sessions?course_id=${encodeURIComponent(courseId)}&status=scheduled`);
+        if (resSched.ok) {
+          const dataSched = await resSched.json();
+          if (dataSched.sessions && dataSched.sessions.length > 0) {
+            setLiveSession(dataSched.sessions[0]);
+            return;
+          }
+        }
+        setLiveSession(null);
+      } catch (err) {
+        // Silent background check
+      }
+    };
+
+    fetchCurrentLiveSession();
+    const livePoll = setInterval(fetchCurrentLiveSession, 20000);
+    return () => clearInterval(livePoll);
+  }, [courseId]);
+
+  const handleJoinGoogleMeet = async (sessionId: string) => {
+    if (!currentUser?.email) {
+      showToast("Please log in with your registered account to join.", "error");
+      return;
+    }
+    setIsJoiningLiveMeet(true);
+    try {
+      const baseUrl = getBackendBaseUrl();
+      const res = await fetch(`${baseUrl}/api/live/join-meet`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          session_id: sessionId,
+          student_email: currentUser.email,
+          user_id: currentUser.id
+        })
+      });
+      const data = await res.json();
+      if (res.ok && data.authorized && data.meet_url) {
+        window.open(data.meet_url, "_blank", "noopener,noreferrer");
+        showToast(`Authorized! Opening Google Meet for ${currentUser.email}`, "success");
+      } else {
+        showToast(data.detail || "Access Denied: Only enrolled students can join this live session.", "error");
+      }
+    } catch (e: any) {
+      showToast("Verification failed: " + (e?.message || "Network error"), "error");
+    } finally {
+      setIsJoiningLiveMeet(false);
+    }
+  };
+
   const [course, setCourse] = useState<Course | null>(null);
   const [activeLesson, setActiveLesson] = useState<CourseLesson | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>("assignments");
@@ -1373,6 +1450,57 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
       <div className="classroomWorkspace">
         {/* Left Column: Video Player + Tabs */}
         <div className="classroomMainColumn">
+
+          {/* Live Session Alert Banner (Google Meet Invite-Only) */}
+          {liveSession && (liveSession.status === "live" || liveSession.status === "scheduled") && (
+            <div className={`liveClassroomBanner ${liveSession.status === "live" ? "bannerLiveActive" : "bannerLiveScheduled"}`}>
+              <div className="liveBannerLeft">
+                <div className="liveIndicatorBadge">
+                  {liveSession.status === "live" ? (
+                    <>
+                      <span className="livePulseDot"></span>
+                      <span className="liveBadgeText">LIVE NOW</span>
+                    </>
+                  ) : (
+                    <>
+                      <Clock size={14} />
+                      <span className="liveBadgeText">UPCOMING CLASS</span>
+                    </>
+                  )}
+                </div>
+                <div className="liveBannerInfo">
+                  <h4 className="liveBannerTitle">{liveSession.title}</h4>
+                  <div className="liveBannerMeta">
+                    <span>Faculty: <strong>{liveSession.host_name || "Faculty"}</strong></span>
+                    <span>&bull;</span>
+                    <span>
+                      {new Date(liveSession.scheduled_at).toLocaleDateString([], { month: "short", day: "numeric" })} at {new Date(liveSession.scheduled_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                    </span>
+                    <span className="liveSecurityBadge">
+                      <ShieldCheck size={12} /> Invite-Only
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="liveBannerRight">
+                {liveSession.status === "live" ? (
+                  <button
+                    onClick={() => handleJoinGoogleMeet(liveSession.id)}
+                    disabled={isJoiningLiveMeet}
+                    className="btnJoinGoogleMeet"
+                  >
+                    <ExternalLink size={16} />
+                    {isJoiningLiveMeet ? "Verifying..." : "Join Live Class (Google Meet)"}
+                  </button>
+                ) : (
+                  <div className="scheduledNoticeBadge">
+                    <Clock size={14} /> Starts Soon
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
           
           {/* Video Player Container (Protected with custom sleek controls and DRM) */}
           <div
