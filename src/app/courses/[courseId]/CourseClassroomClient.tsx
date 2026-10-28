@@ -132,7 +132,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
         })
       });
       const data = await res.json();
-      if (res.ok && data.authorized && data.meet_url) {
+      if (res.ok && (data.authorized || data.status === "authorized") && data.meet_url) {
         window.open(data.meet_url, "_blank", "noopener,noreferrer");
         showToast(`Authorized! Opening Google Meet for ${currentUser.email}`, "success");
       } else {
