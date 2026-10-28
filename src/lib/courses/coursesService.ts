@@ -52,6 +52,7 @@ function mapDBCourseToCourse(
         structuredNotes: l.structured_notes || undefined,
         chapters: l.chapters || undefined,
         isFreePreview: !!l.is_free_preview,
+        is_free_preview: !!l.is_free_preview,
         notes: l.raw_transcript || undefined,
         transcriptSnippets: l.transcript_snippets || [],
       })),

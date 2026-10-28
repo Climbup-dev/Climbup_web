@@ -27,6 +27,7 @@ import {
   Code2, 
   Timer,
   Lock,
+  GraduationCap,
   RefreshCw,
   Check,
   Copy,
@@ -62,6 +63,9 @@ import Hls from "hls.js";
 import "@/styles/ClassroomTabs.css";
 
 type TabType = "overview" | "assignments" | "mcqs" | "resources" | "syllabus" | "rag" | "discussions" | "certificate";
+
+// Module-level token cache across client navigations: lessonId -> { token: string, expiresAt: number }
+const STREAM_TOKEN_CACHE = new Map<string, { token: string; expiresAt: number }>();
 
 export default function CourseClassroomClient({ courseId }: { courseId: string }) {
   const router = useRouter();
@@ -117,6 +121,12 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
   const handleJoinGoogleMeet = async (sessionId: string) => {
     if (!currentUser?.email) {
       showToast("Please log in with your registered account to join.", "error");
+      setAuthOpen(true);
+      return;
+    }
+    if (!isEnrolled) {
+      showToast("Access Denied: Only enrolled students can join this live session.", "error");
+      handleEnroll();
       return;
     }
     setIsJoiningLiveMeet(true);
@@ -344,60 +354,138 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
     );
   }, [activeLesson?.videoUrl, activeLesson?.id, authToken]);
 
+// Student Video Hotkeys (Space/K: Play/Pause, Left/Right: Rewind/Seek 5s, Up/Down: Vol +/- 10%, M: Mute, F: Fullscreen)
+  useEffect(() => {
+    const handleVideoHotkeys = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable ||
+          target.closest(".monaco-editor") ||
+          target.closest("form"))
+      ) {
+        return;
+      }
+
+      if (!videoRef.current || resolvedVideo.type === "youtube") return;
+
+      if (e.code === "Space" || e.key === " " || e.key === "k" || e.key === "K") {
+        e.preventDefault();
+        togglePlay();
+        resetControlsTimeout();
+      } else if (e.key === "ArrowLeft" || e.key === "j" || e.key === "J") {
+        e.preventDefault();
+        skipTime(-5);
+        resetControlsTimeout();
+      } else if (e.key === "ArrowRight" || e.key === "l" || e.key === "L") {
+        e.preventDefault();
+        skipTime(5);
+        resetControlsTimeout();
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        handleVolumeChange(Math.min(1, volume + 0.1));
+        resetControlsTimeout();
+      } else if (e.key === "ArrowDown") {
+        e.preventDefault();
+        handleVolumeChange(Math.max(0, volume - 0.1));
+        resetControlsTimeout();
+      } else if (e.key === "m" || e.key === "M") {
+        e.preventDefault();
+        toggleMute();
+        resetControlsTimeout();
+      } else if (e.key === "f" || e.key === "F") {
+        e.preventDefault();
+        toggleFullscreen();
+      }
+    };
+
+    window.addEventListener("keydown", handleVideoHotkeys);
+    return () => window.removeEventListener("keydown", handleVideoHotkeys);
+  }, [isPlaying, volume, isMuted, duration, resolvedVideo.type]);
+
 
 
   // Enterprise Anti-Piracy HLS Streaming Engine (Hls.js with AES-128 crypto decoding)
   const hlsInstanceRef = useRef<Hls | null>(null);
+  const mediaRecoveryCountRef = useRef<number>(0);
 
   useEffect(() => {
     if (!resolvedVideo.isDirectVideo || useDrivePlayer) return;
     const video = videoRef.current;
     if (!video) return;
 
-    const lessonId = activeLesson?.id;
-    if (!lessonId) return;
+    const rawLessonId = activeLesson?.id;
+    if (!rawLessonId) return;
+    const lessonId: string = rawLessonId;
 
     let isDisposed = false;
+    mediaRecoveryCountRef.current = 0;
 
+    // Clean teardown of existing instance to eliminate memory leaks and decoder stalls
     if (hlsInstanceRef.current) {
-      hlsInstanceRef.current.destroy();
+      try {
+        hlsInstanceRef.current.stopLoad();
+        hlsInstanceRef.current.detachMedia();
+        hlsInstanceRef.current.destroy();
+      } catch {}
       hlsInstanceRef.current = null;
     }
 
     async function initEncryptedHLS() {
+      if (!isEnrolled && !activeLesson?.is_free_preview) {
+        setIsVideoLoading(false);
+        return;
+      }
       setIsVideoLoading(true);
       const backendBase = getBackendBaseUrl();
-      // 1. Fetch short-lived signed stream token (with resilient proxy fallback)
+
+      // 1. Fetch or reuse cached short-lived signed stream token (instant 0ms playback on revisited lessons)
       let token = authToken || "";
-      try {
-        let res = await fetch(`/api/lessons/${lessonId}/stream-token`, {
-          method: "POST",
-          headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
-        });
-        if (!res.ok) {
-          // Direct fallback to backend server if internal Next.js proxy is unavailable
-          res = await fetch(`${backendBase}/api/lessons/${lessonId}/stream-token`, {
-            method: "POST",
-            headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
-          });
-        }
-        if (res.ok) {
-          const d = await res.json();
-          if (d.signed_token) token = d.signed_token;
-        }
-      } catch (e) {
-        console.warn("[Stream Security] Proxy notice, attempting direct connection:", e);
+      const now = Date.now();
+      const cached = STREAM_TOKEN_CACHE.get(lessonId);
+
+      if (cached && cached.expiresAt > now) {
+        token = cached.token;
+      } else {
         try {
-          const directRes = await fetch(`${backendBase}/api/lessons/${lessonId}/stream-token`, {
+          let res = await fetch(`/api/lessons/${lessonId}/stream-token`, {
             method: "POST",
             headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
           });
-          if (directRes.ok) {
-            const d = await directRes.json();
-            if (d.signed_token) token = d.signed_token;
+          if (!res.ok) {
+            // Direct fallback to backend server if internal Next.js proxy is unavailable
+            res = await fetch(`${backendBase}/api/lessons/${lessonId}/stream-token`, {
+              method: "POST",
+              headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
+            });
           }
-        } catch (dirErr) {
-          console.warn("[Stream Security] Direct token fetch notice:", dirErr);
+          if (res.ok) {
+            const d = await res.json();
+            if (d.signed_token) {
+              token = d.signed_token;
+              // Cache for 50 minutes (server TTL is 60 minutes)
+              STREAM_TOKEN_CACHE.set(lessonId, { token, expiresAt: now + 50 * 60 * 1000 });
+            }
+          }
+        } catch (e) {
+          console.warn("[Stream Security] Proxy notice, attempting direct connection:", e);
+          try {
+            const directRes = await fetch(`${backendBase}/api/lessons/${lessonId}/stream-token`, {
+              method: "POST",
+              headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
+            });
+            if (directRes.ok) {
+              const d = await directRes.json();
+              if (d.signed_token) {
+                token = d.signed_token;
+                STREAM_TOKEN_CACHE.set(lessonId, { token, expiresAt: now + 50 * 60 * 1000 });
+              }
+            }
+          } catch (dirErr) {
+            console.warn("[Stream Security] Direct token fetch notice:", dirErr);
+          }
         }
       }
 
@@ -405,7 +493,6 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
 
       const tokenParam = token ? `?st=${encodeURIComponent(token)}` : ``;
       const hlsUrl = `/api/lessons/${lessonId}/hls/master.m3u8${tokenParam}`;
-      const directHlsUrl = `/api/lessons/${lessonId}/hls/master.m3u8${tokenParam}`;
 
       // Anti-Piracy Enforcement: Under strict security, raw progressive MP4 fallback is DISABLED
       // Browser extensions (FetchV, IDM, Video DownloadHelper) sniff .mp4 URLs to offer download buttons.
@@ -414,6 +501,8 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
         if (isDisposed || !videoRef.current) return;
         if (hlsInstanceRef.current) {
           try {
+            hlsInstanceRef.current.stopLoad();
+            hlsInstanceRef.current.detachMedia();
             hlsInstanceRef.current.destroy();
             hlsInstanceRef.current = null;
           } catch {}
@@ -427,15 +516,21 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
         const hls = new Hls({
           enableWorker: true,
           lowLatencyMode: false,
-          manifestLoadingTimeOut: 20000,
-          manifestLoadingMaxRetry: 2,
-          manifestLoadingRetryDelay: 1000,
-          levelLoadingMaxRetry: 2,
-          fragLoadingMaxRetry: 3,
-          fragLoadingTimeOut: 25000,
-          maxBufferLength: 60,
-          maxMaxBufferLength: 120,
-          maxBufferSize: 60 * 1000 * 1000,
+          startFragPrefetch: true,               // Prefetch next segment in background (zero stutter/buffering between chunks)
+          backBufferLength: 45,                  // Evict past chunks older than 45s (prevents memory leaks/tab crashes on long lectures)
+          maxBufferLength: 30,                   // 30s forward buffer for rapid startup & low RAM footprint
+          maxMaxBufferLength: 60,                // 60s max buffer cap
+          maxBufferSize: 40 * 1024 * 1024,       // 40MB max buffer allocation in browser memory
+          capLevelToPlayerSize: true,            // Auto-limit quality to player size (saves bandwidth & decoding CPU)
+          progressive: true,                     // Fast chunk demuxing
+          highBufferWatchdogPeriod: 2,           // Buffer health watchdog
+          manifestLoadingTimeOut: 15000,
+          manifestLoadingMaxRetry: 3,
+          manifestLoadingRetryDelay: 800,
+          levelLoadingMaxRetry: 3,
+          fragLoadingMaxRetry: 4,
+          fragLoadingTimeOut: 20000,
+          fragLoadingRetryDelay: 800,
           xhrSetup: (xhr: XMLHttpRequest, _url: string) => {
             const injectHeaders = () => {
               try {
@@ -486,17 +581,36 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
             console.warn("[Video Security] HLS event notice:", data.type, data.details);
             clearTimeout(streamWatchdog);
             if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
-              hls.recoverMediaError();
+              if (mediaRecoveryCountRef.current === 0) {
+                mediaRecoveryCountRef.current++;
+                console.info("[Video Player] Recovering from media error...");
+                hls.recoverMediaError();
+              } else if (mediaRecoveryCountRef.current === 1) {
+                mediaRecoveryCountRef.current++;
+                console.info("[Video Player] Swapping audio codec to recover...");
+                hls.swapAudioCodec();
+                hls.recoverMediaError();
+              } else {
+                fallbackToDirectStream();
+              }
             } else if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
               networkRetries++;
-              if (networkRetries <= 2) {
-                console.info("[Video Security] Retrying stream connection (attempt " + networkRetries + "/2)...");
-                hls.startLoad();
+              if (networkRetries <= 3) {
+                console.info("[Video Security] Retrying stream connection (attempt " + networkRetries + "/3)...");
+                setTimeout(() => {
+                  if (!isDisposed) hls.startLoad();
+                }, 800);
               } else {
                 fallbackToDirectStream();
               }
             } else {
               fallbackToDirectStream();
+            }
+          } else if (data.details === Hls.ErrorDetails.BUFFER_STALLED_ERROR) {
+            // Non-fatal micro-stall: gently nudge playback if video is stuck
+            const v = videoRef.current;
+            if (v && !v.paused && v.readyState >= 2) {
+              v.currentTime = Math.min(v.duration || 0, v.currentTime + 0.1);
             }
           }
         });
@@ -516,8 +630,20 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
     return () => {
       isDisposed = true;
       if (hlsInstanceRef.current) {
-        hlsInstanceRef.current.destroy();
+        try {
+          hlsInstanceRef.current.stopLoad();
+          hlsInstanceRef.current.detachMedia();
+          hlsInstanceRef.current.destroy();
+        } catch {}
         hlsInstanceRef.current = null;
+      }
+      const v = videoRef.current;
+      if (v) {
+        try {
+          v.pause();
+          v.removeAttribute("src");
+          v.load();
+        } catch {}
       }
     };
   }, [activeLesson?.id, resolvedVideo.isDirectVideo, useDrivePlayer, authToken]);
@@ -633,6 +759,11 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
   // Load Dynamic Live MCQs for the current lesson (Zero Answer Leakage)
   const loadLessonMCQs = async () => {
     if (!activeLesson) return;
+    if (!isEnrolled && !activeLesson.is_free_preview) {
+      setMcqQuizQuestions([]);
+      setMcqLoading(false);
+      return;
+    }
     setMcqLoading(true);
     setMcqVerificationResult(null);
     setMcqSelectedAnswers({});
@@ -641,7 +772,12 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
     setQuizScore(0);
 
     try {
-      const res = await fetch(`/api/lessons/${activeLesson.id}/mcqs/quiz?count=5`);
+      const authQuery = authToken ? `&token=${encodeURIComponent(authToken)}` : "";
+      const res = await fetch(`/api/lessons/${activeLesson.id}/mcqs/quiz?count=5${authQuery}`, {
+        headers: {
+          ...(authToken ? { Authorization: `Bearer ${authToken}` } : {})
+        }
+      });
       if (res.ok) {
         const data = await res.json();
         if (data && data.questions && data.questions.length > 0) {
@@ -1235,9 +1371,13 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
     setMcqVerifying(true);
 
     try {
-      const response = await fetch(`/api/lessons/${activeLesson?.id || "default"}/mcqs/verify`, {
+      const authQuery = authToken ? `?token=${encodeURIComponent(authToken)}` : "";
+      const response = await fetch(`/api/lessons/${activeLesson?.id || "default"}/mcqs/verify${authQuery}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          ...(authToken ? { Authorization: `Bearer ${authToken}` } : {})
+        },
         body: JSON.stringify({
           student_id: currentUser?.id || "student_user",
           answers: mcqSelectedAnswers,
@@ -1342,28 +1482,42 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                       transition: "all 0.15s ease",
                     }}
                   >
-                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0, flex: 1, overflow: "hidden" }}>
                       <span
                         onClick={(e) => {
                           e.stopPropagation();
+                          if (!isEnrolled) {
+                            handleEnroll();
+                            return;
+                          }
                           handleToggleLesson(lesson.id);
                         }}
-                        style={{ cursor: "pointer", display: "grid", placeItems: "center" }}
+                        title={!isEnrolled && !lesson.is_free_preview ? "Enroll to unlock" : isDone ? "Mark as incomplete" : "Mark as completed"}
+                        style={{ cursor: "pointer", display: "grid", placeItems: "center", flexShrink: 0 }}
                       >
-                        {isDone ? (
+                        {!isEnrolled && !lesson.is_free_preview ? (
+                          <Lock size={14} color="#94a3b8" />
+                        ) : isDone ? (
                           <CheckCircle2 size={16} color="#2563eb" />
                         ) : (
                           <Circle size={16} color="#94a3b8" />
                         )}
                       </span>
-                      <span style={{ fontSize: "13px", color: isCurrent ? "#1d4ed8" : "#334155", fontWeight: isCurrent ? 700 : 500 }}>
+                      <span style={{ fontSize: "13px", color: isCurrent ? "#1d4ed8" : "#334155", fontWeight: isCurrent ? 700 : 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {lesson.title}
                       </span>
                     </div>
 
-                    <span style={{ fontSize: "11px", color: "#64748b", whiteSpace: "nowrap" }}>
-                      {lesson.duration}
-                    </span>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
+                      {lesson.is_free_preview && (
+                        <span style={{ fontSize: "10px", fontWeight: 700, color: "#059669", background: "rgba(16, 185, 129, 0.12)", border: "1px solid rgba(16, 185, 129, 0.3)", padding: "1px 5px", borderRadius: "4px" }}>
+                          FREE
+                        </span>
+                      )}
+                      <span style={{ fontSize: "11px", color: "#64748b", whiteSpace: "nowrap" }}>
+                        {lesson.duration}
+                      </span>
+                    </div>
                   </div>
                 );
               })}
@@ -1515,7 +1669,42 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
             }}
             onClick={() => resetControlsTimeout()}
           >
-            {activeLesson?.videoUrl ? (
+            {!isEnrolled && !activeLesson?.is_free_preview ? (
+              <div className="classroomLockedOverlay">
+                <div className="classroomLockedCard">
+                  <div className="classroomLockedIconBadge">
+                    <Lock size={30} color="#818cf8" />
+                  </div>
+                  <span className="classroomLockedPill">PREMIUM ENROLLED ACCESS</span>
+                  <h3 className="classroomLockedTitle">Lesson Video is Locked</h3>
+                  <p className="classroomLockedSubtitle">
+                    Enroll in <strong>{course.title}</strong> to unlock full HD video streaming, AI mentor guidance, hands-on assignments, and chapter quizzes.
+                  </p>
+                  <button onClick={handleEnroll} className="classroomLockedEnrollBtn">
+                    <GraduationCap size={18} />
+                    Enroll in Course to Watch
+                  </button>
+                  <div className="classroomLockedPerksGrid">
+                    <div className="classroomLockedPerkItem">
+                      <CheckCircle2 size={13} color="#34d399" />
+                      Full Course Video Stream
+                    </div>
+                    <div className="classroomLockedPerkItem">
+                      <CheckCircle2 size={13} color="#34d399" />
+                      Live Google Meet Classes
+                    </div>
+                    <div className="classroomLockedPerkItem">
+                      <CheckCircle2 size={13} color="#34d399" />
+                      AI Coding Assignments
+                    </div>
+                    <div className="classroomLockedPerkItem">
+                      <CheckCircle2 size={13} color="#34d399" />
+                      Interactive Quiz Arena
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : activeLesson?.videoUrl ? (
               (resolvedVideo.isDirectVideo && !useDrivePlayer) ? (
                 <>
                   
@@ -1544,7 +1733,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
               </div>
             )}
                   <video
-                    key={activeLesson?.id ? `${activeLesson.id}_${authToken ? "auth" : "anon"}` : (activeLesson?.videoUrl || "player")}
+                    key={activeLesson?.id || "classroom-video-player"}
                     ref={videoRef}
                     id="classroom-video-player-html5"
                     autoPlay
@@ -1959,20 +2148,51 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
 
             {/* 2. Enterprise Dark-Mode Assignments & AI Auto-Grader Workspace */}
             {activeTab === "assignments" && (
-              <StudentAssignmentWorkspace
-                lessonId={activeLesson?.id || "default_lesson"}
-                courseId={course.id}
-                studentId={currentUser?.id || "student_user"}
-                studentName={currentUser?.user_metadata?.full_name || currentUser?.email?.split("@")[0] || "Student"}
-                studentEmail={currentUser?.email || "student@climbup.dev"}
-                initialAssignment={liveAssignment || selectedAssignment || (course?.assignments ? (course.assignments.find((a: any) => a.lessonId === activeLesson?.id) || course.assignments[0]) : null)}
-                onSeekVideo={handleTimestampJump}
-                onSwitchTab={(tab) => setActiveTab(tab as TabType)}
-              />
+              !isEnrolled ? (
+                <div className="classroomToolLockedBanner">
+                  <div className="classroomToolLockedIconWrapper" style={{ background: "rgba(59, 130, 246, 0.1)", border: "1px solid rgba(59, 130, 246, 0.2)" }}>
+                    <Code2 size={28} color="#2563eb" />
+                  </div>
+                  <h3 className="classroomToolLockedHeading">Hands-on Assignments Locked</h3>
+                  <p className="classroomToolLockedDesc">
+                    Interactive coding labs, auto-evaluator scoring, and goal test suites are reserved for enrolled students in <strong>{course.title}</strong>.
+                  </p>
+                  <button onClick={handleEnroll} className="classroomToolLockedBtn">
+                    <GraduationCap size={18} />
+                    Enroll in Course to Access
+                  </button>
+                </div>
+              ) : (
+                <StudentAssignmentWorkspace
+                  lessonId={activeLesson?.id || "default_lesson"}
+                  courseId={course.id}
+                  studentId={currentUser?.id || "student_user"}
+                  studentName={currentUser?.user_metadata?.full_name || currentUser?.email?.split("@")[0] || "Student"}
+                  studentEmail={currentUser?.email || "student@climbup.dev"}
+                  initialAssignment={liveAssignment || selectedAssignment || (course?.assignments ? (course.assignments.find((a: any) => a.lessonId === activeLesson?.id) || course.assignments[0]) : null)}
+                  onSeekVideo={handleTimestampJump}
+                  onSwitchTab={(tab) => setActiveTab(tab as TabType)}
+                />
+              )
             )}
 
             {/* 3. Server-Verified MCQs Practice Tab (Zero-Leakage Security) */}
             {activeTab === "mcqs" && (
+              !isEnrolled ? (
+                <div className="classroomToolLockedBanner">
+                  <div className="classroomToolLockedIconWrapper" style={{ background: "rgba(147, 51, 234, 0.1)", border: "1px solid rgba(147, 51, 234, 0.2)" }}>
+                    <Award size={28} color="#9333ea" />
+                  </div>
+                  <h3 className="classroomToolLockedHeading">MCQ Quiz Arena Locked</h3>
+                  <p className="classroomToolLockedDesc">
+                    Interactive chapter quizzes, difficulty assessments, and cheat-proof scorecards are reserved for enrolled students in <strong>{course.title}</strong>.
+                  </p>
+                  <button onClick={handleEnroll} className="classroomToolLockedBtn" style={{ background: "linear-gradient(135deg, #9333ea, #7e22ce)", boxShadow: "0 4px 14px rgba(147, 51, 234, 0.35)" }}>
+                    <GraduationCap size={18} />
+                    Enroll to Practice MCQs
+                  </button>
+                </div>
+              ) : (
               <div className="mcqWorkspaceCard">
                 {mcqLoading ? (
                   <div style={{ textAlign: "center", padding: "48px 20px" }}>
@@ -2292,78 +2512,95 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                   </div>
                 )}
               </div>
+              )
             )}
 
             {activeTab === "resources" && (
-              <div className="tabContentFadeIn">
-                <div style={{ display: "grid", gap: "10px" }}>
-                  {course.resources.map((res) => (
-                    <div
-                      key={res.id}
-                      style={{
-                        background: "#ffffff",
-                        border: "1px solid #e2e8f0",
-                        borderRadius: "14px",
-                        padding: "16px 20px",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        flexWrap: "wrap",
-                        gap: "16px",
-                        boxShadow: "0 2px 8px rgba(15, 23, 42, 0.04)",
-                        transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
-                      }}
-                    >
-                      <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-                        <div style={{
-                          width: "42px",
-                          height: "42px",
-                          borderRadius: "10px",
-                          background: "#eff6ff",
-                          border: "1px solid #bfdbfe",
-                          display: "grid",
-                          placeItems: "center",
-                          flexShrink: 0,
-                        }}>
-                          {res.fileType === "github" ? <Code2 size={20} color="#2563eb" /> : <FolderDown size={20} color="#2563eb" />}
-                        </div>
-                        <div>
-                          <div style={{ fontWeight: 700, fontSize: "14.5px", color: "#0f172a", marginBottom: "3px" }}>
-                            {res.title}
-                          </div>
-                          <div style={{ fontSize: "12.5px", color: "#475569" }}>
-                            {res.description} {res.fileSize && <span style={{ color: "#64748b" }}> • {res.fileSize}</span>}
-                          </div>
-                        </div>
-                      </div>
-
-                      <a
-                        href={res.downloadUrl}
-                        target="_blank"
-                        rel="noreferrer"
+              !isEnrolled ? (
+                <div className="classroomToolLockedBanner">
+                  <div className="classroomToolLockedIconWrapper" style={{ background: "rgba(16, 185, 129, 0.1)", border: "1px solid rgba(16, 185, 129, 0.2)" }}>
+                    <FolderDown size={28} color="#059669" />
+                  </div>
+                  <h3 className="classroomToolLockedHeading">Course Resources & Downloads Locked</h3>
+                  <p className="classroomToolLockedDesc">
+                    Official slides, source code repositories, and supplementary assets are reserved for enrolled students in <strong>{course.title}</strong>.
+                  </p>
+                  <button onClick={handleEnroll} className="classroomToolLockedBtn" style={{ background: "linear-gradient(135deg, #059669, #047857)", boxShadow: "0 4px 14px rgba(5, 150, 105, 0.35)" }}>
+                    <GraduationCap size={18} />
+                    Enroll to Download Resources
+                  </button>
+                </div>
+              ) : (
+                <div className="tabContentFadeIn">
+                  <div style={{ display: "grid", gap: "10px" }}>
+                    {course.resources.map((res) => (
+                      <div
+                        key={res.id}
                         style={{
-                          background: "#eff6ff",
-                          color: "#1d4ed8",
-                          border: "1px solid #bfdbfe",
-                          borderRadius: "8px",
-                          padding: "8px 16px",
-                          fontSize: "12.5px",
-                          fontWeight: 700,
-                          textDecoration: "none",
-                          display: "inline-flex",
+                          background: "#ffffff",
+                          border: "1px solid #e2e8f0",
+                          borderRadius: "14px",
+                          padding: "16px 20px",
+                          display: "flex",
                           alignItems: "center",
-                          gap: "6px",
-                          whiteSpace: "nowrap",
-                          flexShrink: 0,
+                          justifyContent: "space-between",
+                          flexWrap: "wrap",
+                          gap: "16px",
+                          boxShadow: "0 2px 8px rgba(15, 23, 42, 0.04)",
                           transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
                         }}
                       >
-                        Access Resource <ExternalLink size={13} />
-                      </a>
-                    </div>
-                  ))}
+                        <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+                          <div style={{
+                            width: "42px",
+                            height: "42px",
+                            borderRadius: "10px",
+                            background: "#eff6ff",
+                            border: "1px solid #bfdbfe",
+                            display: "grid",
+                            placeItems: "center",
+                            flexShrink: 0,
+                          }}>
+                            {res.fileType === "github" ? <Code2 size={20} color="#2563eb" /> : <FolderDown size={20} color="#2563eb" />}
+                          </div>
+                          <div>
+                            <div style={{ fontWeight: 700, fontSize: "14.5px", color: "#0f172a", marginBottom: "3px" }}>
+                              {res.title}
+                            </div>
+                            <div style={{ fontSize: "12.5px", color: "#475569" }}>
+                              {res.description} {res.fileSize && <span style={{ color: "#64748b" }}> • {res.fileSize}</span>}
+                            </div>
+                          </div>
+                        </div>
+
+                        <a
+                          href={res.downloadUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          style={{
+                            background: "#eff6ff",
+                            color: "#1d4ed8",
+                            border: "1px solid #bfdbfe",
+                            borderRadius: "8px",
+                            padding: "8px 16px",
+                            fontSize: "12.5px",
+                            fontWeight: 700,
+                            textDecoration: "none",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "6px",
+                            whiteSpace: "nowrap",
+                            flexShrink: 0,
+                            transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
+                          }}
+                        >
+                          Access Resource <ExternalLink size={13} />
+                        </a>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )
             )}
 
             {/* 5. Discussions Tab */}
@@ -2609,9 +2846,13 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                                   <span
                                     onClick={(e) => {
                                       e.stopPropagation();
+                                      if (!isEnrolled) {
+                                        handleEnroll();
+                                        return;
+                                      }
                                       handleToggleLesson(lesson.id);
                                     }}
-                                    title={isDone ? "Mark as incomplete" : "Mark as completed"}
+                                    title={!isEnrolled && !lesson.is_free_preview ? "Enroll to unlock" : isDone ? "Mark as incomplete" : "Mark as completed"}
                                     style={{
                                       cursor: "pointer",
                                       display: "grid",
@@ -2621,7 +2862,9 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                                       height: "22px",
                                     }}
                                   >
-                                    {isDone ? (
+                                    {!isEnrolled && !lesson.is_free_preview ? (
+                                      <Lock size={15} color="#94a3b8" />
+                                    ) : isDone ? (
                                       <CheckCircle2 size={18} color="#10b981" />
                                     ) : isCurrent ? (
                                       <div style={{
@@ -2660,21 +2903,32 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
                                 <div style={{
                                   display: "flex",
                                   alignItems: "center",
-                                  gap: "4px",
+                                  gap: "6px",
                                   flexShrink: 0,
-                                  background: isCurrent ? "rgba(37, 99, 235, 0.12)" : "#f1f5f9",
-                                  padding: "3px 8px",
-                                  borderRadius: "6px",
                                 }}>
-                                  <Clock size={11} color={isCurrent ? "#2563eb" : "#64748b"} />
-                                  <span style={{
-                                    fontSize: "11.5px",
-                                    color: isCurrent ? "#2563eb" : "#475569",
-                                    fontWeight: isCurrent ? 700 : 600,
-                                    whiteSpace: "nowrap",
+                                  {lesson.is_free_preview && (
+                                    <span style={{ fontSize: "10px", fontWeight: 700, color: "#059669", background: "rgba(16, 185, 129, 0.12)", border: "1px solid rgba(16, 185, 129, 0.3)", padding: "1px 5px", borderRadius: "4px" }}>
+                                      FREE
+                                    </span>
+                                  )}
+                                  <div style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "4px",
+                                    background: isCurrent ? "rgba(37, 99, 235, 0.12)" : "#f1f5f9",
+                                    padding: "3px 8px",
+                                    borderRadius: "6px",
                                   }}>
-                                    {lesson.duration}
-                                  </span>
+                                    <Clock size={11} color={isCurrent ? "#2563eb" : "#64748b"} />
+                                    <span style={{
+                                      fontSize: "11.5px",
+                                      color: isCurrent ? "#2563eb" : "#475569",
+                                      fontWeight: isCurrent ? 700 : 600,
+                                      whiteSpace: "nowrap",
+                                    }}>
+                                      {lesson.duration}
+                                    </span>
+                                  </div>
                                 </div>
                               </div>
                             );
@@ -2689,16 +2943,32 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
 
             {/* 8. AI Doubt Assistant & RAG Mentor Tab (Unified View) */}
             {activeTab === "rag" && (
-              <div className="tabContentFadeIn" style={{
-                background: "#ffffff",
-                border: "1px solid #bfdbfe",
-                borderRadius: "20px",
-                overflow: "hidden",
-                boxShadow: "0 10px 30px rgba(15, 23, 42, 0.06)",
-                height: "680px",
-              }}>
-                {renderAiTutor("680px")}
-              </div>
+              !isEnrolled ? (
+                <div className="classroomToolLockedBanner">
+                  <div className="classroomToolLockedIconWrapper" style={{ background: "rgba(234, 88, 12, 0.1)", border: "1px solid rgba(234, 88, 12, 0.2)" }}>
+                    <Sparkles size={28} color="#ea580c" />
+                  </div>
+                  <h3 className="classroomToolLockedHeading">AI Doubt Mentor Locked</h3>
+                  <p className="classroomToolLockedDesc">
+                    Interactive timestamped doubt clearance, code debugging explanations, and personalized mentor advice are exclusive to enrolled learners in <strong>{course.title}</strong>.
+                  </p>
+                  <button onClick={handleEnroll} className="classroomToolLockedBtn" style={{ background: "linear-gradient(135deg, #ea580c, #c2410c)", boxShadow: "0 4px 14px rgba(234, 88, 12, 0.35)" }}>
+                    <GraduationCap size={18} />
+                    Enroll to Ask AI Mentor
+                  </button>
+                </div>
+              ) : (
+                <div className="tabContentFadeIn" style={{
+                  background: "#ffffff",
+                  border: "1px solid #bfdbfe",
+                  borderRadius: "20px",
+                  overflow: "hidden",
+                  boxShadow: "0 10px 30px rgba(15, 23, 42, 0.06)",
+                  height: "680px",
+                }}>
+                  {renderAiTutor("680px")}
+                </div>
+              )
             )}
           </div>
         </div>

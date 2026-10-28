@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import Hls from 'hls.js';
 import { getBackendBaseUrl, extractGoogleDriveId } from '@/utils/videoHelpers';
 
@@ -12,6 +12,9 @@ interface SecurePlayerProps {
   onTimeUpdate?: (currentSeconds: number) => void;
   videoRef?: React.RefObject<HTMLVideoElement>;
 }
+
+// Module-level token cache across client navigations: lessonId -> { token, expiresAt }
+const STREAM_TOKEN_CACHE = new Map<string, { token: string; expiresAt: number }>();
 
 export function SecureHLSVideoPlayer({
   lessonId,
@@ -25,40 +28,69 @@ export function SecureHLSVideoPlayer({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const activeVideo = videoRef || localRef;
   const hlsInstanceRef = useRef<Hls | null>(null);
+  const mediaRecoveryCountRef = useRef<number>(0);
   const [playbackError, setPlaybackError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Playback retry handler
+  const retryPlayback = useCallback(() => {
+    setPlaybackError(false);
+    setIsLoading(true);
+    const v = activeVideo.current;
+    if (v) {
+      v.load();
+      v.play().catch(() => {});
+    }
+  }, [activeVideo]);
 
   useEffect(() => {
     setIsLoading(true);
     let isDisposed = false;
     let timer: NodeJS.Timeout | null = null;
+    mediaRecoveryCountRef.current = 0;
     const backendBase = getBackendBaseUrl();
 
+    // 1. Cleanly tear down existing HLS session to eliminate memory leaks
     if (hlsInstanceRef.current) {
-      hlsInstanceRef.current.destroy();
+      try {
+        hlsInstanceRef.current.stopLoad();
+        hlsInstanceRef.current.detachMedia();
+        hlsInstanceRef.current.destroy();
+      } catch {}
       hlsInstanceRef.current = null;
     }
 
     async function initSecureStream() {
-      // 1. Fetch short-lived signed stream token
+      // 2. Fetch or reuse cached short-lived signed stream token
       let token = authToken || '';
-      try {
-        let res = await fetch(`/api/lessons/${lessonId}/stream-token`, {
-          method: 'POST',
-          headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
-        });
-        if (!res.ok) {
-          res = await fetch(`${backendBase}/api/lessons/${lessonId}/stream-token`, {
+      const now = Date.now();
+      const cached = STREAM_TOKEN_CACHE.get(lessonId);
+
+      if (cached && cached.expiresAt > now) {
+        token = cached.token;
+      } else {
+        try {
+          let res = await fetch(`/api/lessons/${lessonId}/stream-token`, {
             method: 'POST',
             headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
           });
+          if (!res.ok) {
+            res = await fetch(`${backendBase}/api/lessons/${lessonId}/stream-token`, {
+              method: 'POST',
+              headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
+            });
+          }
+          if (res.ok) {
+            const d = await res.json();
+            if (d.signed_token) {
+              token = d.signed_token;
+              // Cache for 50 minutes (server TTL 60m)
+              STREAM_TOKEN_CACHE.set(lessonId, { token, expiresAt: now + 50 * 60 * 1000 });
+            }
+          }
+        } catch (err) {
+          console.warn('[Secure Player] Token fetch notice, attempting direct fallback:', err);
         }
-        if (res.ok) {
-          const d = await res.json();
-          if (d.signed_token) token = d.signed_token;
-        }
-      } catch (err) {
-        console.warn('[Secure Player] Token fetch notice, attempting direct fallback:', err);
       }
 
       if (isDisposed || !activeVideo.current) return;
@@ -72,7 +104,11 @@ export function SecureHLSVideoPlayer({
         const driveId = videoUrl ? extractGoogleDriveId(videoUrl) : '';
         if (driveId) {
           if (hlsInstanceRef.current) {
-            hlsInstanceRef.current.destroy();
+            try {
+              hlsInstanceRef.current.stopLoad();
+              hlsInstanceRef.current.detachMedia();
+              hlsInstanceRef.current.destroy();
+            } catch {}
             hlsInstanceRef.current = null;
           }
           activeVideo.current.src = `/api/stream/drive/${driveId}${tokenParam}`;
@@ -92,9 +128,21 @@ export function SecureHLSVideoPlayer({
         const hls = new Hls({
           enableWorker: true,
           lowLatencyMode: false,
-          manifestLoadingTimeOut: 30000,
+          startFragPrefetch: true,               // Prefetch next chunk in background for gapless continuous streaming
+          backBufferLength: 45,                  // Evict past chunks older than 45s to prevent browser RAM bloating
+          maxBufferLength: 30,                   // 30s forward buffer for rapid startup
+          maxMaxBufferLength: 60,                // 60s max buffer cap
+          maxBufferSize: 40 * 1024 * 1024,       // 40MB max buffer allocation in browser memory
+          capLevelToPlayerSize: true,            // Auto-limit quality to player size (saves bandwidth & decoding CPU)
+          progressive: true,                     // Fast chunk demuxing
+          highBufferWatchdogPeriod: 2,           // Buffer health watchdog
+          manifestLoadingTimeOut: 15000,
           manifestLoadingMaxRetry: 3,
-          fragLoadingTimeOut: 35000,
+          manifestLoadingRetryDelay: 800,
+          levelLoadingMaxRetry: 3,
+          fragLoadingMaxRetry: 4,
+          fragLoadingTimeOut: 20000,
+          fragLoadingRetryDelay: 800,
           xhrSetup: (xhr) => {
             try {
               xhr.setRequestHeader('X-Climbup-Player', 'amirshaikh320340');
@@ -117,7 +165,7 @@ export function SecureHLSVideoPlayer({
           if (v && (v.paused || v.readyState < 2) && v.currentTime === 0) {
             fallbackToByteRange();
           }
-        }, 18000);
+        }, 15000);
 
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
           clearTimeout(watchdog);
@@ -129,8 +177,20 @@ export function SecureHLSVideoPlayer({
 
         hls.on(Hls.Events.ERROR, (_evt, data) => {
           if (data.fatal) {
+            clearTimeout(watchdog);
             if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
-              hls.recoverMediaError();
+              if (mediaRecoveryCountRef.current === 0) {
+                mediaRecoveryCountRef.current++;
+                console.info('[Secure Player] Recovering from media error...');
+                hls.recoverMediaError();
+              } else if (mediaRecoveryCountRef.current === 1) {
+                mediaRecoveryCountRef.current++;
+                console.info('[Secure Player] Swapping audio codec to recover...');
+                hls.swapAudioCodec();
+                hls.recoverMediaError();
+              } else {
+                fallbackToByteRange();
+              }
             } else if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
               networkRetries++;
               if (networkRetries <= 2) {
@@ -142,6 +202,12 @@ export function SecureHLSVideoPlayer({
             } else {
               fallbackToByteRange();
             }
+          } else if (data.details === Hls.ErrorDetails.BUFFER_STALLED_ERROR) {
+            // Non-fatal micro-stall: gently nudge playback if video is stuck
+            const v = activeVideo.current;
+            if (v && !v.paused && v.readyState >= 2) {
+              v.currentTime = Math.min(v.duration || 0, v.currentTime + 0.1);
+            }
           }
         });
       } else if (activeVideo.current.canPlayType('application/vnd.apple.mpegurl')) {
@@ -152,16 +218,16 @@ export function SecureHLSVideoPlayer({
         fallbackToByteRange();
       }
 
-      // 2. Start Dynamic Forensic Canvas Watermark
+      // 3. Dynamic Forensic Canvas Watermark (Crisp, High-DPI scaled, Low CPU)
       const canvas = canvasRef.current;
       if (canvas) {
         const ctx = canvas.getContext('2d');
         const draw = () => {
-          if (!ctx) return;
+          if (!ctx || !canvas) return;
           ctx.clearRect(0, 0, canvas.width, canvas.height);
           ctx.font = "500 12px 'Inter', sans-serif";
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
-          ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.22)';
+          ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
           ctx.shadowBlur = 4;
           const text = `${userEmail} • ${new Date().toLocaleTimeString()}`;
           const x = 30 + Math.random() * Math.max(10, canvas.width - 240);
@@ -169,7 +235,7 @@ export function SecureHLSVideoPlayer({
           ctx.fillText(text, x, y);
         };
         draw();
-        timer = setInterval(draw, 5000);
+        timer = setInterval(draw, 7000);
       }
     }
 
@@ -178,8 +244,20 @@ export function SecureHLSVideoPlayer({
     return () => {
       isDisposed = true;
       if (hlsInstanceRef.current) {
-        hlsInstanceRef.current.destroy();
+        try {
+          hlsInstanceRef.current.stopLoad();
+          hlsInstanceRef.current.detachMedia();
+          hlsInstanceRef.current.destroy();
+        } catch {}
         hlsInstanceRef.current = null;
+      }
+      const v = activeVideo.current;
+      if (v) {
+        try {
+          v.pause();
+          v.removeAttribute('src');
+          v.load();
+        } catch {}
       }
       if (timer) clearInterval(timer);
     };
@@ -192,6 +270,8 @@ export function SecureHLSVideoPlayer({
         playsInline
         controls
         controlsList="nodownload noplaybackrate"
+        disablePictureInPicture
+        disableRemotePlayback
         onContextMenu={(e) => e.preventDefault()}
         onDragStart={(e) => e.preventDefault()}
         className="w-full h-full object-contain"
@@ -266,12 +346,7 @@ export function SecureHLSVideoPlayer({
         <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm flex flex-col items-center justify-center p-4 text-center z-20">
           <p className="text-white text-sm font-semibold mb-3">Video playback temporarily unavailable.</p>
           <button
-            onClick={() => {
-              setPlaybackError(false);
-              setIsLoading(true);
-              activeVideo.current?.load();
-              activeVideo.current?.play().catch(() => {});
-            }}
+            onClick={retryPlayback}
             className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg transition-colors shadow-lg shadow-indigo-600/30"
           >
             Retry Playback

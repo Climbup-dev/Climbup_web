@@ -21,6 +21,7 @@ export interface CourseLesson {
   structuredNotes?: any;
   chapters?: any[];
   isFreePreview?: boolean;
+  is_free_preview?: boolean;
   notes?: string;
   transcriptSnippets?: {
     time: string; // "04:15"
