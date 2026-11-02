@@ -630,6 +630,40 @@ export const LectureChatbot: React.FC<LectureChatbotProps> = ({
                       onTimestampClick={handleTimestampClick}
                       onCompleteAnimation={handleCompleteAnimation}
                     />
+
+                    {/* Grounding Evidence / Lecture Citations Bar */}
+                    {hasEvidence && (
+                      <div className="chatEvidenceSection">
+                        <div className="chatEvidenceHeader">
+                          <BookOpen size={11} style={{ color: '#2563eb' }} />
+                          <span>Video Grounding Citations:</span>
+                        </div>
+                        <div className="chatEvidenceChipsGrid">
+                          {msg.evidence!.map((ev, eIdx) => {
+                            const rawTime = ev.timestamp_label || '';
+                            const firstTime = rawTime.split(' ')[0] || '00:00';
+                            const matchPercent = Math.min(99, Math.round((ev.similarity_score || 0.85) * 100));
+
+                            return (
+                              <button
+                                key={eIdx}
+                                type="button"
+                                onClick={() => handleTimestampClick(firstTime)}
+                                className="chatEvidenceChip"
+                                title={`Jump video to ${rawTime} (${ev.topic_name || 'Lecture segment'})`}
+                              >
+                                <span className="evidencePlayTriangle">▶</span>
+                                <span className="evidenceTime">{rawTime}</span>
+                                {ev.topic_name && (
+                                  <span className="evidenceTopicPill">{ev.topic_name}</span>
+                                )}
+                                <span className="evidenceScoreBadge">{matchPercent}% match</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
                   </>
                 )}
               </div>
