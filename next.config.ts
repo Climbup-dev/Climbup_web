@@ -66,7 +66,7 @@ const nextConfig: NextConfig = {
       });
     }
     // Internal backend RAG & Video Streaming proxy (Hides raw Cloud Run server URL from student browsers)
-    const ragServer = process.env.RAG_SERVER_INTERNAL_URL || process.env.NEXT_PUBLIC_RAG_SERVER_URL || 'https://teacher-lecture-video-rag.onrender.com';
+    const ragServer = process.env.RAG_SERVER_INTERNAL_URL || process.env.NEXT_PUBLIC_RAG_SERVER_URL || 'http://127.0.0.1:8000';
     rewritesList.push({
       source: '/uploads/:path*',
       destination: `${ragServer}/uploads/:path*`,
