@@ -507,6 +507,15 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
             hlsInstanceRef.current = null;
           } catch {}
         }
+        const driveId = activeLesson?.videoUrl ? extractGoogleDriveId(activeLesson.videoUrl) : "";
+        if (driveId && videoRef.current) {
+          videoRef.current.src = `/api/stream/drive/${driveId}${tokenParam}`;
+          videoRef.current.load();
+          videoRef.current.play().catch(() => {});
+          setIsVideoLoading(false);
+          setVideoPlaybackError(false);
+          return;
+        }
         setIsVideoLoading(false);
         setVideoPlaybackError(true);
       };
@@ -522,7 +531,7 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
           maxMaxBufferLength: 60,                // 60s max buffer cap
           maxBufferSize: 40 * 1024 * 1024,       // 40MB max buffer allocation in browser memory
           capLevelToPlayerSize: true,            // Auto-limit quality to player size (saves bandwidth & decoding CPU)
-          progressive: true,                     // Fast chunk demuxing
+          progressive: false,                    // MUST be false for AES-128 encrypted HLS to prevent fragParsingError
           highBufferWatchdogPeriod: 2,           // Buffer health watchdog
           manifestLoadingTimeOut: 15000,
           manifestLoadingMaxRetry: 3,
@@ -532,27 +541,13 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
           fragLoadingTimeOut: 20000,
           fragLoadingRetryDelay: 800,
           xhrSetup: (xhr: XMLHttpRequest, _url: string) => {
-            const injectHeaders = () => {
-              try {
-                if (xhr.readyState === 1) {
-                  xhr.setRequestHeader("X-Climbup-Player", "amirshaikh320340");
-                  if (authToken) {
-                    xhr.setRequestHeader("Authorization", `Bearer ${authToken}`);
-                  }
-                }
-              } catch (e) {
-                // Header state guarded
+            try {
+              xhr.setRequestHeader("X-Climbup-Player", "amirshaikh320340");
+              if (authToken) {
+                xhr.setRequestHeader("Authorization", `Bearer ${authToken}`);
               }
-            };
-            if (xhr.readyState === XMLHttpRequest.OPENED || xhr.readyState === 1) {
-              injectHeaders();
-            } else {
-              const origOpen = xhr.open;
-              xhr.open = function (...args: any[]) {
-                const res = origOpen.apply(this, args as any);
-                injectHeaders();
-                return res;
-              };
+            } catch (e) {
+              // Header state guarded
             }
           },
         });
