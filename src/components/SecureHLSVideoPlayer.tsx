@@ -143,14 +143,17 @@ export function SecureHLSVideoPlayer({
           fragLoadingMaxRetry: 4,
           fragLoadingTimeOut: 20000,
           fragLoadingRetryDelay: 800,
-          xhrSetup: (xhr: XMLHttpRequest) => {
+          xhrSetup: (xhr: XMLHttpRequest, url: string) => {
             try {
+              if (!xhr.readyState) {
+                xhr.open('GET', url, true);
+              }
               xhr.setRequestHeader('X-Climbup-Player', 'amirshaikh320340');
               if (token) {
                 xhr.setRequestHeader('Authorization', `Bearer ${token}`);
               }
             } catch (e) {
-              // Header state guarded
+              console.warn('[Secure Player] xhrSetup notice:', e);
             }
           }
         });

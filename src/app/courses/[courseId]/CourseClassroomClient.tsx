@@ -540,14 +540,17 @@ export default function CourseClassroomClient({ courseId }: { courseId: string }
           fragLoadingMaxRetry: 4,
           fragLoadingTimeOut: 20000,
           fragLoadingRetryDelay: 800,
-          xhrSetup: (xhr: XMLHttpRequest, _url: string) => {
+          xhrSetup: (xhr: XMLHttpRequest, url: string) => {
             try {
+              if (!xhr.readyState) {
+                xhr.open("GET", url, true);
+              }
               xhr.setRequestHeader("X-Climbup-Player", "amirshaikh320340");
               if (authToken) {
                 xhr.setRequestHeader("Authorization", `Bearer ${authToken}`);
               }
             } catch (e) {
-              // Header state guarded
+              console.warn("[Video Security] xhrSetup notice:", e);
             }
           },
         });
