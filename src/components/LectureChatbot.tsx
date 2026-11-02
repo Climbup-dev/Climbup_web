@@ -12,7 +12,8 @@ import {
   Volume2,
   VolumeX,
   Code2,
-  AlertTriangle
+  AlertTriangle,
+  Clock
 } from 'lucide-react';
 import { useLectureRAG } from '@/hooks/useLectureRAG';
 import { parseTimestampToSeconds, parseInlineFormatted } from '@/utils/ragHelpers';
@@ -97,6 +98,9 @@ const StructuredMessageContent: React.FC<StructuredMessageContentProps> = ({
       if (part.type === 'bold') {
         return <strong key={pIdx} className="chatBold">{part.value}</strong>;
       }
+      if (part.type === 'italic') {
+        return <em key={pIdx} className="chatItalic">{part.value}</em>;
+      }
       if (part.type === 'code') {
         return <code key={pIdx} className="chatCode">{part.value}</code>;
       }
@@ -124,49 +128,12 @@ const StructuredMessageContent: React.FC<StructuredMessageContentProps> = ({
       elements.push(
         <div key={`${keyPrefix}-bullets-wrapper`} className="chatBulletsWrapper">
           {bulletsToRender.map((bText, bIdx) => {
-            const isProTip = bText.includes('Pro Tip') || bText.includes('Key Insight') || bText.startsWith('💡');
-            const isCaution = bText.includes('Pitfall') || bText.includes('Warning') || bText.includes('Caution') || bText.startsWith('⚠️');
-            const isMechanism = bText.includes('Mechanism') || bText.includes('How it works') || bText.startsWith('⚙️');
-
-            if (isProTip) {
-              return (
-                <div key={bIdx} className="chatProTipCard">
-                  <div className="chatProTipIcon">💡</div>
-                  <div className="chatProTipBody">
-                    {renderFormattedTokens(bText.replace(/^💡\s*/, ''))}
-                  </div>
-                </div>
-              );
-            }
-
-            if (isCaution) {
-              return (
-                <div key={bIdx} className="chatCautionCard">
-                  <div className="chatCautionIcon">⚠️</div>
-                  <div className="chatCautionBody">
-                    {renderFormattedTokens(bText.replace(/^⚠️\s*/, ''))}
-                  </div>
-                </div>
-              );
-            }
-
-            if (isMechanism) {
-              return (
-                <div key={bIdx} className="chatMechanismCard">
-                  <div className="chatMechanismIcon">⚙️</div>
-                  <div className="chatMechanismBody">
-                    {renderFormattedTokens(bText.replace(/^⚙️\s*/, ''))}
-                  </div>
-                </div>
-              );
-            }
-
             return (
               <div key={bIdx} className="chatBulletItem">
                 <span className="chatBulletDot">•</span>
-                <span className="chatBulletText">
+                <div className="chatBulletText">
                   {renderFormattedTokens(bText)}
-                </span>
+                </div>
               </div>
             );
           })}
@@ -182,7 +149,7 @@ const StructuredMessageContent: React.FC<StructuredMessageContentProps> = ({
   lines.forEach((line, lineIdx) => {
     const trimmed = line.trim();
 
-    // Fenced Code Block (```lang ... ```)
+    // 1. Fenced Code Block (```lang ... ```)
     if (trimmed.startsWith('```')) {
       if (inCodeBlock) {
         const codeText = currentCodeLines.join('\n');
@@ -209,14 +176,14 @@ const StructuredMessageContent: React.FC<StructuredMessageContentProps> = ({
       return;
     }
 
-    // Horizontal Rule
+    // 2. Horizontal Rule
     if (trimmed === '---' || trimmed === '___') {
       flushBullets(`line-${lineIdx}`);
       elements.push(<hr key={`hr-${lineIdx}`} className="chatDivider" />);
       return;
     }
 
-    // Heading (supports #, ##, ###, ####, #####)
+    // 3. Headings (supports #, ##, ###)
     if (/^#{1,6}\s+/.test(trimmed)) {
       flushBullets(`line-${lineIdx}`);
       const headingText = trimmed.replace(/^#+\s*/, '');
@@ -229,7 +196,37 @@ const StructuredMessageContent: React.FC<StructuredMessageContentProps> = ({
       return;
     }
 
-    // Caution / Curriculum Notice (starts with ⚠️ or Topic Not Discussed)
+    // 4. Video Jump Points Section Header (e.g. "✨ ⏱ Video Jump Points" or "⏱ Video Jump Points")
+    if (/^(✨\s*)?(⏱\s*)?Video Jump Points/i.test(trimmed) || /^(✨\s*)?(⏱\s*)?Key Timestamps/i.test(trimmed)) {
+      flushBullets(`line-${lineIdx}`);
+      elements.push(
+        <div key={`section-jump-${lineIdx}`} className="chatSectionHeading">
+          <Clock size={13} className="chatSectionIcon" />
+          <span>Video Jump Points</span>
+        </div>
+      );
+      return;
+    }
+
+    // 5. Pro Tip / Key Insight Highlight Card (starts with 💡 or "Pro Tip:" or contains "💡 Pro Tip")
+    if (trimmed.startsWith('💡') || /^pro\s*tip\s*:/i.test(trimmed) || /key\s*insight\s*:/i.test(trimmed)) {
+      flushBullets(`line-${lineIdx}`);
+      const cleanTipText = trimmed.replace(/^💡\s*/, '').replace(/^pro\s*tip\s*:\s*/i, '');
+      elements.push(
+        <div key={`protip-${lineIdx}`} className="chatProTipCard">
+          <div className="chatProTipHeader">
+            <span className="chatProTipIcon">💡</span>
+            <span className="chatProTipTitle">Pro Tip</span>
+          </div>
+          <div className="chatProTipBody">
+            {renderFormattedTokens(cleanTipText)}
+          </div>
+        </div>
+      );
+      return;
+    }
+
+    // 6. Caution / Curriculum Notice (starts with ⚠️ or Topic Not Discussed)
     if (trimmed.startsWith('⚠️') || trimmed.includes('Topic Not Discussed')) {
       flushBullets(`line-${lineIdx}`);
       elements.push(
@@ -246,13 +243,13 @@ const StructuredMessageContent: React.FC<StructuredMessageContentProps> = ({
       return;
     }
 
-    // Numbered List Item
+    // 7. Numbered List Item (e.g. "1. Step...")
     const numMatch = trimmed.match(/^(\d+)\.\s+(.*)$/);
     if (numMatch) {
       flushBullets(`line-${lineIdx}`);
       elements.push(
         <div key={`num-${lineIdx}`} className="chatNumberedItem">
-          <span className="chatNumberPrefix">{numMatch[1]}.</span>
+          <span className="chatNumberPrefix">{numMatch[1]}</span>
           <div className="chatNumberText">
             {renderFormattedTokens(numMatch[2])}
           </div>
@@ -261,10 +258,13 @@ const StructuredMessageContent: React.FC<StructuredMessageContentProps> = ({
       return;
     }
 
-    // Bullet Item (* or -)
-    if (trimmed.startsWith('* ') || trimmed.startsWith('- ')) {
-      currentBulletGroup.push(trimmed.slice(2));
-      return;
+    // 8. Bullet Item (*, -, •, +)
+    if (/^(\*|-|•|\+)\s+(.*)$/.test(trimmed)) {
+      const bulletMatch = trimmed.match(/^(\*|-|•|\+)\s+(.*)$/);
+      if (bulletMatch) {
+        currentBulletGroup.push(bulletMatch[2]);
+        return;
+      }
     }
 
     // Regular line
@@ -630,40 +630,6 @@ export const LectureChatbot: React.FC<LectureChatbotProps> = ({
                       onTimestampClick={handleTimestampClick}
                       onCompleteAnimation={handleCompleteAnimation}
                     />
-
-                    {/* Grounding Evidence / Lecture Citations Bar */}
-                    {hasEvidence && (
-                      <div className="chatEvidenceSection">
-                        <div className="chatEvidenceHeader">
-                          <BookOpen size={11} style={{ color: '#2563eb' }} />
-                          <span>Video Grounding Citations:</span>
-                        </div>
-                        <div className="chatEvidenceChipsGrid">
-                          {msg.evidence!.map((ev, eIdx) => {
-                            const rawTime = ev.timestamp_label || '';
-                            const firstTime = rawTime.split(' ')[0] || '00:00';
-                            const matchPercent = Math.min(99, Math.round((ev.similarity_score || 0.85) * 100));
-
-                            return (
-                              <button
-                                key={eIdx}
-                                type="button"
-                                onClick={() => handleTimestampClick(firstTime)}
-                                className="chatEvidenceChip"
-                                title={`Jump video to ${rawTime} (${ev.topic_name || 'Lecture segment'})`}
-                              >
-                                <span className="evidencePlayTriangle">▶</span>
-                                <span className="evidenceTime">{rawTime}</span>
-                                {ev.topic_name && (
-                                  <span className="evidenceTopicPill">{ev.topic_name}</span>
-                                )}
-                                <span className="evidenceScoreBadge">{matchPercent}% match</span>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
                   </>
                 )}
               </div>

@@ -1,5 +1,5 @@
 /* ============================================================
-   PractQ Lecture AI Chatbot - Clean, Professional Theme
+   PractQ Lecture AI Chatbot - Ultra-Comfortable Reading Theme
    ============================================================ */
 
 .chatbotContainer {
@@ -28,7 +28,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 16px;
+  padding: 13px 18px;
   background: #ffffff;
   border-bottom: 1px solid #e2e8f0;
   gap: 10px;
@@ -40,12 +40,12 @@
 .chatHeaderLeft {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 11px;
 }
 
 .chatAvatarIcon {
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   border-radius: 10px;
   background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
   display: grid;
@@ -58,11 +58,11 @@
 .chatHeaderTitleRow {
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 8px;
 }
 
 .chatTitle {
-  font-size: 14px;
+  font-size: 14.5px;
   font-weight: 700;
   margin: 0;
   color: #0f172a;
@@ -97,7 +97,7 @@
   padding: 1px 7px;
   border-radius: 5px;
   border: 1px solid #bfdbfe;
-  max-width: 190px;
+  max-width: 200px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -146,8 +146,8 @@
 }
 
 .clearChatBtn {
-  background: transparent;
-  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
   color: #64748b;
   padding: 5px 10px;
   border-radius: 8px;
@@ -175,7 +175,7 @@
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 40px 20px;
+  padding: 44px 20px;
   margin: auto 0;
   animation: emptyFadeIn 0.3s ease-out;
 }
@@ -186,15 +186,15 @@
 }
 
 .chatEmptyIconWrapper {
-  width: 48px;
-  height: 48px;
+  width: 50px;
+  height: 50px;
   border-radius: 14px;
   background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-  border: 1px solid #bfdbfe;
+  border: 1.5px solid #bfdbfe;
   display: grid;
   place-items: center;
   margin-bottom: 14px;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1);
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.12);
 }
 
 .chatEmptySparkle {
@@ -202,7 +202,7 @@
 }
 
 .chatEmptyTitle {
-  font-size: 17px;
+  font-size: 18px;
   font-weight: 700;
   color: #0f172a;
   margin: 0 0 8px;
@@ -210,23 +210,24 @@
 }
 
 .chatEmptySubtitle {
-  font-size: 13px;
+  font-size: 13.5px;
   color: #64748b;
-  line-height: 1.6;
-  margin: 0 0 14px;
-  max-width: 320px;
+  line-height: 1.62;
+  margin: 0 0 16px;
+  max-width: 330px;
 }
 
 .chatEmptyLessonTag {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 5px 12px;
+  padding: 6px 14px;
   border-radius: 999px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
   font-size: 12px;
-  max-width: 300px;
+  max-width: 310px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
 }
 
 .chatEmptyLessonIcon {
@@ -248,17 +249,17 @@
 }
 
 /* ============================================================
-   Scroll Area & Chat Stream
+   Scroll Area & Chat Stream (Soft, Comfortable Background)
    ============================================================ */
 .chatMessagesScroll {
   flex-grow: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 16px;
+  padding: 20px 18px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  background: #fafbfc;
+  gap: 20px;
+  background: #f4f6fb;
   scroll-behavior: smooth;
   width: 100%;
   box-sizing: border-box;
@@ -267,7 +268,7 @@
 
 /* Slim modern scrollbar */
 .chatMessagesScroll::-webkit-scrollbar {
-  width: 5px;
+  width: 6px;
 }
 
 .chatMessagesScroll::-webkit-scrollbar-track {
@@ -287,8 +288,8 @@
 .messageWrapper {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  max-width: 90%;
+  gap: 5px;
+  max-width: 92%;
   animation: messageSlideIn 0.2s ease-out;
 }
 
@@ -303,7 +304,7 @@
 
 .messageWrapper.ai {
   align-self: flex-start;
-  max-width: 94%;
+  max-width: 96%;
 }
 
 .senderMeta {
@@ -311,7 +312,8 @@
   align-items: center;
   gap: 8px;
   font-size: 11.5px;
-  margin-bottom: 2px;
+  margin-bottom: 3px;
+  padding: 0 2px;
 }
 
 .messageWrapper.student .senderMeta {
@@ -330,17 +332,18 @@
 
 .messageWrapper.ai .senderLabel {
   font-weight: 700;
-  color: #2563eb;
+  color: #1d4ed8;
   background: #eff6ff;
   border: 1px solid #bfdbfe;
-  padding: 1px 8px;
+  padding: 2px 9px;
   border-radius: 999px;
-  font-size: 10.5px;
+  font-size: 11px;
 }
 
 .senderTime {
-  color: #94a3b8;
-  font-size: 11px;
+  color: #64748b;
+  font-size: 11.5px;
+  font-weight: 500;
 }
 
 .aiActionsRow {
@@ -353,23 +356,25 @@
 .speakMsgBtn,
 .copyMsgBtn {
   background: #ffffff;
-  border: 1px solid #e2e8f0;
-  color: #64748b;
+  border: 1px solid #cbd5e1;
+  color: #475569;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 4px;
   font-size: 11px;
-  padding: 3px 8px;
+  font-weight: 600;
+  padding: 3px 9px;
   border-radius: 6px;
-  transition: all 0.14s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  transition: all 0.15s ease;
 }
 
 .speakMsgBtn:hover,
 .copyMsgBtn:hover {
-  background: #f1f5f9;
+  background: #f8fafc;
   color: #0f172a;
-  border-color: #cbd5e1;
+  border-color: #94a3b8;
 }
 
 .speakMsgBtn.active {
@@ -378,40 +383,46 @@
   color: #dc2626;
 }
 
-/* Message Bubble */
+/* ============================================================
+   Message Bubbles (Ultra-Comfortable Reading Box)
+   ============================================================ */
 .chatBubble {
-  padding: 14px 16px;
-  font-size: 14px;
-  line-height: 1.62;
   box-sizing: border-box;
 }
 
 .chatBubble.student {
-  background: #2563eb;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
   color: #ffffff;
   border-radius: 16px 16px 4px 16px;
-  box-shadow: 0 2px 10px rgba(37, 99, 235, 0.2);
+  padding: 13px 18px;
+  box-shadow: 0 3px 12px rgba(37, 99, 235, 0.22);
 }
 
 .chatBubble.student .chatParagraph {
   color: #ffffff;
   margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
 }
 
 .chatBubble.ai {
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  color: #0f172a;
-  border-radius: 4px 16px 16px 16px;
-  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.04);
+  border-left: 4px solid #3b82f6;
+  color: #1e293b;
+  border-radius: 4px 18px 18px 18px;
+  padding: 20px 24px;
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05), 0 1px 3px rgba(15, 23, 42, 0.04);
+  font-size: 14.5px;
+  line-height: 1.72;
 }
 
 /* Typography Inside Chatbot Messages */
 .chatParagraph {
-  margin: 0 0 10px 0;
+  margin: 0 0 14px 0;
   color: #1e293b;
-  font-size: 14px;
-  line-height: 1.62;
+  font-size: 14.5px;
+  line-height: 1.72;
 }
 
 .chatParagraph:last-child {
@@ -422,182 +433,246 @@
   border: 0;
   height: 1px;
   background: #e2e8f0;
-  margin: 12px 0;
+  margin: 16px 0;
 }
 
 .chatHeading {
-  font-size: 13.5px;
+  font-size: 14.5px;
   font-weight: 700;
   color: #0f172a;
-  margin: 12px 0 6px;
+  margin: 16px 0 8px;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 7px;
 }
 
 .chatBold {
   color: #0f172a;
-  font-weight: 600;
+  font-weight: 700;
+}
+
+.chatItalic {
+  font-style: italic;
+  color: #0f172a;
+  font-weight: 500;
 }
 
 .chatCode {
   background: #f1f5f9;
-  border: 1px solid #e2e8f0;
-  color: #2563eb;
+  border: 1px solid #cbd5e1;
+  color: #1e40af;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 12.5px;
   font-weight: 600;
-  padding: 1px 6px;
-  border-radius: 4px;
+  padding: 2px 6px;
+  border-radius: 5px;
 }
 
-/* Numbered List Items */
+/* ============================================================
+   Numbered List Items (Clean Badge Styling)
+   ============================================================ */
 .chatNumberedItem {
   display: flex;
   align-items: flex-start;
-  gap: 7px;
-  margin: 4px 0;
-  font-size: 13.5px;
-  line-height: 1.55;
+  gap: 10px;
+  margin: 7px 0;
+  font-size: 14px;
+  line-height: 1.68;
   color: #1e293b;
 }
 
 .chatNumberPrefix {
+  min-width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1d4ed8;
   font-weight: 700;
-  color: #2563eb;
+  font-size: 11.5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
-  min-width: 18px;
+  margin-top: 2px;
 }
 
 .chatNumberText {
   flex: 1;
 }
 
-/* Bullet Items */
+/* ============================================================
+   Bullet Items (Generous Spacing & High-Contrast Dots)
+   ============================================================ */
 .chatBulletsWrapper {
-  margin: 6px 0;
+  margin: 8px 0;
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 7px;
 }
 
 .chatBulletItem {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
-  font-size: 13.5px;
-  line-height: 1.55;
+  gap: 10px;
+  font-size: 14px;
+  line-height: 1.68;
   color: #1e293b;
 }
 
 .chatBulletDot {
   color: #2563eb;
-  font-size: 14px;
-  line-height: 1.3;
+  font-size: 18px;
+  line-height: 1.2;
   flex-shrink: 0;
+  margin-top: -1px;
 }
 
 .chatBulletText {
   flex: 1;
 }
 
-/* Video Jump Timestamp Button */
+/* ============================================================
+   Section Headings (e.g. Video Jump Points)
+   ============================================================ */
+.chatSectionHeading {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #1d4ed8;
+  margin: 16px 0 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  padding: 4px 11px;
+  border-radius: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.chatSectionIcon {
+  color: #2563eb;
+  flex-shrink: 0;
+}
+
+/* ============================================================
+   Video Jump Timestamp Button
+   ============================================================ */
 .chatTimestampBtn {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  margin: 0 3px;
-  padding: 2px 7px;
-  border-radius: 6px;
+  gap: 5px;
+  margin: 0 4px;
+  padding: 3px 9px;
+  border-radius: 7px;
   background: #eff6ff;
-  border: 1px solid #bfdbfe;
+  border: 1.5px solid #93c5fd;
   color: #1d4ed8;
   font-size: 12px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-weight: 700;
   cursor: pointer;
   vertical-align: baseline;
-  transition: all 0.15s ease;
+  transition: all 0.16s ease;
   white-space: nowrap;
+  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.08);
 }
 
 .chatTimestampBtn:hover {
-  background: #dbeafe;
+  background: #2563eb;
   border-color: #2563eb;
-  color: #1e40af;
-  transform: translateY(-0.5px);
+  color: #ffffff !important;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(37, 99, 235, 0.25);
 }
 
 .tsPlayTriangle {
   font-size: 9px;
-  color: #2563eb;
+  color: currentColor;
 }
 
-/* Pedagogical Cards (Clean Light Theme) */
+/* ============================================================
+   Pedagogical Cards (Pro Tip, Caution, Mechanism)
+   ============================================================ */
 .chatProTipCard {
-  margin: 8px 0;
-  padding: 10px 14px;
+  margin: 14px 0 6px;
+  padding: 12px 16px;
   background: #f0fdf4;
-  border: 1px solid #bbf7d0;
-  border-left: 3.5px solid #16a34a;
-  border-radius: 10px;
+  border: 1.5px solid #bbf7d0;
+  border-left: 4.5px solid #16a34a;
+  border-radius: 12px;
   display: flex;
-  align-items: flex-start;
-  gap: 10px;
+  flex-direction: column;
+  gap: 4px;
+  box-shadow: 0 2px 8px rgba(22, 163, 74, 0.05);
+}
+
+.chatProTipHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .chatProTipIcon {
   font-size: 16px;
   line-height: 1;
-  flex-shrink: 0;
-  margin-top: 1px;
+}
+
+.chatProTipTitle {
+  font-size: 12px;
+  font-weight: 800;
+  color: #15803d;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .chatProTipBody {
-  font-size: 13px;
-  line-height: 1.55;
-  color: #166534;
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: #14532d;
   font-weight: 500;
 }
 
 .chatCautionCard {
-  margin: 8px 0;
-  padding: 10px 14px;
+  margin: 12px 0 6px;
+  padding: 12px 16px;
   background: #fffbeb;
-  border: 1px solid #fde68a;
-  border-left: 3.5px solid #d97706;
-  border-radius: 10px;
+  border: 1.5px solid #fde68a;
+  border-left: 4.5px solid #d97706;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(217, 119, 6, 0.05);
 }
 
 .chatCautionHeader {
   display: flex;
   align-items: center;
   gap: 6px;
-  margin-bottom: 4px;
+  margin-bottom: 5px;
 }
 
 .chatCautionBadge {
-  font-size: 10.5px;
-  font-weight: 700;
+  font-size: 11px;
+  font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: #b45309;
 }
 
 .chatCautionBody {
-  font-size: 13px;
-  line-height: 1.55;
+  font-size: 13.5px;
+  line-height: 1.65;
   color: #92400e;
   font-weight: 500;
 }
 
 .chatMechanismCard {
-  margin: 8px 0;
-  padding: 10px 14px;
+  margin: 12px 0 6px;
+  padding: 12px 16px;
   background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-left: 3.5px solid #475569;
-  border-radius: 10px;
+  border: 1.5px solid #e2e8f0;
+  border-left: 4.5px solid #475569;
+  border-radius: 12px;
   display: flex;
   align-items: flex-start;
   gap: 10px;
@@ -610,27 +685,29 @@
 }
 
 .chatMechanismBody {
-  font-size: 13px;
-  line-height: 1.55;
+  font-size: 13.5px;
+  line-height: 1.65;
   color: #334155;
   font-weight: 500;
 }
 
-/* Grounding Evidence / Citations */
+/* ============================================================
+   Grounding Evidence / Citations
+   ============================================================ */
 .chatEvidenceSection {
-  margin-top: 12px;
-  padding-top: 10px;
+  margin-top: 14px;
+  padding-top: 12px;
   border-top: 1px solid #e2e8f0;
 }
 
 .chatEvidenceHeader {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   font-size: 11px;
   font-weight: 700;
   color: #64748b;
-  margin-bottom: 7px;
+  margin-bottom: 8px;
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
@@ -638,22 +715,23 @@
 .chatEvidenceChipsGrid {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 7px;
 }
 
 .chatEvidenceChip {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   background: #ffffff;
   border: 1px solid #cbd5e1;
-  padding: 4px 10px;
+  padding: 4px 11px;
   border-radius: 7px;
   color: #0f172a;
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
 }
 
 .chatEvidenceChip:hover {
@@ -680,7 +758,7 @@
   border-radius: 4px;
   font-size: 10.5px;
   color: #475569;
-  max-width: 140px;
+  max-width: 150px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -691,9 +769,9 @@
   color: #059669;
   background: #ecfdf5;
   border: 1px solid #a7f3d0;
-  padding: 1px 5px;
+  padding: 1px 6px;
   border-radius: 4px;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 /* ============================================================
@@ -704,11 +782,11 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 14px;
+  padding: 7px 15px;
   border-radius: 999px;
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.05);
   margin: 4px 0 8px;
   animation: thinkingFadeIn 0.2s ease-out;
 }
@@ -810,7 +888,7 @@
    Syntax-styled Code Block
    ============================================================ */
 .chatCodeBlockContainer {
-  margin: 10px 0;
+  margin: 12px 0;
   border-radius: 10px;
   background: #0f172a;
   border: 1px solid #1e293b;
@@ -823,7 +901,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 7px 14px;
+  padding: 8px 14px;
   background: #020617;
   border-bottom: 1px solid #1e293b;
 }
@@ -848,7 +926,7 @@
   color: #f1f5f9;
   font-size: 11px;
   font-weight: 600;
-  padding: 3px 8px;
+  padding: 3px 9px;
   border-radius: 5px;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -863,10 +941,10 @@
 
 .chatCodeBlockPre {
   margin: 0;
-  padding: 12px 14px;
+  padding: 14px 16px;
   overflow-x: auto;
-  font-size: 12.5px;
-  line-height: 1.6;
+  font-size: 13px;
+  line-height: 1.62;
   color: #f8fafc;
   background: #0f172a;
 }
@@ -881,7 +959,7 @@
    Input Form
    ============================================================ */
 .chatInputForm {
-  padding: 12px 16px;
+  padding: 13px 18px;
   border-top: 1px solid #e2e8f0;
   background: #ffffff;
   z-index: 2;
@@ -898,7 +976,7 @@
   background: #f8fafc;
   border: 1.5px solid #cbd5e1;
   border-radius: 12px;
-  padding: 3px 4px 3px 12px;
+  padding: 4px 5px 4px 14px;
   transition: all 0.2s ease;
 }
 
@@ -913,7 +991,7 @@
   background: transparent;
   border: none;
   color: #0f172a;
-  font-size: 13.5px;
+  font-size: 14px;
   font-weight: 500;
   outline: none;
   padding: 6px 0;

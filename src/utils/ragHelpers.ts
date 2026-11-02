@@ -22,20 +22,22 @@ export function parseTimestampToSeconds(ts: string): number {
 export type InlinePart = 
   | { type: 'text'; value: string }
   | { type: 'bold'; value: string }
+  | { type: 'italic'; value: string }
   | { type: 'code'; value: string }
   | { type: 'timestamp'; value: string };
 
 /**
  * Parses inline formatting:
  * - Bold: **text**
+ * - Italic: *text* or _text_
  * - Inline code: `code`
- * - Timestamps: [MM:SS], `▶ MM:SS`, ▶ MM:SS, (MM:SS)
+ * - Timestamps: ⏱ [MM:SS], [MM:SS], `▶ MM:SS`, ▶ MM:SS, (MM:SS), MM:SS
  */
 export function parseInlineFormatted(text: string): InlinePart[] {
   if (!text) return [];
 
-  // Match bold, inline code, or timestamp formats
-  const tokenRegex = /(\*\*[^*]+\*\*|`[^`]+`|(?:`?▶\s*|\[|\()(?:\d{1,2}:\d{2}:\d{2}|\d{1,3}:\d{2})(?:`|\]|\))?)/g;
+  // Match bold, italic, inline code, or timestamp formats
+  const tokenRegex = /(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`|(?:⏱\s*|▶\s*|\[|\()*(?:\d{1,2}:\d{2}:\d{2}|\d{1,3}:\d{2})(?:\]|\))*)/g;
   const parts: InlinePart[] = [];
   let lastIndex = 0;
   let match: RegExpExecArray | null;
@@ -48,6 +50,8 @@ export function parseInlineFormatted(text: string): InlinePart[] {
     const token = match[0];
     if (token.startsWith('**') && token.endsWith('**')) {
       parts.push({ type: 'bold', value: token.slice(2, -2) });
+    } else if (token.startsWith('*') && token.endsWith('*') && !token.startsWith('**')) {
+      parts.push({ type: 'italic', value: token.slice(1, -1) });
     } else if (token.startsWith('`') && token.endsWith('`') && !token.includes('▶')) {
       parts.push({ type: 'code', value: token.slice(1, -1) });
     } else {
