@@ -60,6 +60,7 @@ async function handleProxy(
     const init: RequestInit = {
       method,
       headers,
+      signal: AbortSignal.timeout(60000), // 60s timeout accommodates Render cold start
     };
 
     if (method !== "GET" && method !== "HEAD") {
@@ -81,9 +82,9 @@ async function handleProxy(
     return NextResponse.json(
       {
         status: "error",
-        detail: `Failed to connect to backend AI server: ${error?.message || "Connection refused"}`,
+        detail: `The AI Teaching Assistant is currently warming up on Render. Please wait 10-15 seconds and try asking again! (${error?.message || "Connection timeout"})`,
       },
-      { status: 502 }
+      { status: 503 }
     );
   }
 }

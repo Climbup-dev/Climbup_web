@@ -8,7 +8,13 @@ import { createClient } from "@/lib/supabase/client";
  */
 export async function fetchApi(endpoint: string, options: RequestInit = {}) {
   // Use the env variable, fallback to localhost if not found during dev
-  const baseUrl = process.env.NEXT_PUBLIC_PYTHON_BACKEND_URL || "http://localhost:8000";
+  let baseUrl = process.env.NEXT_PUBLIC_PYTHON_BACKEND_URL || process.env.NEXT_PUBLIC_RAG_SERVER_URL || "";
+  if (!baseUrl && typeof window !== "undefined") {
+    const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+    baseUrl = isLocal ? "http://127.0.0.1:8000" : "";
+  } else if (!baseUrl) {
+    baseUrl = process.env.RAG_SERVER_INTERNAL_URL || "http://127.0.0.1:8000";
+  }
   
   // Ensure the endpoint starts with a slash
   const url = `${baseUrl}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;

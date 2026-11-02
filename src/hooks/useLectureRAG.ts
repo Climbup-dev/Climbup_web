@@ -2,7 +2,8 @@ import { useState, useCallback, useEffect } from 'react';
 
 const RAG_BASE_URL = 
   process.env.NEXT_PUBLIC_RAG_SERVER_URL || 
-  'https://practq45-28929614461.asia-south1.run.app';
+  process.env.RAG_SERVER_INTERNAL_URL || 
+  '';
 
 export interface RetrievedEvidence {
   chunk_index: number;
@@ -120,13 +121,19 @@ export function useLectureRAG(
       setMessages((prev) => [...prev, aiMessage]);
     } catch (err: any) {
       console.error('[RAG Client Error]:', err);
-      setError(err.message || 'Failed to retrieve answer.');
+      let errorMsg = err.message || 'Could not connect to the lecture assistant server.';
+      if (errorMsg.includes('405') || errorMsg.includes('Method Not Allowed')) {
+        errorMsg = 'AI Assistant is reconnecting to backend server. Please try again in a few seconds.';
+      } else if (errorMsg.includes('Failed to fetch') || errorMsg.includes('502') || errorMsg.includes('503') || errorMsg.includes('504')) {
+        errorMsg = 'AI Teaching Assistant is currently warming up on Render. Please wait 10-15 seconds and ask again!';
+      }
+      setError(errorMsg);
       setMessages((prev) => [
         ...prev,
         {
           id: `err-${Date.now()}`,
           sender: 'ai',
-          text: `⚠️ ${err.message || 'Could not connect to the lecture assistant server. Please ensure the server is online.'}`
+          text: `⚠️ ${errorMsg}`
         }
       ]);
     } finally {

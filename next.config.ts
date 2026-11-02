@@ -65,48 +65,40 @@ const nextConfig: NextConfig = {
         destination: classAgentWsUrl,
       });
     }
-    // Internal backend RAG & Video Streaming proxy (Hides raw Cloud Run server URL from student browsers)
-    const ragServer = process.env.RAG_SERVER_INTERNAL_URL || process.env.NEXT_PUBLIC_RAG_SERVER_URL || 'http://127.0.0.1:8000';
-    rewritesList.push({
-      source: '/uploads/:path*',
-      destination: `${ragServer}/uploads/:path*`,
-    });
-    rewritesList.push({
-      source: '/api/lessons/:lessonId/hls/:path*',
-      destination: `${ragServer}/api/lessons/:lessonId/hls/:path*`,
-    });
-    rewritesList.push({
-      source: '/api/lessons/:lessonId/stream',
-      destination: `${ragServer}/api/lessons/:lessonId/stream`,
-    });
-    rewritesList.push({
-      source: '/api/lessons/:lessonId/stream-token',
-      destination: `${ragServer}/api/lessons/:lessonId/stream-token`,
-    });
-    rewritesList.push({
-      source: '/api/stream/:path*',
-      destination: `${ragServer}/api/stream/:path*`,
-    });
-    rewritesList.push({
-      source: '/api/rag/:path*',
-      destination: `${ragServer}/api/:path*`,
-    });
-    rewritesList.push({
-      source: '/api/lessons/:lessonId/mcqs/:path*',
-      destination: `${ragServer}/api/lessons/:lessonId/mcqs/:path*`,
-    });
-    rewritesList.push({
-      source: '/api/lessons/:lessonId/assignment',
-      destination: `${ragServer}/api/lessons/:lessonId/assignment`,
-    });
-    rewritesList.push({
-      source: '/api/assignments/:path*',
-      destination: `${ragServer}/api/assignments/:path*`,
-    });
-    rewritesList.push({
-      source: '/api/live/:path*',
-      destination: `${ragServer}/api/live/:path*`,
-    });
+    // Internal backend RAG & Video Streaming proxy (Dynamic & Leak-Proof)
+    const ragServer = (
+      process.env.RAG_SERVER_INTERNAL_URL ||
+      process.env.NEXT_PUBLIC_RAG_SERVER_URL ||
+      process.env.NEXT_PUBLIC_PYTHON_BACKEND_URL ||
+      ""
+    ).replace(/\/+$/, "");
+
+    if (ragServer) {
+      rewritesList.push({
+        source: '/uploads/:path*',
+        destination: `${ragServer}/uploads/:path*`,
+      });
+      rewritesList.push({
+        source: '/api/lessons/:path*',
+        destination: `${ragServer}/api/lessons/:path*`,
+      });
+      rewritesList.push({
+        source: '/api/rag/:path*',
+        destination: `${ragServer}/api/:path*`,
+      });
+      rewritesList.push({
+        source: '/api/stream/:path*',
+        destination: `${ragServer}/api/stream/:path*`,
+      });
+      rewritesList.push({
+        source: '/api/assignments/:path*',
+        destination: `${ragServer}/api/assignments/:path*`,
+      });
+      rewritesList.push({
+        source: '/api/live/:path*',
+        destination: `${ragServer}/api/live/:path*`,
+      });
+    }
     return rewritesList;
   },
   images: {

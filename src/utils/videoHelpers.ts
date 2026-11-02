@@ -15,21 +15,25 @@ export interface VideoInfo {
   driveId?: string;
 }
 
-export const DEFAULT_CLOUD_RUN_URL = "https://practq45-28929614461.asia-south1.run.app";
-
 export function getBackendBaseUrl(): string {
-  // If running in browser on localhost or 127.0.0.1, auto-route to local backend on port 8000
+  // In browser, prefer relative URL ("") so Next.js internal proxy handles all requests without CORS
   if (typeof window !== "undefined") {
+    const envUrl = process.env.NEXT_PUBLIC_RAG_SERVER_URL || process.env.NEXT_PUBLIC_PYTHON_BACKEND_URL || "";
+    if (envUrl && envUrl.startsWith("http")) {
+      return envUrl.replace(/\/+$/, "");
+    }
     const hostname = window.location.hostname;
     if (hostname === "localhost" || hostname === "127.0.0.1") {
       return "http://127.0.0.1:8000";
     }
+    return "";
   }
-  const envUrl = process.env.NEXT_PUBLIC_RAG_SERVER_URL || "";
-  if (envUrl && (envUrl.includes("run.app") || envUrl.includes("localhost") || envUrl.includes("127.0.0.1") || envUrl.startsWith("http"))) {
-    return envUrl.replace(/\/$/, "");
-  }
-  return DEFAULT_CLOUD_RUN_URL;
+  return (
+    process.env.RAG_SERVER_INTERNAL_URL ||
+    process.env.NEXT_PUBLIC_RAG_SERVER_URL ||
+    process.env.NEXT_PUBLIC_PYTHON_BACKEND_URL ||
+    "http://127.0.0.1:8000"
+  ).replace(/\/+$/, "");
 }
 
 export function extractGoogleDriveId(urlOrId: string): string {
