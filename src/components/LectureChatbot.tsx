@@ -6,19 +6,13 @@ import {
   Send, 
   Trash2, 
   Brain, 
-  ArrowRight, 
-  Lightbulb, 
   Copy, 
   Check, 
-  Zap, 
-  Clock, 
   BookOpen,
   Volume2,
   VolumeX,
   Code2,
-  AlertTriangle,
-  Layers,
-  HelpCircle
+  AlertTriangle
 } from 'lucide-react';
 import { useLectureRAG } from '@/hooks/useLectureRAG';
 import { parseTimestampToSeconds, parseInlineFormatted } from '@/utils/ragHelpers';
@@ -35,40 +29,6 @@ const THINKING_STEPS = [
   'Scanning lecture audio & speech transcript...',
   'Pinpointing precise video timestamps...',
   'Structuring clear, step-by-step explanation...',
-];
-
-const QUICK_STARTERS = [
-  {
-    icon: Zap,
-    label: 'Core Concept',
-    shortDesc: 'Intuitive concept analogy & summary',
-    query: 'Explain the main concept of this lecture in simple words with an intuitive analogy.'
-  },
-  {
-    icon: Code2,
-    label: 'Code / Implementation',
-    shortDesc: 'Step-by-step code walkthrough',
-    query: 'Show me the step-by-step code or implementation demonstrated in this lecture.'
-  },
-  {
-    icon: Clock,
-    label: 'Key Timestamps',
-    shortDesc: 'Jump to key moments & chapters',
-    query: 'What are the most important video timestamps and what is covered at each point?'
-  },
-  {
-    icon: Lightbulb,
-    label: 'Practical Pro Tip',
-    shortDesc: 'Interview tips & key takeaways',
-    query: 'What is the most crucial practical takeaway and interview tip from this class?'
-  }
-];
-
-const CONTEXTUAL_PROMPTS = [
-  { label: '💡 Real-world Example', query: 'Can you give a practical, real-world example of this concept?' },
-  { label: '📝 3-Bullet Summary', query: 'Please summarize the key takeaways in 3 crisp bullet points.' },
-  { label: '💻 Code Walkthrough', query: 'Can you show a step-by-step code example explaining this?' },
-  { label: '❓ Quiz Question', query: 'Ask me a quick practice question to test if I understood this topic.' }
 ];
 
 /**
@@ -119,22 +79,18 @@ const CodeBlock: React.FC<{ code: string; language: string }> = ({ code, languag
 interface StructuredMessageContentProps {
   text: string;
   onTimestampClick: (ts: string) => void;
-  onSelectQuestion: (question: string) => void;
   showCursor?: boolean;
 }
 
 const StructuredMessageContent: React.FC<StructuredMessageContentProps> = ({
   text,
   onTimestampClick,
-  onSelectQuestion,
   showCursor,
 }) => {
   const lines = text.split('\n');
   const elements: React.ReactNode[] = [];
 
   let currentBulletGroup: string[] = [];
-  let currentSuggestedQuestions: { num: string; text: string }[] = [];
-  let isUnderSuggestedHeader = false;
 
   const renderFormattedTokens = (rawText: string) => {
     return parseInlineFormatted(rawText).map((part, pIdx) => {
@@ -207,37 +163,13 @@ const StructuredMessageContent: React.FC<StructuredMessageContentProps> = ({
 
             return (
               <div key={bIdx} className="chatBulletItem">
-                <span className="chatBulletIcon">▶</span>
+                <span className="chatBulletDot">•</span>
                 <span className="chatBulletText">
                   {renderFormattedTokens(bText)}
                 </span>
               </div>
             );
           })}
-        </div>
-      );
-    }
-  };
-
-  const flushSuggestedQuestions = (keyPrefix: string) => {
-    if (currentSuggestedQuestions.length > 0) {
-      const questionsToRender = [...currentSuggestedQuestions];
-      currentSuggestedQuestions = [];
-      elements.push(
-        <div key={`${keyPrefix}-suggested`} className="suggestedQuestionsContainer">
-          {questionsToRender.map((item, qIdx) => (
-            <button
-              key={qIdx}
-              type="button"
-              className="suggestedQuestionBtn"
-              onClick={() => onSelectQuestion(item.text)}
-              title="Click to ask this question"
-            >
-              <span className="questionNumBadge">{item.num}</span>
-              <span style={{ flex: 1, textAlign: 'left' }}>{item.text}</span>
-              <ArrowRight size={13} className="questionArrowIcon" />
-            </button>
-          ))}
         </div>
       );
     }
@@ -266,7 +198,6 @@ const StructuredMessageContent: React.FC<StructuredMessageContentProps> = ({
         inCodeBlock = false;
       } else {
         flushBullets(`line-${lineIdx}`);
-        flushSuggestedQuestions(`line-${lineIdx}`);
         codeBlockLang = trimmed.replace(/^```/, '').trim() || 'code';
         inCodeBlock = true;
       }
@@ -281,7 +212,6 @@ const StructuredMessageContent: React.FC<StructuredMessageContentProps> = ({
     // Horizontal Rule
     if (trimmed === '---' || trimmed === '___') {
       flushBullets(`line-${lineIdx}`);
-      flushSuggestedQuestions(`line-${lineIdx}`);
       elements.push(<hr key={`hr-${lineIdx}`} className="chatDivider" />);
       return;
     }
@@ -289,11 +219,7 @@ const StructuredMessageContent: React.FC<StructuredMessageContentProps> = ({
     // Heading (supports #, ##, ###, ####, #####)
     if (/^#{1,6}\s+/.test(trimmed)) {
       flushBullets(`line-${lineIdx}`);
-      flushSuggestedQuestions(`line-${lineIdx}`);
       const headingText = trimmed.replace(/^#+\s*/, '');
-      if (headingText.toLowerCase().includes('suggested')) {
-        isUnderSuggestedHeader = true;
-      }
       elements.push(
         <h4 key={`heading-${lineIdx}`} className="chatHeading">
           <Sparkles size={14} style={{ color: '#2563eb' }} />
@@ -306,7 +232,6 @@ const StructuredMessageContent: React.FC<StructuredMessageContentProps> = ({
     // Caution / Curriculum Notice (starts with ⚠️ or Topic Not Discussed)
     if (trimmed.startsWith('⚠️') || trimmed.includes('Topic Not Discussed')) {
       flushBullets(`line-${lineIdx}`);
-      flushSuggestedQuestions(`line-${lineIdx}`);
       elements.push(
         <div key={`caution-${lineIdx}`} className="chatCautionCard">
           <div className="chatCautionHeader">
@@ -321,11 +246,18 @@ const StructuredMessageContent: React.FC<StructuredMessageContentProps> = ({
       return;
     }
 
-    // Numbered Item (e.g. Suggested Questions)
+    // Numbered List Item
     const numMatch = trimmed.match(/^(\d+)\.\s+(.*)$/);
-    if (numMatch && (isUnderSuggestedHeader || numMatch[2].includes('?'))) {
+    if (numMatch) {
       flushBullets(`line-${lineIdx}`);
-      currentSuggestedQuestions.push({ num: numMatch[1], text: numMatch[2] });
+      elements.push(
+        <div key={`num-${lineIdx}`} className="chatNumberedItem">
+          <span className="chatNumberPrefix">{numMatch[1]}.</span>
+          <div className="chatNumberText">
+            {renderFormattedTokens(numMatch[2])}
+          </div>
+        </div>
+      );
       return;
     }
 
@@ -337,7 +269,6 @@ const StructuredMessageContent: React.FC<StructuredMessageContentProps> = ({
 
     // Regular line
     flushBullets(`line-${lineIdx}`);
-    flushSuggestedQuestions(`line-${lineIdx}`);
 
     if (trimmed === '') {
       return;
@@ -352,7 +283,6 @@ const StructuredMessageContent: React.FC<StructuredMessageContentProps> = ({
   });
 
   flushBullets('final');
-  flushSuggestedQuestions('final');
 
   if (inCodeBlock && currentCodeLines.length > 0) {
     elements.push(
@@ -382,17 +312,14 @@ interface TypewriterMessageProps {
   isAi: boolean;
   shouldAnimate: boolean;
   onTimestampClick: (ts: string) => void;
-  onSelectQuestion: (q: string) => void;
   onCompleteAnimation: (id: string) => void;
 }
 
 const TypewriterMessage: React.FC<TypewriterMessageProps> = ({
   messageId,
   text,
-  isAi,
   shouldAnimate,
   onTimestampClick,
-  onSelectQuestion,
   onCompleteAnimation,
 }) => {
   const [displayedLength, setDisplayedLength] = useState<number>(() => {
@@ -439,7 +366,6 @@ const TypewriterMessage: React.FC<TypewriterMessageProps> = ({
       <StructuredMessageContent
         text={currentText}
         onTimestampClick={onTimestampClick}
-        onSelectQuestion={onSelectQuestion}
         showCursor={isTyping}
       />
     </div>
@@ -494,11 +420,6 @@ export const LectureChatbot: React.FC<LectureChatbotProps> = ({
     if (!input.trim() || loading) return;
     askDoubt(input.trim());
     setInput('');
-  };
-
-  const handleSelectQuestion = (question: string) => {
-    if (loading) return;
-    askDoubt(question);
   };
 
   const handleCopy = (id: string, text: string) => {
@@ -557,11 +478,12 @@ export const LectureChatbot: React.FC<LectureChatbotProps> = ({
     animatedSetRef.current.add(id);
   }, []);
 
-  const isWelcomeOnly = messages.length === 1 && messages[0].id.startsWith('welcome');
+  const isWelcomeOnly = messages.length === 0 || (messages.length === 1 && messages[0].id.startsWith('welcome'));
+  const chatMessages = messages.filter((m) => !m.id.startsWith('welcome'));
 
   return (
     <div className="chatbotContainer">
-      {/* Chat Header */}
+      {/* Clean Chat Header */}
       <div className="chatHeader">
         <div className="chatHeaderLeft">
           <div className="chatAvatarIcon">
@@ -612,88 +534,40 @@ export const LectureChatbot: React.FC<LectureChatbotProps> = ({
             title="Reset Chat History"
             className="clearChatBtn"
           >
-            <Trash2 size={12} /> Clear
+            <Trash2 size={13} /> <span>Clear</span>
           </button>
         </div>
       </div>
 
       {/* Messages Scroll Area */}
       <div className="chatMessagesScroll">
-        {/* Rich Welcome Hero Card when chat is in initial state */}
+        {/* Clean, Modern Empty State (No default questions) */}
         {isWelcomeOnly && (
-          <div className="welcomeHeroCard">
-            <div className="welcomeBadgeRow">
-              <span className="welcomeAssistantPill">
-                <Sparkles size={13} />
-                <span>AI Teaching Assistant Desk</span>
-              </span>
-              <span className="welcomeActiveDot">
-                <span className="welcomeLivePulse" />
-                Ready
-              </span>
+          <div className="chatEmptyState">
+            <div className="chatEmptyIconWrapper">
+              <Sparkles size={26} className="chatEmptySparkle" />
             </div>
-
-            <h2 className="welcomeHeroTitle">
-              Welcome to your Lecture Mentor!
-            </h2>
-
+            <h3 className="chatEmptyTitle">How can I help you today?</h3>
+            <p className="chatEmptySubtitle">
+              Ask any doubts about concepts, formulas, or code demonstrated in this lecture. 
+              Explanations include clickable video timestamps to jump directly to key moments.
+            </p>
             {lessonTitle && (
-              <div className="welcomeLessonBanner">
-                <BookOpen size={14} className="welcomeLessonIcon" />
-                <span className="welcomeLessonPrefix">Lecture:</span>
-                <strong className="welcomeLessonName">{lessonTitle}</strong>
+              <div className="chatEmptyLessonTag" title={lessonTitle}>
+                <BookOpen size={13} className="chatEmptyLessonIcon" />
+                <span className="chatEmptyLessonPrefix">Current Lecture:</span>
+                <span className="chatEmptyLessonName">
+                  {lessonTitle.length > 40 ? `${lessonTitle.slice(0, 38)}...` : lessonTitle}
+                </span>
               </div>
             )}
-
-            <p className="welcomeHeroDesc">
-              Ask any doubts about concepts, explanations, or code shown in this video. 
-              Every answer gives you concise explanations with <strong>clickable video jump links</strong>!
-            </p>
-
-            <div className="welcomeFeaturesRow">
-              <span className="welcomeFeatureTag">🎯 100% Transcript Grounded</span>
-              <span className="welcomeFeatureTag">⏱️ Interactive Video Jump Points</span>
-              <span className="welcomeFeatureTag">🌐 English & Hinglish</span>
-            </div>
-
-            {/* Quick Starter Action Chips */}
-            <div className="quickStartersSection">
-              <div className="quickStartersHeader">
-                <Lightbulb size={13} style={{ color: '#60a5fa' }} />
-                <span>Quick Prompt Starters</span>
-              </div>
-              <div className="quickStartersGrid">
-                {QUICK_STARTERS.map((item, sIdx) => {
-                  const Icon = item.icon;
-                  return (
-                    <button
-                      key={sIdx}
-                      type="button"
-                      className="quickStarterBtn"
-                      onClick={() => handleSelectQuestion(item.query)}
-                      disabled={loading}
-                      title={`Click to ask: "${item.query}"`}
-                    >
-                      <div className="quickStarterIconBox">
-                        <Icon size={14} />
-                      </div>
-                      <div className="quickStarterTextBox">
-                        <span className="quickStarterLabel">{item.label}</span>
-                        <span className="quickStarterSnippet">{item.shortDesc || item.query}</span>
-                      </div>
-                      <ArrowRight size={13} className="quickStarterArrow" />
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
           </div>
         )}
 
         {/* Regular Messages Stream */}
-        {!isWelcomeOnly && messages.map((msg, idx) => {
+        {!isWelcomeOnly && chatMessages.map((msg, idx) => {
           const isStudent = msg.sender === 'student';
-          const isLatestAi = !isStudent && idx === messages.length - 1;
+          const isLatestAi = !isStudent && idx === chatMessages.length - 1;
           const shouldAnimate = isLatestAi && !animatedSetRef.current.has(msg.id);
           const hasEvidence = !isStudent && Array.isArray(msg.evidence) && msg.evidence.length > 0;
 
@@ -728,8 +602,8 @@ export const LectureChatbot: React.FC<LectureChatbotProps> = ({
                     >
                       {copiedId === msg.id ? (
                         <>
-                          <Check size={11} style={{ color: '#60a5fa' }} />
-                          <span>Copied!</span>
+                          <Check size={11} style={{ color: '#2563eb' }} />
+                          <span style={{ color: '#2563eb' }}>Copied!</span>
                         </>
                       ) : (
                         <>
@@ -754,7 +628,6 @@ export const LectureChatbot: React.FC<LectureChatbotProps> = ({
                       isAi={true}
                       shouldAnimate={shouldAnimate}
                       onTimestampClick={handleTimestampClick}
-                      onSelectQuestion={handleSelectQuestion}
                       onCompleteAnimation={handleCompleteAnimation}
                     />
 
@@ -762,7 +635,7 @@ export const LectureChatbot: React.FC<LectureChatbotProps> = ({
                     {hasEvidence && (
                       <div className="chatEvidenceSection">
                         <div className="chatEvidenceHeader">
-                          <BookOpen size={11} style={{ color: '#60a5fa' }} />
+                          <BookOpen size={11} style={{ color: '#2563eb' }} />
                           <span>Video Grounding Citations:</span>
                         </div>
                         <div className="chatEvidenceChipsGrid">
@@ -802,7 +675,7 @@ export const LectureChatbot: React.FC<LectureChatbotProps> = ({
         {loading && (
           <div className="thinkingCard" role="status" aria-live="polite">
             <div className="thinkingBrainIconWrapper">
-              <Brain size={18} strokeWidth={2.4} className="thinkingBrainSvg" />
+              <Brain size={16} strokeWidth={2.4} className="thinkingBrainSvg" />
             </div>
             <div className="thinkingTitleContainer">
               <span className="thinkingLabel">AI Reasoning</span>
@@ -820,34 +693,14 @@ export const LectureChatbot: React.FC<LectureChatbotProps> = ({
         <div ref={chatBottomRef} />
       </div>
 
-      {/* Contextual Fast Follow-up Action Chips (shown when chat is active and ready) */}
-      {!loading && !isWelcomeOnly && (
-        <div className="chatContextPillsRow">
-          <span className="contextPillsLabel">⚡ Quick Follow-up:</span>
-          <div className="contextPillsList">
-            {CONTEXTUAL_PROMPTS.map((cp, idx) => (
-              <button
-                key={idx}
-                type="button"
-                className="contextPillBtn"
-                onClick={() => handleSelectQuestion(cp.query)}
-                title={cp.query}
-              >
-                {cp.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Input Form with Floating Styling */}
+      {/* Clean Professional Input Form */}
       <form onSubmit={handleSubmit} className="chatInputForm">
         <div className="chatInputContainer">
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask doubt about this lecture (e.g. explain formula at 03:45)..."
+            placeholder="Ask a question about this lecture..."
             disabled={loading}
             className="chatInputField"
           />
@@ -855,13 +708,14 @@ export const LectureChatbot: React.FC<LectureChatbotProps> = ({
             type="submit"
             disabled={loading || !input.trim()}
             className={`chatSendBtn ${input.trim() && !loading ? 'active' : 'disabled'}`}
-            title="Send query"
+            title="Send question"
+            aria-label="Send question"
           >
             <Send size={15} />
           </button>
         </div>
         <div className="chatInputHintRow">
-          <span>💡 Press Enter to ask • Click any video timestamp to jump player</span>
+          <span>Press Enter to send • Click timestamps to jump video</span>
         </div>
       </form>
     </div>
