@@ -25,6 +25,7 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/api/assignments/") ||
     pathname.startsWith("/api/stream/") ||
     pathname.startsWith("/api/live") ||
+    pathname.startsWith("/api/rag") ||
     pathname.includes("/stream")
   ) {
     return NextResponse.next();
